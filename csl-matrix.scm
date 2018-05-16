@@ -7,11 +7,26 @@
 (define (csl:vector-length v)
   (gsl_vector.size (csl:vector-data v)))
 
+(define (csl:vector-map f v)
+  (let* ((len (csl:vector-length v))
+         (d (csl:vector-data v))
+         (r (gsl_vector_alloc_gc len)))
+    (let loop ((i (- len 1)))
+      (if (= i -1)
+          (csl:make-vector-record r)
+          (begin
+            (gsl_vector_set r i (f (gsl_vector_get d i)))
+            (loop (- i 1)))))))
 
-;; (define (csl:vector-map v)
-;;   (let ((len (csl:vector-length v)))
-;;     (let loop ((i len))
-;;       ())))
+(define (csl:vector-map! f v)
+  (let* ((len (csl:vector-length v))
+         (d (csl:vector-data v)))
+    (let loop ((i (- len 1)))
+      (if (= i -1)
+          (void)
+          (begin
+            (gsl_vector_set d i (f (gsl_vector_get d i)))
+            (loop (- i 1)))))))
 
 (define (csl:vector->list v)
   (let* ((data (csl:vector-data v))
