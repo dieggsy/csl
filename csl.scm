@@ -13,7 +13,9 @@
        fmt)
 
   (include "gsl-math.scm")
+  (include "gsl-vector.scm")
   (include "gsl-matrix.scm")
+  (include "csl-vector.scm")
   (include "csl-matrix.scm")
   ;; (include "gsl-complex.scm")
 

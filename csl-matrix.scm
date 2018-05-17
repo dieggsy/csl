@@ -1,142 +1,145 @@
-;; High level wrapper
-(define-record-type csl:vector
-  (csl:make-vector-record data)
-  csl:vector?
-  (data csl:vector-data))
+(define-record-type csl:matrix
+  (csl:ptr->matrix data)
+  csl:matrix?
+  (data csl:matrix->ptr))
 
-(define (csl:vector-length v)
-  (gsl_vector.size (csl:vector-data v)))
-
-(define (csl:vector-map f v)
-  (let* ((len (csl:vector-length v))
-         (d (csl:vector-data v))
-         (r (gsl_vector_alloc_gc len)))
-    (let loop ((i (- len 1)))
-      (if (= i -1)
-          (csl:make-vector-record r)
+(define (csl:list->matrix lst)
+  (let* ((rows (length lst))
+         (cols (length (car lst)))
+         (m (gsl_matrix_alloc_gc rows cols)))
+    (let loop1 ((i 0)
+                (l1 lst))
+      (if (= i rows)
+          (csl:ptr->matrix m)
           (begin
-            (gsl_vector_set r i (f (gsl_vector_get d i)))
-            (loop (- i 1)))))))
+            (let loop2 ((j 0)
+                        (l2 (car l1)))
+              (gsl_matrix_set m i j (car l2))
+              (if (= j (- cols 1))
+                  (void)
+                  (loop2 (+ j 1) (cdr l2))))
+            (loop1 (+ i 1) (cdr l1)))))))
 
-(define (csl:vector-map! f v)
-  (let* ((len (csl:vector-length v))
-         (d (csl:vector-data v)))
-    (let loop ((i (- len 1)))
-      (if (= i -1)
-          (void)
-          (begin
-            (gsl_vector_set d i (f (gsl_vector_get d i)))
-            (loop (- i 1)))))))
-
-(define (csl:vector->list v)
-  (let* ((data (csl:vector-data v))
-         (len (gsl_vector.size data)))
-    (let loop ((i (- len 1))
+(define (csl:matrix->list m)
+  (let* ((data (csl:matrix->ptr m))
+         (shape (csl:matrix-shape m))
+         (rows (car shape))
+         (columns (cdr shape)))
+    (let loop ((i (- rows 1))
                (res '()))
       (if (= i -1)
           res
-          (loop (- i 1) (cons (gsl_vector_get data i) res))))))
+          (loop
+           (- i 1)
+           (cons
+            (let loop ((j (- columns 1))
+                       (res '()))
+              (if (= j -1)
+                  res
+                  (loop (- j 1) (cons (gsl_matrix_get data i j) res))))
+            res))))))
 
-(define (csl:list->vector lst)
-  (let* ((len (length lst))
-         (v (gsl_vector_alloc_gc (length lst))))
-    (let loop ((i 0)
-               (lst lst))
-      (gsl_vector_set v i (car lst))
-      (if (= i (- len 1))
-          (csl:make-vector-record v)
-          (loop (+ i 1) (cdr lst))))))
+(define (csl:matrix . args)
+  (csl:list->matrix args))
 
-(define (csl:vector . args)
-  (csl:list->vector args))
-
-(define (csl:make-vector n #!optional fill)
-  (let ((v (gsl_vector_alloc_gc n)))
+(define (csl:make-matrix n1 n2 #!optional fill)
+  (let ((m (gsl_matrix_alloc_gc n1 n2)))
     (when fill
-      (gsl_vector_set_all v fill))
-    (csl:make-vector-record v)))
+      (gsl_matrix_set_all m fill))
+    (csl:ptr->matrix m)))
 
-(define (csl:vector-ref v n)
-  (let ((vpointer (csl:vector-data v)))
-    (define (spec-reader i #!optional j step)
-      (let* ((len (csl:vector-length v))
-             (i (cond ((eq? i '_)
-                       0)
-                      ((negative? i)
-                       (- len i))
-                      (else i)))
-             (j (cond ((eq? i '_)
-                       len)
-                      ((negative? i)
-                       (- len i))
-                      (else i))))
-        (cond (step
-               (csl:make-vector-record
-                (gsl_vector_subvector_with_stride vpointer i step (- j i))))
-              (else
-               (csl:make-vector-record
-                (gsl_vector_subvector vpointer i (- j i)))))))
-    (if (list? n)
-        (apply spec-reader n)
-        (gsl_vector_get vpointer n))))
+(define (csl:matrix-shape m)
+  (cons
+   (gsl_matrix.size1 (csl:matrix->ptr m))
+   (gsl_matrix.size2 (csl:matrix->ptr m))))
 
-(define-reader-ctor 'csl:vector csl:vector)
+(define (csl:vector-map! f . m))
 
-(define-record-printer (csl:vector v out)
-  (let ((size (csl:vector-length v)))
-    (if (> size 20)
-        (fprintf out "#<~a csl:vector>" size)
-        (let ((str (format "~a" (csl:vector->list v))))
-          (fprintf out "#,(csl:vector ~a)"
-                   (substring str 1 (- (string-length str) 1)))))))
+(define (csl:matrix-map f . m)
+  (let* ((rows (apply min (map (o car csl:matrix-shape) m)))
+         (cols (apply min (map (o cdr csl:matrix-shape) m)))
+         (d (map csl:matrix->ptr m))
+         (r (gsl_matrix_alloc_gc rows cols)))
+    (let loop ((i (- rows 1)))
+      (if (= i -1)
+          (csl:ptr->matrix r)
+          (begin
+            (let loop ((j (- cols 1)))
+              (if (= j -1)
+                  #f
+                  (begin
+                    (gsl_matrix_set r i j
+                                    (apply f
+                                           (map (cut gsl_matrix_get <> i j) d)))
+                    (loop (- j 1)))))
+            (loop (- i 1)))))))
 
-;; (define-record-type matrix
-;;   (%make-matrix data)
-;;   matrix?
-;;   (data matrix-data))
+;; (define (csl:matrix-ref))
 
-;; (define (matrix-shape m)
-;;   (cons
-;;    (matrix-size1 (matrix-data m))
-;;    (matrix-size2 (matrix-data m))))
+;; (define (csl:matrix-set!))
 
-;; (define (matrix->list m)
-;;   (let* ((data (matrix-data m))
-;;          (shape (matrix-shape m))
-;;          (rows (car shape))
-;;          (columns (cdr shape)))
-;;     (let loop ((i (- rows 1))
-;;                (res '()))
-;;       (if (= i -1)
-;;           res
-;;           (loop
-;;            (- i 1)
-;;            (cons
-;;             (let loop ((j (- columns 1))
-;;                        (res '()))
-;;               (if (= j -1)
-;;                   res
-;;                   (loop (- j 1) (cons (matrix-get data i j) res))))
-;;             res)))
-;;       )))
+(define (csl:matrix-fill! m n)
+  (gsl_matrix_set_all (csl:matrix->ptr m) n))
 
+(define (csl:identity-matrix n)
+  (let ((m (gsl_matrix_alloc_gc n n)))
+    (gsl_matrix_set_identity m)
+    (csl:ptr->matrix m)))
 
+(define (csl:matrix-transpose m)
+  (let* ((d (csl:matrix->ptr m))
+         (shape (csl:matrix-shape m))
+         (rows (car shape))
+         (cols (cdr shape))
+         (r (gsl_matrix_alloc_gc cols rows)))
+    (gsl_matrix_transpose_memcpy r d)
+    (csl:ptr->matrix r)))
+
+(define (csl:matrix-row m n)
+  (csl:ptr->vector
+   (gsl_matrix_row (csl:matrix->ptr m) n)))
+
+(define (csl:matrx-column m n)
+  (csl:ptr->vector
+   (gsl_matrix_column (csl:matrix->ptr m) n)))
+
+(define (csl:matrix-print m out)
+  (let* ((cols (csl:matrix->list
+                (csl:matrix-transpose m)))
+         (str-cols (map (lambda (x)
+                          (string-join
+                           (map number->string x)
+                           "\n"))
+                        cols))
+         (fmt-cols (apply append
+                          (map (lambda (x)
+                                 (list 'right (dsp x) " "))
+                               str-cols)))
+         (fmt-str (call-with-output-string
+                    (lambda (strout)
+                      (fmt strout (apply tabular fmt-cols))))))
+    (fprintf out "#,(csl:matrix(~a))"
+             (string-join
+              (intersperse (map (cut string-drop-right <> 1)
+                                (string-split fmt-str "\n"))
+                           (format ")\n~a("
+                                   (make-string 13 #\space)))
+              ""))))
 ;; ;; (define (matrix-print m out)
 ;; ;;   (let* ((cols ))))
 
-;; ;; (define-record-printer (matrix m out)
-;; ;;   (let* ((shape (matrix-shape m))
-;; ;;          (rows (car shape))
-;; ;;          (columns (cdr shape)))
-;; ;;     (if (or (> rows 20)
-;; ;;             (> columns 20))
-;; ;;         (fprintf out "#<~ax~a matrix>" rows columns)
-;; ;;         (##sys#with-print-length-limit
-;; ;;          +inf.0
-;; ;;          (lambda ()
-;; ;;            (matrix-print m out))))))
-;; (define (make-matrix n1 n2 #!optional fill)
-;;   (let ((m (matrix-alloc n1 n2)))
-;;     (when fill
-;;       (matrix-set-all m fill))
-;;     (%make-matrix m)))
+(define-reader-ctor 'csl:matrix csl:matrix)
+
+(define-record-printer (csl:matrix m out)
+  (let* ((shape (csl:matrix-shape m))
+         (rows (car shape))
+         (columns (cdr shape)))
+    (if (or (> rows 20)
+            (> columns 20))
+        (fprintf out "#<~ax~a csl:matrix>" rows columns)
+        (##sys#with-print-length-limit
+         +inf.0
+         (lambda ()
+           (csl:matrix-print m out))))))
+
+;; Operations
