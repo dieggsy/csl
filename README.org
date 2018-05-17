@@ -1,0 +1,8 @@
+* CSL: Chicken Scientific Library
+
+*This egg is very much still incomplete, but some basic double/complex/vector/matrix
+representation and operations do currently work.*
+
+This is a [[https://call-cc.org/][Chicken Scheme]] egg for the [[https://www.gnu.org/software/gsl/][GNU Scientific Library (GSL)]], providing
+both low-level bindings and a more scheme-y api, as well as some generic
+functions for convenience.
