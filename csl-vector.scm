@@ -1,7 +1,7 @@
 (define-record-type csl:vector
   (csl:ptr->vector data)
   csl:vector?
-  (data csl:vector-ptr))
+  (data csl:vector->ptr))
 
 (define (csl:list->vector lst)
   (let* ((len (length lst))
@@ -14,7 +14,7 @@
           (loop (+ i 1) (cdr lst))))))
 
 (define (csl:vector->list v)
-  (let* ((data (csl:vector-ptr v))
+  (let* ((data (csl:vector->ptr v))
          (len (gsl_vector.size data)))
     (let loop ((i (- len 1))
                (res '()))
@@ -32,34 +32,37 @@
     (csl:ptr->vector v)))
 
 (define (csl:vector-length v)
-  (gsl_vector.size (csl:vector-ptr v)))
+  (gsl_vector.size (csl:vector->ptr v)))
 
 (define (csl:vector-map f . v)
   (let* ((len (apply min (map csl:vector-length v)))
-         (d (map csl:vector-ptr v))
+         (d (map csl:vector->ptr v))
          (r (gsl_vector_alloc_gc len)))
     (let loop ((i (- len 1)))
       (if (= i -1)
           (csl:ptr->vector r)
           (begin
-            (gsl_vector_set r i (apply f
-                                       (map
-                                        (cut gsl_vector_get <> i)
-                                        d)))
+            (gsl_vector_set
+             r
+             i
+             (apply f (map (cut gsl_vector_get <> i) d)))
             (loop (- i 1)))))))
 
 (define (csl:vector-map! f . v)
   (let* ((len (apply min (map csl:vector-length v)))
-         (d (map csl:vector-ptr v)))
+         (d (map csl:vector->ptr v)))
     (let loop ((i (- len 1)))
       (if (= i -1)
           (void)
           (begin
-            (gsl_vector_set (car d) i (apply f (map (cut gsl_vector_get <> i) d)))
+            (gsl_vector_set
+             (car d)
+             i
+             (apply f (map (cut gsl_vector_get <> i) d)))
             (loop (- i 1)))))))
 
 (define (csl:vector-ref v n)
-  (let ((d (csl:vector-ptr v))
+  (let ((d (csl:vector->ptr v))
         (len (csl:vector-length v)))
     (define (spec-reader i #!optional j step)
       (let* ((i (cond ((eq? i '_)
@@ -102,9 +105,9 @@
          (if (negative? n) (+ len n) n)))))
 
 (define (csl:vector-set! v n val)
-  (let ((d (csl:vector-ptr v))
+  (let ((d (csl:vector->ptr v))
         (len (csl:vector-length v))
-        (val (if (csl:vector? val) (csl:vector-ptr val) val))
+        (val (if (csl:vector? val) (csl:vector->ptr val) val))
         (ref (if (list? val) list-ref gsl_vector_get)))
     (define (spec-reader i #!optional j step)
       (let* ((i (cond ((eq? i '_)
@@ -135,113 +138,113 @@
         (gsl_vector_set d n val))))
 
 (define (csl:vector-fill! v n)
-  (gsl_vector_set_all (csl:vector-ptr v) n))
+  (gsl_vector_set_all (csl:vector->ptr v) n))
 
 (define (csl:vector-copy v)
   (let ((c (gsl_vector_alloc_gc (csl:vector-length v)))
-        (d (csl:vector-ptr v)))
+        (d (csl:vector->ptr v)))
     (gsl_vector_memcpy c d)
     (csl:ptr->vector c)))
 
 (define (csl:vector-swap! v n1 n2)
-  (gsl_vector_swap_elements (csl:vector-ptr v) n1 n2))
+  (gsl_vector_swap_elements (csl:vector->ptr v) n1 n2))
 
 (define (csl:vector-reverse v)
   (let ((r (gsl_vector_alloc_gc (csl:vector-length v))))
-    (gsl_vector_memcpy r (csl:vector-ptr v))
+    (gsl_vector_memcpy r (csl:vector->ptr v))
     (gsl_vector_reverse r)
     (csl:ptr->vector r)))
 
 (define (csl:vector-reverse! v)
-  (gsl_vector_reverse (csl:vector-ptr v)))
+  (gsl_vector_reverse (csl:vector->ptr v)))
 
 (define (csl:vector-add v1 v2)
   (let ((c (csl:vector-copy v1)))
-    (gsl_vector_add (csl:vector-ptr c) (csl:vector-ptr v2))
+    (gsl_vector_add (csl:vector->ptr c) (csl:vector->ptr v2))
     c))
 
 (define (csl:vector-add! v1 v2)
-  (gsl_vector_add (csl:vector-ptr v1) (csl:vector-ptr v2))
+  (gsl_vector_add (csl:vector->ptr v1) (csl:vector->ptr v2))
   (void))
 
 (define (csl:vector-sub v1 v2)
   (let ((c (csl:vector-copy v1)))
-    (gsl_vector_sub (csl:vector-ptr c) (csl:vector-ptr v2))
+    (gsl_vector_sub (csl:vector->ptr c) (csl:vector->ptr v2))
     c))
 
 (define (csl:vector-sub! v1 v2)
-  (gsl_vector_sub (csl:vector-ptr v1) (csl:vector-ptr v2))
+  (gsl_vector_sub (csl:vector->ptr v1) (csl:vector->ptr v2))
   (void))
 
 (define (csl:vector-mul v1 v2)
   (let ((c (csl:vector-copy v1)))
-    (gsl_vector_mul (csl:vector-ptr c) (csl:vector-ptr v2))
+    (gsl_vector_mul (csl:vector->ptr c) (csl:vector->ptr v2))
     c))
 
 (define (csl:vector-mul! v1 v2)
-  (gsl_vector_mul (csl:vector-ptr v1) (csl:vector-ptr v2))
+  (gsl_vector_mul (csl:vector->ptr v1) (csl:vector->ptr v2))
   (void))
 
 (define (csl:vector-div v1 v2)
   (let ((c (csl:vector-copy v1)))
-    (gsl_vector_div (csl:vector-ptr c) (csl:vector-ptr v2))
+    (gsl_vector_div (csl:vector->ptr c) (csl:vector->ptr v2))
     c))
 
 (define (csl:vector-div! v1 v2)
-  (gsl_vector_div (csl:vector-ptr v1) (csl:vector-ptr v2))
+  (gsl_vector_div (csl:vector->ptr v1) (csl:vector->ptr v2))
   (void))
 
 
 (define (csl:vector-scale v n)
   (let ((c (csl:vector-copy v)))
-    (gsl_vector_scale (csl:vector-ptr c) n)
+    (gsl_vector_scale (csl:vector->ptr c) n)
     c))
 
 (define (csl:vector-scale! v n)
-  (gsl_vector_scale (csl:vector-ptr v) (csl:vector-ptr n))
+  (gsl_vector_scale (csl:vector->ptr v) (csl:vector->ptr n))
   (void))
 
 (define (csl:vector-add-const v n)
   (let ((c (csl:vector-copy v)))
-    (gsl_vector_add_const (csl:vector-ptr c) n)
+    (gsl_vector_add_const (csl:vector->ptr c) n)
     c))
 
 (define (csl:vector-add-const! v n)
-  (gsl_vector_add_const (csl:vector-ptr v) (csl:vector-ptr n))
+  (gsl_vector_add_const (csl:vector->ptr v) (csl:vector->ptr n))
   (void))
 
 (define (csl:vector-max v)
-  (gsl_vector_max (csl:vector-ptr v)))
+  (gsl_vector_max (csl:vector->ptr v)))
 
 (define (csl:vector-min v)
-  (gsl_vector_min (csl:vector-ptr v)))
+  (gsl_vector_min (csl:vector->ptr v)))
 
 (define (csl:vector-minmax v)
-  (gsl_vector_minmax (csl:vector-ptr v)))
+  (gsl_vector_minmax (csl:vector->ptr v)))
 
 (define (csl:vector-argmax v)
-  (gsl_vector_max_index (csl:vector-ptr v)))
+  (gsl_vector_max_index (csl:vector->ptr v)))
 
 (define (csl:vector-argmin v)
-  (gsl_vector_min_index (csl:vector-ptr v)))
+  (gsl_vector_min_index (csl:vector->ptr v)))
 
 (define (csl:vector-argminmax v)
-  (gsl_vector_minmax_index (csl:vector-ptr v)))
+  (gsl_vector_minmax_index (csl:vector->ptr v)))
 
 (define (csl:vector-zero? v)
-  (gsl_vector_isnull (csl:vector-ptr v)))
+  (gsl_vector_isnull (csl:vector->ptr v)))
 
 (define (csl:vector-positive? v)
-  (gsl_vector_ispos (csl:vector-ptr v)))
+  (gsl_vector_ispos (csl:vector->ptr v)))
 
 (define (csl:vector-negative? v)
-  (gsl_vector_isneg (csl:vector-ptr v)))
+  (gsl_vector_isneg (csl:vector->ptr v)))
 
 (define (csl:vector-nonnegative? v)
-  (gsl_vector_isnonneg (csl:vector-ptr v)))
+  (gsl_vector_isnonneg (csl:vector->ptr v)))
 
 (define (csl:vector= v1 v2)
-  (gsl_vector_equal (csl:vector-ptr v1) (csl:vector-ptr v2)))
+  (gsl_vector_equal (csl:vector->ptr v1) (csl:vector->ptr v2)))
 
 (define-reader-ctor 'csl:vector csl:vector)
 
