@@ -1,4 +1,4 @@
-(module csl-const *
+(module csl-const ()
   (import chicken scheme foreign)
   (use foreigners)
   (foreign-declare "#include <gsl/gsl_const_mksa.h>")
@@ -25,8 +25,10 @@
                 name)))
        (define (make-standard-defs name type)
          (let* ((strname (get-gsl-name name type))
-                (def `(define ,(string->symbol strname)
-                        (foreign-value ,strname double))))
+                (def `(begin
+                        (export ,(string->symbol strname))
+                        (define ,(string->symbol strname)
+                          (foreign-value ,strname double)))))
            (if (eq? type unit:)
                (cons def (make-standard-defs name cgsm:))
                (list def))))
@@ -42,8 +44,10 @@
                  (else
                   (loop (cdr lst)
                         (cons
-                         `(define ,(get-csl-name (strip-syntax (car lst)) type)
-                            ,(string->symbol (get-gsl-name name type)))
+                         `(begin
+                            (export ,(get-csl-name (strip-syntax (car lst)) type))
+                            (define ,(get-csl-name (strip-syntax (car lst)) type)
+                              ,(string->symbol (get-gsl-name name type))))
                          res))))))
        (let* ((type (cadr e))
               (name (caddr e))
