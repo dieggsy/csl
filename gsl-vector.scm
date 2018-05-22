@@ -112,7 +112,7 @@
 (define gsl_vector_scale
   (foreign-safe-lambda int "gsl_vector_scale" gsl_vector double))
 
-(define gsl_vector_add_const
+(define gsl_vector_add_constant
   (foreign-safe-lambda int "gsl_vector_add_constant" gsl_vector double))
 
 ;; Finding max and min elements of vectors
