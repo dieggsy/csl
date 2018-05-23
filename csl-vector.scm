@@ -165,6 +165,12 @@
   (define (csl:vector-reverse! v)
     (gsl_vector_complex_reverse (csl:vector->ptr v)))
 
+  (define (csl:vector-real-part v)
+    (csl:ptr->vector (gsl_vector_complex_real (csl:vector->ptr v))))
+
+  (define (csl:vector-imag-part v)
+    (csl:ptr->vector (gsl_vector_complex_imag (csl:vector->ptr v))))
+
   (define (csl:vector-add v1 v2)
     (let ((c (csl:vector-copy v1)))
       (gsl_vector_complex_add (csl:vector->ptr c) (csl:vector->ptr v2))

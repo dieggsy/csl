@@ -59,11 +59,9 @@
         (iz (imag-part z)))
     ((foreign-safe-lambda* void ((gsl_vector_complex v)
                                  (double rz) (double iz))
-       "gsl_complex zin = gsl_complex_rect(rz,iz);"
-       "gsl_vector_complex_set_all(v,zin);")
-     v
-     rz
-     iz)))
+       "gsl_complex zset = gsl_complex_rect(rz,iz);"
+       "gsl_vector_complex_set_all(v,zset);")
+     v rz iz)))
 
 (define gsl_vector_complex_set_zero
   (foreign-safe-lambda void "gsl_vector_complex_set_zero" gsl_vector_complex))
@@ -98,11 +96,27 @@
    (unsigned-int stride)
    (unsigned-int n)))
 
-;; (define-gsl-complex-subview-binding vector_complex real vector_complex
-;;   ((gsl_vector_complex v)))
+(define gsl_vector_complex_real
+  (foreign-safe-lambda* gsl_vector_complex ((gsl_vector_complex v))
+    "gsl_vector_complex *p0 = gsl_vector_complex_alloc(v->size);"
+    "gsl_vector_view p1 = gsl_vector_complex_real(v);"
+    "int i;"
+    "for (i = 0; i < v->size; i++) { "
+    "double rz = gsl_vector_get(&p1.vector, i);"
+    "gsl_vector_complex_set(p0,i,gsl_complex_rect(rz, 0));"
+    "}"
+    "C_return(p0);"))
 
-;; (define-gsl-complex-subview-binding vector_complex imag vector_complex
-;;   ((gsl_vector_complex v)))
+(define gsl_vector_complex_imag
+  (foreign-safe-lambda* gsl_vector_complex ((gsl_vector_complex v))
+    "gsl_vector_complex *p0 = gsl_vector_complex_alloc(v->size);"
+    "gsl_vector_view p1 = gsl_vector_complex_imag(v);"
+    "int i;"
+    "for (i = 0; i < v->size; i++) { "
+    "double iz = gsl_vector_get(&p1.vector, i);"
+    "gsl_vector_complex_set(p0,i,gsl_complex_rect(0, iz));"
+    "}"
+    "C_return(p0);"))
 
 ;; Copying vectors
 (define gsl_vector_complex_memcpy
