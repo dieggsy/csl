@@ -1,11 +1,11 @@
-(foreign-declare "#include <gsl/gsl_vector_complex.h>")
+(foreign-declare "#include <gsl/gsl_vector.h>")
 (foreign-declare "#include <gsl/gsl_complex_math.h>")
 
 (define-foreign-record-type (gsl_vector_complex "gsl_vector_complex")
   (unsigned-int size gsl_vector_complex.size)
   (unsigned-int stride gsl_vector_complex.stride)
   ((c-pointer double) data gsl_vector_complex.data)
-  (gsl_block block gsl_vector_complex.block)
+  (gsl_block_complex block gsl_vector_complex.block)
   (int owner gsl_vector_complex.owner))
 
 (define-external (numbers_make_rect (double r) (double i)) scheme-object
@@ -57,10 +57,13 @@
 (define (gsl_vector_complex_set_all v z)
   (let ((rz (real-part z))
         (iz (imag-part z)))
-    (foreign-safe-lambda* void ((gsl_vector_complex v)
-                                (double rz) (double iz))
-      "gsl_complex zin = gsl_complex_rect(rz,iz);"
-      "gsl_vector_complex_set_all(v,zin);")))
+    ((foreign-safe-lambda* void ((gsl_vector_complex v)
+                                 (double rz) (double iz))
+       "gsl_complex zin = gsl_complex_rect(rz,iz);"
+       "gsl_vector_complex_set_all(v,zin);")
+     v
+     rz
+     iz)))
 
 (define gsl_vector_complex_set_zero
   (foreign-safe-lambda void "gsl_vector_complex_set_zero" gsl_vector_complex))
@@ -81,7 +84,8 @@
             ,(conc "gsl_" (fourth form) "_view p1 = gsl_" (second form) "_" (third form) "("
                    (string-join (map (lambda (a) (symbol->string (second a))) (fifth form)) ",")
                    ");")
-            ,(conc "memcpy(p0, &p1.vector, sizeof(" (conc "gsl_" (fourth form)) "));")))))))
+            ,(conc "memcpy(p0, &p1.vector, sizeof(" (conc "gsl_" (fourth form)) "));")
+            "C_return(p0);"))))))
 
 (define-gsl-complex-subview-binding vector_complex subvector vector_complex
   ((gsl_vector_complex v)
@@ -94,13 +98,11 @@
    (unsigned-int stride)
    (unsigned-int n)))
 
-(define-gsl-complex-subview-binding vector_complex real vector
-  ((gsl_vector_complex v)))
+;; (define-gsl-complex-subview-binding vector_complex real vector_complex
+;;   ((gsl_vector_complex v)))
 
-(define-gsl-complex-subview-binding vector_complex imag vector
-  ((gsl_vector_complex v)))
-
-;; TODO Complex and array operations skipped here
+;; (define-gsl-complex-subview-binding vector_complex imag vector_complex
+;;   ((gsl_vector_complex v)))
 
 ;; Copying vectors
 (define gsl_vector_complex_memcpy
@@ -131,18 +133,20 @@
 (define (gsl_vector_complex_scale v z)
   (let ((rz (real-part z))
         (iz (imag-part z)))
-    (foreign-safe-lambda* int ((gsl_vector_complex v)
-                               (double rz) (double iz))
-      "gsl_complex zin = gsl_complex_rect(rz,iz);"
-      "gsl_vector_complex_scale(v,zin);")))
+    ((foreign-safe-lambda* int ((gsl_vector_complex v)
+                                (double rz) (double iz))
+       "gsl_complex zin = gsl_complex_rect(rz,iz);"
+       "gsl_vector_complex_scale(v,zin);")
+     v rz iz)))
 
 (define (gsl_vector_complex_add_constant v z)
   (let ((rz (real-part z))
         (iz (imag-part z)))
-    (foreign-safe-lambda* int ((gsl_vector_complex v)
-                               (double rz) (double iz))
-      "gsl_complex zin = gsl_complex_rect(rz,iz);"
-      "gsl_vector_complex_add_constant(v,zin);")))
+    ((foreign-safe-lambda* int ((gsl_vector_complex v)
+                                (double rz) (double iz))
+       "gsl_complex zin = gsl_complex_rect(rz,iz);"
+       "gsl_vector_complex_add_constant(v,zin);")
+     v rz iz)))
 
 ;; Vector properties
 (define gsl_vector_complex_isnull (foreign-safe-lambda bool "gsl_vector_complex_isnull" gsl_vector_complex))
