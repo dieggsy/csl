@@ -4,8 +4,10 @@
        csl-vector
        fmt
        srfi-13
-       ports)
+       ports
+       srfi-1)
 
+  (include "csl-error.scm")
   (include "gsl-block.scm")
   (include "gsl-matrix-complex.scm")
 
@@ -101,7 +103,107 @@
                       (loop (- j 1)))))
               (loop (- i 1)))))))
 
-  ;; (define (csl:matrix-ref))
+  (define (csl:matrix-ref m i #!optional (j '_))
+    (define (fix-spec spec max)
+      (cond
+       ;; No spec
+       ((number? spec)
+        (if (negative? spec)
+            (+ max spec)
+            spec))
+       ((or (eq? spec '_)
+            (null? spec))
+        (list 0 max 0))
+       ;; Second/third omitted
+       ((null? (cdr spec))
+        (fix-spec (cons (first spec) `(,max 0)) max))
+       ((null? (cddr spec))
+        (fix-spec (list (first spec) (second spec) 0) max))
+       ;; Third negative, this is the indices of the reversed direction
+       ((negative? (third spec))
+        (fix-spec (list (if (number? (first spec))
+                            (- max (first spec) 1)
+                            0)
+                        (if (number? (second spec))
+                            (- max (second spec) 1)
+                            max)
+                        (- (third spec)))
+                  max))
+       ;; First not specified
+       ((eq? (first spec) '_)
+        (fix-spec (cons 0 (cdr spec)) max))
+       ;; First negative
+       ((negative? (first spec))
+        (fix-spec (cons (+ max (first spec)) (cdr spec)) max))
+       ;; First maxed
+       ((> (first spec) max)
+        (fix-spec (cons max (cdr spec)) max))
+       ;; Second not specified
+       ((eq? (second spec) '_)
+        (fix-spec (list (first spec) max (third spec)) max))
+       ;; Second negative
+       ((negative? (second spec))
+        (fix-spec (list (first spec) (+ max (second spec)) (third spec)) max))
+       ;; Scecond maxed
+       ((> (second spec) max)
+        (fix-spec (list (first spec) (+ max (second spec)) (third spec)) max))
+       (else spec)))
+    (let* ((m (csl:matrix->ptr m))
+           (mcols (gsl_matrix_complex.size2 m))
+           (mrows (gsl_matrix_complex.size1 m))
+           (fliplr (and (list? j)
+                        (= (length j) 3)
+                        (negative? (caddr j))))
+           (flipud (and (list? i)
+                        (= (length i) 3)
+                        (negative? (caddr i))))
+           (i (fix-spec i mrows))
+           (j (fix-spec j mcols)))
+      (if (number? i)
+          (if (number? j)
+              (gsl_matrix_complex_get m i j)
+              (let ((vec (csl:ptr->vector (gsl_matrix_complex_row m i))))
+                (if (or (not j) (eq? j '_))
+                    vec
+                    (csl:vector-ref vec j))))
+          (if (number? j)
+              (let ((vec (csl:ptr->vector (gsl_matrix_complex_column m j))))
+                (if (eq? i '_)
+                    vec
+                    (csl:vector-ref vec i)))
+              (let* ((startr (first i))
+                     (endr (second i))
+                     (stepr (third i))
+                     (startc (first j))
+                     (endc (second j))
+                     (stepc (third j)))
+                (cond ((or flipud fliplr)
+                       (let ((r (gsl_matrix_complex_alloc_gc mrows mcols)))
+                         (gsl_matrix_complex_memcpy r m)
+                         (when flipud
+                           (gsl_matrix_complex_reverse_rows r))
+                         (when fliplr
+                           (gsl_matrix_complex_reverse_cols r))
+                         (csl:matrix-ref (csl:ptr->matrix r) i j)))
+                      ((and (zero? stepr) (zero? stepc))
+                       (csl:ptr->matrix
+                        (gsl_matrix_complex_submatrix
+                         m
+                         startr startc
+                         (- endr startr)
+                         (- endc startc))))
+                      (else
+                       (csl:ptr->matrix
+                        (gsl_matrix_complex_submatrix_with_stride
+                         m
+                         startr startc
+                         stepr stepc
+                         (if (zero? stepr)
+                             (- endr startr)
+                             (inexact->exact (ceiling (/ (- endr startr) stepr))))
+                         (if (zero? stepc)
+                             (- endc startc)
+                             (inexact->exact (ceiling (/ (- endc startc) stepc)))))))))))))
 
   ;; (define (csl:matrix-set!))
 
@@ -125,6 +227,12 @@
       (gsl_matrix_complex_get_row v (csl:matrix->ptr m) n)
       (csl:ptr->vector v)))
 
+  (define (csl:matrix-column-ref m n)
+    (let* ((cols (cdr (csl:matrix-shape m)))
+           (v (gsl_vector_complex_alloc_gc cols)))
+      (gsl_matrix_complex_column v (csl:matrix->ptr m) n)
+      (csl:ptr->vector v)))
+
   (define (csl:matrix-transpose m)
     (let* ((d (csl:matrix->ptr m))
            (shape (csl:matrix-shape m))
@@ -133,14 +241,6 @@
            (r (gsl_matrix_complex_alloc_gc cols rows)))
       (gsl_matrix_complex_transpose_memcpy r d)
       (csl:ptr->matrix r)))
-
-  (define (csl:matrix-row m n)
-    (csl:ptr->vector
-     (gsl_matrix_complex_row (csl:matrix->ptr m) n)))
-
-  (define (csl:matrx-column m n)
-    (csl:ptr->vector
-     (gsl_matrix_complex_column (csl:matrix->ptr m) n)))
 
   (define (csl:matrix-print m out)
     (let* ((cols (csl:matrix->list
