@@ -70,31 +70,24 @@
   (foreign-safe-lambda void "gsl_vector_complex_set_basis" gsl_vector_complex unsigned-int))
 
 ;; Vector views
-(define-syntax define-gsl-complex-subview-binding
-  (er-macro-transformer
-   (lambda (form rename compare)
-     (let ((type (conc "gsl_" (second form))))
-       `(define ,(string->symbol (conc "gsl_" (second form) "_" (third form)))
-          (foreign-safe-lambda*
-              ,(string->symbol (conc "gsl_" (fourth form)))
-              ,(fifth form)
-            ,(conc type " *p0 = malloc(sizeof(" type "));")
-            ,(conc "gsl_" (fourth form) "_view p1 = gsl_" (second form) "_" (third form) "("
-                   (string-join (map (lambda (a) (symbol->string (second a))) (fifth form)) ",")
-                   ");")
-            ,(conc "memcpy(p0, &p1.vector, sizeof(" (conc "gsl_" (fourth form)) "));")
-            "C_return(p0);"))))))
+(define gsl_vector_complex_subvector
+  (foreign-safe-lambda* gsl_vector_complex ((gsl_vector_complex v)
+                                            (unsigned-int offset)
+                                            (unsigned-int n))
+    "gsl_vector_complex *p0 = gsl_vector_complex_alloc(v->size);"
+    "gsl_vector_complex_view p1 = gsl_vector_complex_subvector(v,offset,n);"
+    "memcpy(p0, &p1.vector, sizeof(gsl_vector_complex));"
+    "C_return(p0);"))
 
-(define-gsl-complex-subview-binding vector_complex subvector vector_complex
-  ((gsl_vector_complex v)
-   (unsigned-int offset)
-   (unsigned-int n)))
-
-(define-gsl-complex-subview-binding vector_complex subvector_with_stride vector_complex
-  ((gsl_vector_complex v)
-   (unsigned-int offset)
-   (unsigned-int stride)
-   (unsigned-int n)))
+(define gsl_vector_complex_subvector_with_stride
+  (foreign-safe-lambda* gsl_vector_complex ((gsl_vector_complex v)
+                                            (unsigned-int offset)
+                                            (unsigned-int stride)
+                                            (unsigned-int n))
+    "gsl_vector_complex *p0 = gsl_vector_complex_alloc(v->size);"
+    "gsl_vector_complex_view p1 = gsl_vector_complex_subvector_with_stride(v,offset,stride,n);"
+    "memcpy(p0, &p1.vector, sizeof(gsl_vector_complex));"
+    "C_return(p0);"))
 
 (define gsl_vector_complex_real
   (foreign-safe-lambda* gsl_vector_complex ((gsl_vector_complex v))
@@ -161,6 +154,25 @@
        "gsl_complex zin = gsl_complex_rect(rz,iz);"
        "gsl_vector_complex_add_constant(v,zin);")
      v rz iz)))
+
+;; Finding max and min elements of vectors
+;; (define gsl_vector_max (foreign-safe-lambda double "gsl_vector_max" gsl_vector))
+;; (define gsl_vector_min (foreign-safe-lambda double "gsl_vector_min" gsl_vector))
+;; (define gsl_vector_minmax
+;;   (foreign-primitive ((gsl_vector v))
+;;       "double max_out, min_out;"
+;;     "gsl_vector_minmax(v, &min_out, &max_out);"
+;;     "C_word *ptr = C_alloc(C_SIZEOF_FLONUM);"
+;;     "C_word av[4] = {C_SCHEME_UNDEFINED, C_k, C_flonum(&ptr,min_out), C_flonum(&ptr,max_out)};"
+;;     "C_values(4, av);"))
+;; (define gsl_vector_max_index (foreign-safe-lambda int "gsl_vector_max_index" gsl_vector))
+;; (define gsl_vector_min_index (foreign-safe-lambda int "gsl_vector_min_index" gsl_vector))
+;; (define gsl_vector_minmax_index
+;;   (foreign-primitive ((gsl_vector v))
+;;       "size_t imin, imax;"
+;;     "gsl_vector_minmax_index(v,&imin,&imax);"
+;;     "C_word av[4] = {C_SCHEME_UNDEFINED, C_k, C_fix(imin), C_fix(imax)};"
+;;     "C_values(4,av);"))
 
 ;; Vector properties
 (define gsl_vector_complex_isnull (foreign-safe-lambda bool "gsl_vector_complex_isnull" gsl_vector_complex))

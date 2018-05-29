@@ -109,6 +109,24 @@
    (unsigned-int n1)
    (unsigned-int n2)))
 
+(define gsl_matrix_complex_submatrix_with_stride
+  (foreign-safe-lambda* gsl_matrix_complex ((gsl_matrix_complex m)
+                                            (unsigned-int k1)
+                                            (unsigned-int k2)
+                                            (unsigned-int s1)
+                                            (unsigned-int s2)
+                                            (unsigned-int n1)
+                                            (unsigned-int n2))
+    "gsl_matrix_complex *r = gsl_matrix_complex_alloc(n1,n2);"
+    "int rm, rr;"
+    "for (rm = k1, rr = 0; rr < n1; rr++, rm += s1){"
+    "gsl_vector_complex *row = gsl_vector_complex_alloc(m->size2);"
+    "gsl_matrix_complex_get_row(row,m,rm);"
+    "gsl_vector_complex_view row_with_stride = (s2 > 0) ? gsl_vector_complex_subvector_with_stride(row,k2,s2,n2) : gsl_vector_complex_subvector(row,k2,n2);"
+    "gsl_matrix_complex_set_row(r,rr,&row_with_stride.vector);"
+    "gsl_vector_complex_free(row);"
+    "}"
+    "C_return(r);"))
 (define-gsl-matrix-subview-binding matrix_complex view_vector matrix_complex
   ((c-pointer v) (unsigned-int n1) (unsigned-int n2)))
 
@@ -168,6 +186,28 @@
 
 (define gsl_matrix_complex_transpose
   (foreign-safe-lambda int "gsl_matrix_complex_transpose" gsl_matrix_complex))
+
+(define gsl_matrix_complex_reverse_rows
+  (foreign-safe-lambda* int ((gsl_matrix_complex m))
+    "int i;"
+    "for (i = 0; i < m->size2; i++){"
+    "gsl_vector_complex *col = gsl_vector_complex_alloc(m->size1);"
+    "gsl_matrix_complex_get_col(col,m,i);"
+    "gsl_vector_complex_reverse(col);"
+    "gsl_matrix_complex_set_col(m, i, col);"
+    "gsl_vector_complex_free(col);"
+    "}"))
+
+(define gsl_matrix_complex_reverse_cols
+  (foreign-safe-lambda* int ((gsl_matrix_complex m))
+    "int i;"
+    "for (i = 0; i < m->size1; i++){"
+    "gsl_vector_complex *row = gsl_vector_complex_alloc(m->size2);"
+    "gsl_matrix_complex_get_row(row,m,i);"
+    "gsl_vector_complex_reverse(row);"
+    "gsl_matrix_complex_set_row(m, i, row);"
+    "gsl_vector_complex_free(row);"
+    "}"))
 
 ;; Matrix operations
 (define gsl_matrix_complex_add

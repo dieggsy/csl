@@ -2,6 +2,7 @@
   (import chicken scheme foreign foreigners)
   (use numbers)
 
+  (include "csl-error.scm")
   (include "gsl-block.scm")
   (include "gsl-vector-complex.scm")
 
@@ -132,8 +133,6 @@
                (j (if (> j len) len j)))
           (let loop ((k i)
                      (l 0))
-            (print "K: " k)
-            (print "L: " l)
             (if (or (and (negative? step) (< k (+ j (- step))))
                     (and (positive? step) (> k (- j step))))
                 (void)

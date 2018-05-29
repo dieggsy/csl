@@ -32,8 +32,7 @@
                (string->symbol
                 (conc "csl:"
                       (if (null? (cddr e))
-                          (string-downcase
-                           (irregex-replace/all "_" name "-"))
+                          (irregex-replace/all "_" name "-")
                           (strip-syntax
                            (caddr e))))))
               (args (cddadr e)))

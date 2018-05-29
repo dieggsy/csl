@@ -7,23 +7,15 @@
           ports
           foreign)
   (use numbers
-       bind
        foreigners
        generics
        fmt
-       srfi-13)
+       srfi-13
+       srfi-4
+       srfi-1
+       irregex)
 
-  (foreign-declare "#include <gsl/gsl_errno.h>")
-
-  (define gsl_set_error_handler
-    (foreign-lambda void "gsl_set_error_handler" (c-pointer void)))
-
-  (define-external (csl_err (c-string reason) (c-string file) (int line) (int gsl_errno)) void
-    (error (format "gsl: ~a:~a: ERROR: ~a" file line reason)))
-
-  (gsl_set_error_handler (location csl_err))
-
-  (include "csl-math.scm")
+  (include "gsl-complex.scm")
 
   (foreign-declare "#include <gsl/gsl_block.h>")
 
@@ -49,6 +41,7 @@
   (include "gsl-matrix.scm")
   (include "csl-vector.scm")
   (include "csl-matrix.scm")
-  ;; (include "gsl-complex.scm")
+
+  (include "csl-const.scm")
 
   )

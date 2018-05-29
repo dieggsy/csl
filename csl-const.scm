@@ -1,6 +1,5 @@
 (module csl-const ()
-  (import chicken scheme foreign)
-  (use foreigners)
+  (import chicken scheme foreign irregex srfi-13)
   (foreign-declare "#include <gsl/gsl_const_mksa.h>")
   (foreign-declare "#include <gsl/gsl_const_cgsm.h>")
   (foreign-declare "#include <gsl/gsl_const.h>")
