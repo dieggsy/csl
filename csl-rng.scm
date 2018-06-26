@@ -59,6 +59,11 @@
                           (error "rng-default must be a csl:rng")
                           x))))
 
+  (define (csl:rng-max #!optional (rng (csl:rng-default)))
+    (gsl_rng_max (csl:rng->ptr rng)))
+  (define (csl:rng-min #!optional (rng (csl:rng-default)))
+    (gsl_rng_min (csl:rng->ptr rng)))
+
   (define-record-printer (csl:rng rng out)
     (let ((name (gsl_rng_name (csl:rng->ptr rng))))
       (format out "#,(csl:rng ~a)" name)))
