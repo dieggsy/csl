@@ -52,6 +52,13 @@
       ((fishman2x) (csl:ptr->rng (gsl_rng_alloc_gc gsl_rng_fishman2x)))
       ((coveyou) (csl:ptr->rng (gsl_rng_alloc_gc gsl_rng_coveyou)))))
 
+  (define csl:rng-default
+    (make-parameter (csl:rng 'mt19937)
+                    (lambda (x)
+                      (if (not (csl:rng? x))
+                          (error "rng-default must be a csl:rng")
+                          x))))
+
   (define-record-printer (csl:rng rng out)
     (let ((name (gsl_rng_name (csl:rng->ptr rng))))
       (format out "#,(csl:rng ~a)" name)))
