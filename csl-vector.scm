@@ -94,7 +94,7 @@
                                    `(,(- len i 1)
                                      ,(- len j 1)
                                      ,(- step)))))
-                (step
+                ((and step (positive? step))
                  (csl:ptr->vector
                   (gsl_vector_complex_subvector_with_stride
                    d
