@@ -70,4 +70,14 @@
 
   (define-reader-ctor 'csl:rng csl:rng)
 
-  )
+  (define (csl:random-integer #!key (rng (csl:rng-default)))
+    (gsl_rng_get (csl:rng->ptr rng)))
+
+  (define (csl:random-uniform #!key (rng (csl:rng-default)))
+    (gsl_rng_uniform (csl:rng->ptr rng)))
+
+  (define (csl:random-uniform+ #!key (rng (csl:rng-default)))
+    (gsl_rng_uniform (csl:rng->ptr rng)))
+
+  (define (csl:random-uniform* n #!key (rng (csl:rng-default)))
+    (gsl_rng_uniform_int (csl:rng->ptr rng) n)))
