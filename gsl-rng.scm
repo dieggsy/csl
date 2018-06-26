@@ -127,3 +127,69 @@
 
 (define gsl_rng_rand48
   (foreign-value "gsl_rng_rand48" gsl_rng_type))
+
+(define gsl_rng_ranf
+  (foreign-value "gsl_rng_ranf" gsl_rng_type))
+
+(define gsl_rng_ranmar
+  (foreign-value "gsl_rng_ranmar" gsl_rng_type))
+
+(define gsl_rng_r250
+  (foreign-value "gsl_rng_r250" gsl_rng_type))
+
+(define gsl_rng_tt800
+  (foreign-value "gsl_rng_tt800" gsl_rng_type))
+
+(define gsl_rng_vax
+  (foreign-value "gsl_rng_vax" gsl_rng_type))
+
+(define gsl_rng_transputer
+  (foreign-value "gsl_rng_transputer" gsl_rng_type))
+
+(define gsl_rng_randu
+  (foreign-value "gsl_rng_randu" gsl_rng_type))
+
+(define gsl_rng_minstd
+  (foreign-value "gsl_rng_minstd" gsl_rng_type))
+
+(define gsl_rng_uni
+  (foreign-value "gsl_rng_uni" gsl_rng_type))
+
+(define gsl_rng_uni32
+  (foreign-value "gsl_rng_uni32" gsl_rng_type))
+
+(define gsl_rng_slatec
+  (foreign-value "gsl_rng_slatec" gsl_rng_type))
+
+(define gsl_rng_zuf
+  (foreign-value "gsl_rng_zuf" gsl_rng_type))
+
+(define gsl_rng_knuthran2
+  (foreign-value "gsl_rng_knuthran2" gsl_rng_type))
+
+(define gsl_rng_knuthran2002
+  (foreign-value "gsl_rng_knuthran2002" gsl_rng_type))
+
+(define gsl_rng_knuthran
+  (foreign-value "gsl_rng_knuthran" gsl_rng_type))
+
+(define gsl_rng_borosh13
+  (foreign-value "gsl_rng_borosh13" gsl_rng_type))
+
+(define gsl_rng_fishman18
+  (foreign-value "gsl_rng_fishman18" gsl_rng_type))
+
+(define gsl_rng_fishman20
+  (foreign-value "gsl_rng_fishman20" gsl_rng_type))
+
+(define gsl_rng_lecuyer21
+  (foreign-value "gsl_rng_lecuyer21" gsl_rng_type))
+
+(define gsl_rng_waterman14
+  (foreign-value "gsl_rng_waterman14" gsl_rng_type))
+
+(define gsl_rng_fishman2x
+  (foreign-value "gsl_rng_fishman2x" gsl_rng_type))
+
+(define gsl_rng_coveyou
+  (foreign-value "gsl_rng_coveyou" gsl_rng_type))
