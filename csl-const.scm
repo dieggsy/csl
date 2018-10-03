@@ -1,5 +1,15 @@
 (module csl-const ()
-  (import chicken scheme foreign irregex srfi-13)
+  (import scheme
+          (chicken module)
+          (chicken base)
+          (chicken foreign)
+          (chicken irregex)
+          (chicken syntax)
+          (chicken string)
+          srfi-13)
+  (import-for-syntax srfi-13
+                     (chicken irregex)
+                     (chicken string))
   (foreign-declare "#include <gsl/gsl_const_mksa.h>")
   (foreign-declare "#include <gsl/gsl_const_cgsm.h>")
   (foreign-declare "#include <gsl/gsl_const.h>")
@@ -17,11 +27,11 @@
                          name)))
        (define (get-csl-name name type)
          (string->symbol
-          (conc "csl:"
-                (if (eq? type cgsm:)
-                    "cgsm-"
-                    "")
-                name)))
+          (conc ;; "csl:"
+           (if (eq? type cgsm:)
+               "cgsm-"
+               "")
+           name)))
        (define (make-standard-defs name type)
          (let* ((strname (get-gsl-name name type))
                 (def `(begin
@@ -107,8 +117,8 @@
   (def-const unit: "HOUR")
   (def-const unit: "DAY")
   (def-const unit: "WEEK")
-  (define csl:year (* 365.25 csl:day))
-  (define csl:cgsm-year (* 365.25 csl:day))
+  (define year (* 365.25 day))
+  (define cgsm-year (* 365.25 day))
 
   (def-const unit: "INCH" in)
   (def-const unit: "FOOT" ft)
