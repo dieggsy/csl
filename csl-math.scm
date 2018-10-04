@@ -1,138 +1,190 @@
-(module csl-math ()
-  (import chicken scheme foreign irregex extras)
+;; Compile with -L -lgsl -L -lgslcblas
+(module csl.math (e
+                  log2e
+                  log10e
+                  sqrt2
+                  sqrt1/2
+                  sqrt3
+                  pi
+                  pi/2
+                  pi/4
+                  sqrtpi
+                  2/sqrtpi
+                  1/pi
+                  2/pi
+                  ln10
+                  ln2
+                  lnpi
+                  euler
+                  +inf
+                  -inf
+                  nan
+                  nan?
+                  inf?
+                  finite?
+                  log1+
+                  exp-1
+                  hypot
+                  cosh
+                  acosh
+                  sinh
+                  asinh
+                  tanh
+                  atanh
+                  ldexp
+                  frexp
+                  expt-int
+                  expt2
+                  expt3
+                  expt4
+                  expt5
+                  expt6
+                  expt7
+                  expt8
+                  expt9
+                  sign
+                  odd?
+                  even?
+                  max-dbl
+                  min-dbl
+                  max-int
+                  min-int
+                  max-ldbl
+                  min-ldbl
+                  fcmp)
+
+  (import scheme (chicken foreign))
+
   (foreign-declare "#include <gsl/gsl_math.h>")
-
-  (define-syntax def-const
-    (ir-macro-transformer
-     (lambda (e i c)
-       (let* ((type (cadr e))
-              (name (caddr e))
-              (gsl-name (string-upcase (conc type "_" name)))
-              (csl-name
-               (string->symbol
-                (conc "csl:"
-                      (if (null? (cdddr e))
-                          (string-downcase
-                           (irregex-replace/all "_" name "-"))
-                          (strip-syntax
-                           (cadddr e)))))))
-         `(begin
-            (export ,(string->symbol gsl-name))
-            (define ,(string->symbol gsl-name)
-              (foreign-value ,gsl-name double))
-            (export ,csl-name)
-            (define ,csl-name ,(string->symbol gsl-name)))))))
-
-  (define-syntax def-cfn
-    (ir-macro-transformer
-     (lambda (e i c)
-       (let* ((name (cadadr e))
-              (gsl-name (conc "gsl_" name))
-              (csl-name
-               (string->symbol
-                (conc "csl:"
-                      (if (null? (cddr e))
-                          (irregex-replace/all "_" name "-")
-                          (strip-syntax
-                           (caddr e))))))
-              (args (cddadr e)))
-         `(begin
-            (export ,(string->symbol gsl-name))
-            (define ,(string->symbol gsl-name)
-              (foreign-lambda ,(caadr e) ,gsl-name ,@args))
-            (export ,csl-name)
-            (define ,csl-name
-              ,(string->symbol gsl-name)))))))
-
-  (define-syntax def-cmacro
-    (ir-macro-transformer
-     (lambda (e i c)
-       (let* ((name (cadadr e))
-              (gsl-name (conc "GSL_" name))
-              (csl-name
-               (string->symbol
-                (conc "csl:"
-                      (if (null? (cddr e))
-                          (string-downcase
-                           (irregex-replace/all "_" name "-"))
-                          (strip-syntax
-                           (caddr e))))))
-              (args (map strip-syntax (car (cddadr e)))))
-         `(begin
-            (export ,(string->symbol gsl-name))
-            (define ,(string->symbol gsl-name)
-              (foreign-lambda* ,(caadr e) ,args
-                ,(format "C_return(~a(~a));" gsl-name
-                         (string-join
-                          (map symbol->string (map cadr args))
-                          ","))))
-            (export ,csl-name)
-            (define ,csl-name
-              ,(string->symbol gsl-name)))))))
+  (foreign-declare "#include <math.h>")
 
   ;; Constants
-  (def-const m: "E")
-  (def-const m: "LOG2E")
-  (def-const m: "LOG10E")
-  (def-const m: "SQRT2")
-  (def-const m: "SQRT1_2" sqrt1/2)
-  (def-const m: "SQRT3")
-  (def-const m: "PI")
-  (def-const m: "PI_2" pi/2)
-  (def-const m: "PI_4" pi/4)
-  (def-const m: "SQRTPI")
-  (def-const m: "2_SQRTPI" 2/sqrtpi)
-  (def-const m: "1_PI" 1/pi)
-  (def-const m: "2_PI" 2/pi)
-  (def-const m: "LN10")
-  (def-const m: "LN2")
-  (def-const m: "LNPI")
-  (def-const m: "EULER")
+  (define e (foreign-value "M_E" double))
+  (define log2e (foreign-value "M_LOG2E" double))
+  (define log10e (foreign-value "M_LOG10E" double))
+  (define sqrt2 (foreign-value "M_SQRT2" double))
+  (define sqrt1/2 (foreign-value "M_SQRT1_2" double))
+  (define sqrt3 (foreign-value "M_SQRT3" double))
+  (define pi (foreign-value "M_PI" double))
+  (define pi/2 (foreign-value "M_PI_2" double))
+  (define pi/4 (foreign-value "M_PI_4" double))
+  (define sqrtpi (foreign-value "M_SQRTPI" double))
+  (define 2/sqrtpi (foreign-value "M_2_SQRTPI" double))
+  (define 1/pi (foreign-value "M_1_PI" double))
+  (define 2/pi (foreign-value "M_2_PI" double))
+  (define ln10 (foreign-value "M_LN10" double))
+  (define ln2 (foreign-value "M_LN2" double))
+  (define lnpi (foreign-value "M_LNPI" double))
+  (define euler (foreign-value "M_EULER" double))
 
   ;; Infinities and NAN
-  (def-const gsl: "POSINF" +inf)
-  (def-const gsl: "NEGINF" -inf)
-  (def-const gsl: "NAN")
+  (define +inf (foreign-value "GSL_POSINF" double))
+  (define -inf (foreign-value "GSL_NEGINF" double))
+  (define nan (foreign-value "GSL_NAN" double))
 
-  (def-cfn (bool "isnan" (const double)) nan?)
-  (def-cfn (bool "isinf" (const double)) inf?)
-  (def-cfn (bool "finite" (const double)) finite?)
+
+  (define nan? (foreign-lambda bool "gsl_isnan" (const double)))
+  (define inf? (foreign-lambda bool "gsl_isinf" (const double)))
+  (define finite? (foreign-lambda bool "gsl_finite" (const double)))
 
   ;; Elementary functions
-  (def-cfn (double "log1p" (const double)))
-  (def-cfn (double "hypot" (const double) (const double)))
-  (def-cfn (double "hypot3" (const double) (const double) (const double)))
-  (def-cfn (double "acosh" (const double)))
-  (def-cfn (double "asinh" (const double)))
-  (def-cfn (double "atanh" (const double)))
-  (def-cfn (double "ldexp" double int))
-  (def-cfn (double "frexp" double (c-pointer int)))
+  (define log1+ (foreign-lambda double "gsl_log1p" (const double)))
+  (define exp-1 (foreign-lambda double "gsl_expm1" (const double)))
+  (define hypot2 (foreign-lambda double "gsl_hypot" (const double) (const double)))
+  (define hypot3 (foreign-lambda double "gsl_hypot3" (const double) (const double) (const double)))
+  (define (hypot a b #!optional c)
+    (if c
+        (hypot3 a b c)
+        (hypot2 a b)))
+  (define cosh (foreign-lambda double "cosh" (const double)))
+  (define acosh (foreign-lambda double "gsl_acosh" (const double)))
+  (define sinh (foreign-lambda double "sinh" (const double)))
+  (define asinh (foreign-lambda double "gsl_asinh" (const double)))
+  (define tanh (foreign-lambda double "tanh" (const double)))
+  (define atanh (foreign-lambda double "gsl_atanh" (const double)))
+  (define ldexp (foreign-lambda double "gsl_ldexp" double int))
+  (define frexp
+    (foreign-primitive ((double x))
+        "int e;"
+      "double f = gsl_frexp(x,&e);"
+      "C_word *fptr = C_alloc(C_SIZEOF_FLONUM);"
+      "C_word *iptr = C_alloc(C_SIZEOF_FIX_BIGNUM);"
+      "C_word av[4] = {C_SCHEME_UNDEFINED, C_k, C_flonum(&fptr, f), C_int_to_num(&iptr, e)};"
+      "C_values(4,av);"))
 
   ;; Small integer powers
-  (def-cfn (double "pow_int" double int) expt-int)
-  (def-cfn (double "pow_uint" double unsigned-int) expt-uint)
-  (def-cfn (double "pow_2" (const double)) expt2)
-  (def-cfn (double "pow_3" (const double)) expt3)
-  (def-cfn (double "pow_4" (const double)) expt4)
-  (def-cfn (double "pow_5" (const double)) expt5)
-  (def-cfn (double "pow_6" (const double)) expt6)
-  (def-cfn (double "pow_7" (const double)) expt7)
-  (def-cfn (double "pow_8" (const double)) expt8)
-  (def-cfn (double "pow_9" (const double)) expt9)
+  (define expt-int (foreign-lambda  double "gsl_pow_int" double int))
+  ;; (define expt-uint (foreign-lambda  double "pow-uint" double int))
+  (define expt2 (foreign-lambda double "gsl_pow_2" (const double)))
+  (define expt3 (foreign-lambda double "gsl_pow_3" (const double)))
+  (define expt4 (foreign-lambda double "gsl_pow_4" (const double)))
+  (define expt5 (foreign-lambda double "gsl_pow_5" (const double)))
+  (define expt6 (foreign-lambda double "gsl_pow_6" (const double)))
+  (define expt7 (foreign-lambda double "gsl_pow_7" (const double)))
+  (define expt8 (foreign-lambda double "gsl_pow_8" (const double)))
+  (define expt9 (foreign-lambda double "gsl_pow_9" (const double)))
 
-  (def-cmacro (int "SIGN" ((double x))))
-  (def-cmacro (bool "IS_ODD" ((int x))) odd?)
-  (def-cmacro (bool "IS_EVEN" ((int x))) even?)
+  (define sign (foreign-lambda* int ((double x)) "C_return(GSL_SIGN(x));"))
+  (define odd? (foreign-lambda* bool ((int x)) "C_return(GSL_IS_ODD(x));"))
+  (define even? (foreign-lambda* bool ((int x)) "C_return(GSL_IS_EVEN(x));"))
 
   ;; Maximum and minimum functions
-  (def-cmacro (double "MAX" ((double a) (double b))))
-  (def-cmacro (double "MIN" ((double a) (double b))))
-  (def-cmacro (double "MAX_DBL" ((double a) (double b))))
-  (def-cmacro (double "MIN_DBL" ((double a) (double b))))
-  (def-cmacro (int "MAX_INT" ((int a) (int b))))
-  (def-cmacro (int "MIN_INT" ((int a) (int b))))
-  (def-cmacro (long "MAX_LDBL" ((long a) (long b))))
-  (def-cmacro (long "MIN_LDBL" ((long a) (long b))))
+  ;; (define %max (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX(a,b));"))
+  ;; (define (max . args)
+  ;;   (let loop ((r args)
+  ;;              (m 0))
+  ;;     (if (null? r)
+  ;;         m
+  ;;         (loop (cdr r) (%max (car r) m)))))
+  ;; (define %min (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN(a,b));"))
+  ;; (define (min . args)
+  ;;   (let loop ((r args)
+  ;;              (m 0))
+  ;;     (if (null? r)
+  ;;         m
+  ;;         (loop (cdr r) (%min (car r) m)))))
+  (define %max-dbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX_DBL(a,b));"))
+  (define (max-dbl . args)
+    (let loop ((r args)
+               (m 0))
+      (if (null? r)
+          m
+          (loop (cdr r) (%max-dbl (car r) m)))))
+  (define %min-dbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN_DBL(a,b));"))
+  (define (min-dbl . args)
+    (let loop ((r args)
+               (m 0))
+      (if (null? r)
+          m
+          (loop (cdr r) (%min-dbl (car r) m)))))
+  (define %max-int (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX_INT(a,b));"))
+  (define (max-int . args)
+    (let loop ((r args)
+               (m 0))
+      (if (null? r)
+          m
+          (loop (cdr r) (%max-int (car r) m)))))
+  (define %min-int (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN_INT(a,b));"))
+  (define (min-int . args)
+    (let loop ((r args)
+               (m 0))
+      (if (null? r)
+          m
+          (loop (cdr r) (%min-int (car r) m)))))
+  (define %max-ldbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX_LDBL(a,b));"))
+  (define (max-ldbl . args)
+    (let loop ((r args)
+               (m 0))
+      (if (null? r)
+          m
+          (loop (cdr r) (%max-ldbl (car r) m)))))
+  (define %min-ldbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN_LDBL(a,b));"))
+  (define (min-ldbl . args)
+    (let loop ((r args)
+               (m 0))
+      (if (null? r)
+          m
+          (loop (cdr r) (%min-ldbl (car r) m)))))
 
   ;; Approximate comparison of floating point numbers
-  (def-cfn (double "fcmp" double double double)))
+  (define fcmp (foreign-lambda int "gsl_fcmp" double double double)))
