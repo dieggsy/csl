@@ -1,57 +1,57 @@
 ;; Compile with -L -lgsl -L -lgslcblas
-(module csl.math (e
-                  log2e
-                  log10e
-                  sqrt2
-                  sqrt1/2
-                  sqrt3
-                  pi
-                  pi/2
-                  pi/4
-                  sqrtpi
-                  2/sqrtpi
-                  1/pi
-                  2/pi
-                  ln10
-                  ln2
-                  lnpi
-                  euler
-                  +inf
-                  -inf
-                  nan
-                  nan?
-                  inf?
-                  finite?
-                  log1+
-                  exp-1
-                  hypot
-                  cosh
-                  acosh
-                  sinh
-                  asinh
-                  tanh
-                  atanh
-                  ldexp
-                  frexp
-                  expt-int
-                  expt2
-                  expt3
-                  expt4
-                  expt5
-                  expt6
-                  expt7
-                  expt8
-                  expt9
-                  sign
-                  odd?
-                  even?
-                  max-dbl
-                  min-dbl
-                  max-int
-                  min-int
-                  max-ldbl
-                  min-ldbl
-                  fcmp)
+(module csl.rmath (e
+                   log2e
+                   log10e
+                   sqrt2
+                   sqrt1/2
+                   sqrt3
+                   pi
+                   pi/2
+                   pi/4
+                   sqrtpi
+                   2/sqrtpi
+                   1/pi
+                   2/pi
+                   ln10
+                   ln2
+                   lnpi
+                   euler
+                   +inf
+                   -inf
+                   nan
+                   nan?
+                   inf?
+                   finite?
+                   log1+
+                   exp-1
+                   hypot
+                   cosh
+                   acosh
+                   sinh
+                   asinh
+                   tanh
+                   atanh
+                   ldexp
+                   frexp
+                   expt-int
+                   expt2
+                   expt3
+                   expt4
+                   expt5
+                   expt6
+                   expt7
+                   expt8
+                   expt9
+                   sign
+                   odd?
+                   even?
+                   max-dbl
+                   min-dbl
+                   max-int
+                   min-int
+                   max-ldbl
+                   min-ldbl
+                   fcmp)
 
   (import scheme (chicken foreign))
 
@@ -84,7 +84,7 @@
 
 
   (define nan? (foreign-lambda bool "gsl_isnan" (const double)))
-  (define inf? (foreign-lambda bool "gsl_isinf" (const double)))
+  (define infinite? (foreign-lambda bool "gsl_isinf" (const double)))
   (define finite? (foreign-lambda bool "gsl_finite" (const double)))
 
   ;; Elementary functions
@@ -129,20 +129,20 @@
   (define even? (foreign-lambda* bool ((int x)) "C_return(GSL_IS_EVEN(x));"))
 
   ;; Maximum and minimum functions
-  ;; (define %max (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX(a,b));"))
-  ;; (define (max . args)
-  ;;   (let loop ((r args)
-  ;;              (m 0))
-  ;;     (if (null? r)
-  ;;         m
-  ;;         (loop (cdr r) (%max (car r) m)))))
-  ;; (define %min (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN(a,b));"))
-  ;; (define (min . args)
-  ;;   (let loop ((r args)
-  ;;              (m 0))
-  ;;     (if (null? r)
-  ;;         m
-  ;;         (loop (cdr r) (%min (car r) m)))))
+  (define %max (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX(a,b));"))
+  (define (max . args)
+    (let loop ((r args)
+               (m 0))
+      (if (null? r)
+          m
+          (loop (cdr r) (%max (car r) m)))))
+  (define %min (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN(a,b));"))
+  (define (min . args)
+    (let loop ((r args)
+               (m 0))
+      (if (null? r)
+          m
+          (loop (cdr r) (%min (car r) m)))))
   (define %max-dbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX_DBL(a,b));"))
   (define (max-dbl . args)
     (let loop ((r args)
