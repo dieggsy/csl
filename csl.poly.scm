@@ -155,8 +155,13 @@
         (values z0 z1))))
 
   (define (solve-quadratic* a b c)
-    (define (sign n) (if (positive? n) -1 1))
-    (let ((q (* -1/2 (+ b (* (sign b) (sqrt (- (expt b 2) (* 4 a c))))))))
+    (define (conj x)
+      (if (cplxnum? x)
+          (make-rectangular (real-part x) (- (imag-part x)))
+          x))
+    (let* ((disc (sqrt (- (expt b 2) (* 4 a c))))
+           (sign (if (>= 0 (real-part (* (conj b) disc))) 1 -1))
+           (q (* -1/2 (+ b (* sign disc)))))
       (values (/ q a) (/ c q))))
 
   (define (solve-cubic a b c)
