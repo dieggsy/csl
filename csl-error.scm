@@ -1,3 +1,5 @@
+(import (chicken format))
+
 (foreign-declare "#include <gsl/gsl_errno.h>")
 
 (define gsl_set_error_handler
