@@ -41,93 +41,33 @@
                    coth
                    acoth)
 
-  (import (except (rename scheme
-                          (make-rectangular %make-rectangular))
-                  + - * / sqrt expt exp log sin asin cos acos tan atan)
+  (import (except scheme
+                  magnitude
+                  make-polar
+                  angle
+                  +
+                  -
+                  *
+                  /
+                  sqrt
+                  expt
+                  exp
+                  log
+                  sin
+                  asin
+                  cos
+                  acos
+                  tan
+                  atan
+                  make-rectangular)
+          (chicken base)
           (chicken module)
           (chicken foreign))
-
-  (import-for-syntax (srfi 1)
-                     (srfi 13)
-                     (chicken format)
-                     (chicken foreign)
-                     (chicken string))
 
   (foreign-declare "#include <gsl/gsl_complex.h>")
   (foreign-declare "#include <gsl/gsl_complex_math.h>")
 
-  (define-syntax complex-foreign-lambda
-    (ir-macro-transformer
-     (lambda (e i c)
-       (define (make-gensym sym)
-         (case (strip-syntax sym)
-           ((double) (gensym "x"))
-           ((complex) (gensym "z"))))
-       (define (make-letvars args)
-         (let* ((only-complex (filter (lambda (x)
-                                        (eq? (car x) 'complex))
-                                      args))
-                (only-names (map cadr only-complex)))
-           (fold (lambda (x y)
-                   (cons
-                    `(,(string->symbol (conc "r" x)) (real-part ,x))
-                    (cons
-                     `(,(string->symbol (conc "i" x)) (imag-part ,x))
-                     y)))
-                 '()
-                 only-names)))
-       (define (make-foreign-args* foreign-args)
-         (fold (lambda (x y)
-                 (if (eq? (car x) 'complex)
-                     (cons `(double ,(string->symbol (conc "r" (cadr x))))
-                           (cons `(double ,(string->symbol (conc "i" (cadr x))))
-                                 y))
-                     (cons x y)))
-               '()
-               (reverse foreign-args)))
-       (define (make-inits args)
-         (let* ((only-complex (filter (lambda (x)
-                                        (eq? (car x) 'complex))
-                                      args)))
-           (fold (lambda (x y)
-                   (cons
-                    (let ((name (cadr x)))
-                      (format "gsl_complex ~a = gsl_complex_rect(~a,~a);"
-                              (symbol->string name)
-                              (conc "r" name)
-                              (conc "i" name)))
-                    y))
-                 '()
-                 only-complex)))
-       (define (make-return ret-type fn names)
-         (let ((strargs (string-join (map symbol->string names) ",")))
-           (if (eq? ret-type 'scheme-object)
-               `(,(format "gsl_complex out = ~a(~a);" fn strargs)
-                 ,(format "C_return(numbers_make_rect(GSL_REAL(out),GSL_IMAG(out)));"))
-               `(,(format "C_return(~a(~a));" fn strargs)))))
-       (let* ((name (caddr e))
-              (arg-types (map strip-syntax (cdddr e)))
-              (arg-names (map make-gensym (cdddr e)))
-              (foreign-args (zip arg-types arg-names))
-              (foreign-args* (make-foreign-args* foreign-args))
-              (letvars (make-letvars foreign-args))
-              (ret-type (if (eq? (strip-syntax (cadr e)) 'complex)
-                            'scheme-object
-                            (strip-syntax (cadr e)))))
-         (if (null? letvars)
-             `(foreign-safe-lambda* ,ret-type ,foreign-args*
-                ,@(make-inits foreign-args)
-                ,@(make-return ret-type name arg-names))
-             `(lambda ,arg-names
-                (let (,@letvars)
-                  ((foreign-safe-lambda* ,ret-type ,foreign-args*
-                     ,@(make-inits foreign-args)
-                     ,@(make-return ret-type name arg-names))
-                   ,@(map car letvars)))))))))
-
-  ;; TODO concerns about memory allocation with complex numbers?
-  (define-external (numbers_make_rect (double r) (double i)) scheme-object
-    (%make-rectangular r i))
+  (include "complex-foreign-lambda.scm")
 
   ;; Representation/conversion
   (define make-rectangular (complex-foreign-lambda complex "gsl_complex_rect" double double))
