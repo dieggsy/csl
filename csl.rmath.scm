@@ -20,7 +20,7 @@
                    -inf
                    nan
                    nan?
-                   inf?
+                   infinite?
                    finite?
                    log1+
                    exp-1
@@ -53,7 +53,12 @@
                    min-ldbl
                    fcmp)
 
-  (import scheme (chicken foreign))
+  (import (except scheme
+                  odd?
+                  even?
+                  max
+                  min)
+          (chicken foreign))
 
   (foreign-declare "#include <gsl/gsl_math.h>")
   (foreign-declare "#include <math.h>")
