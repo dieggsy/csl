@@ -46,14 +46,10 @@
        i)))
 
   (define (poly-eval* c z)
-    (let loop ((const c)
-               (pow 0)
-               (val 0))
-      (if (null? const)
-          val
-          (loop (cdr const)
-                (+ pow 1)
-                (+ val (* (car const) (expt z pow)))))))
+    (do ((const c (cdr const))
+         (pow 0 (+ pow 1))
+         (val 0 (+ val (* (car const) (expt z pow)))))
+        ((null? const) val)))
 
   (define (poly-eval-derivs c x #!optional (num-derivs (length c)))
     (let* ((len (length c))

@@ -88,23 +88,14 @@
       (do ((i 0 (+ i 1))
            (lst lst (cdr lst)))
           ((= i len) (ptr->vector v))
-        (vset! v i (car lst)))
-      ;; (let loop ((i 0)
-      ;;            (lst lst))
-      ;;   (vset! v i (car lst))
-      ;;   (if (= i (- len 1))
-      ;;       (ptr->vector v)
-      ;;       (loop (+ i 1) (cdr lst))))
-      ))
+        (vset! v i (car lst)))))
 
   (define (vector->list v)
     (let* ((ptr (vector->ptr v))
            (len (vlength ptr)))
-      (let loop ((i (- len 1))
-                 (res '()))
-        (if (= i -1)
-            res
-            (loop (- i 1) (cons (vref ptr i) res))))))
+      (do ((i (- len 1) (- i 1))
+           (res '() (cons (vref ptr i) res)))
+          ((= i -1) res))))
 
   (define (vector . args)
     (list->vector args))
@@ -122,28 +113,16 @@
     (let* ((len (apply min (map vector-length v)))
            (d (map vector->ptr v))
            (r (valloc len)))
-      (let loop ((i (- len 1)))
-        (if (= i -1)
-            (ptr->vector r)
-            (begin
-              (vset!
-               r
-               i
-               (apply f (map (cut vref <> i) d)))
-              (loop (- i 1)))))))
+      (do ((i 0 (+ i 1)))
+          ((= i len) (ptr->vector r))
+        (vset! r i (apply f (map (cut vref <> i) d))))))
 
   (define (vector-map! f . v)
     (let* ((len (apply min (map vector-length v)))
            (d (map vector->ptr v)))
-      (let loop ((i (- len 1)))
-        (if (= i -1)
-            (void)
-            (begin
-              (vset!
-               (car d)
-               i
-               (apply f (map (cut vref <> i) d)))
-              (loop (- i 1)))))))
+      (do ((i 0 (+ i 1)))
+          ((= i len))
+        (vset! (car d) i (apply f (map (cut vref <> i) d))))))
 
   (define (vector-ref v i)
     (vref (vector->ptr v) i))
