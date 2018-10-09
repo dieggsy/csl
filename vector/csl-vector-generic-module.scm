@@ -264,7 +264,7 @@
                         (chicken foreign)
                         foreigners)
 
-                (include "csl-error.scm")
+                (include "../csl-error.scm")
 
 
                 (foreign-declare ,(format "#include <gsl/gsl_block~a.h>"
@@ -277,10 +277,13 @@
                                                                     ""
                                                                     (string-append "_" (symbol->string (strip-syntax base-type))))))
                   (unsigned-int size gsl_block.size)
-                  ((c-pointer double) data gsl_block.data))
+                  ((c-pointer ,base-type) data gsl_block.data))
                 ;; (include "gsl-block.scm")
 
-                (foreign-declare ,(format "#include <gsl/~a.h>" file-prefix))
+                (foreign-declare ,(format "#include <gsl/~a.h>"
+                                          (if (equal? file-prefix "gsl_vector")
+                                              "gsl_vector_double"
+                                              file-prefix)))
 
                 (define-foreign-record-type (gsl_vector ,file-prefix)
                   (unsigned-int size vlength)
@@ -357,10 +360,10 @@
                   (foreign-safe-lambda int ,(format "~a_div" file-prefix) gsl_vector gsl_vector))
 
                 (define v*c
-                  (foreign-safe-lambda int ,(format "~a_scale" file-prefix) gsl_vector double))
+                  (foreign-safe-lambda int ,(format "~a_scale" file-prefix) gsl_vector ,base-type))
 
                 (define v+c
-                  (foreign-safe-lambda int ,(format "~a_add_constant" file-prefix) gsl_vector double))
+                  (foreign-safe-lambda int ,(format "~a_add_constant" file-prefix) gsl_vector ,base-type))
 
                 ;; Finding max and min elements of vectors
                 (define vmax (foreign-safe-lambda ,base-type ,(format "~a_max" file-prefix) gsl_vector))
@@ -379,3 +382,153 @@
                     (vfill! v 0)
                     v))
                 (define (vreal v) v))))))
+
+(define-syntax make-zvector-module
+  (ir-macro-transformer
+   (lambda (e i c)
+     (let ((file-prefix (caddr e))
+           (base-type (cadddr e)))
+       `(module ,(cadr e) = generic-vector
+                (import scheme
+                        (chicken base)
+                        (chicken gc)
+                        (chicken foreign)
+                        foreigners)
+
+                (include "../csl-error")
+                (include "../complex-foreign-lambda.scm")
+
+                (define-external (scheme_make_rect (,base-type r) (,base-type i)) scheme-object
+                  (%make-rectangular r i))
+
+                (foreign-declare ,(format "#include <gsl/gsl_block_complex~a.h>"
+                                          (string-append "_" (symbol->string (strip-syntax base-type)))))
+
+                (define-foreign-record-type (gsl_block ,(format "gsl_block_complex~a"
+                                                                (if (eq? base-type (i 'double))
+                                                                    ""
+                                                                    (string-append "_" (symbol->string (strip-syntax base-type))))))
+                  (unsigned-int size gsl_block.size)
+                  ((c-pointer ,base-type) data gsl_block.data))
+                ;; (include "gsl-block.scm")
+
+                (foreign-declare ,(format "#include <gsl/~a.h>"
+                                          (if (equal? file-prefix "gsl_vector_complex")
+                                              "gsl_vector_complex_double"
+                                              file-prefix)))
+                (foreign-declare "#include <gsl/gsl_complex.h>")
+                (foreign-declare "#include <gsl/gsl_complex_math.h>")
+
+                (define-foreign-record-type (gsl_vector ,file-prefix)
+                  (unsigned-int size vlength)
+                  (unsigned-int stride gsl_vector.stride)
+                  ((c-pointer ,base-type) data gsl_vector.data)
+                  (gsl_block block gsl_vector.block)
+                  (int owner gsl_vector.owner))
+
+                ;; Vector allocation
+                (define gsl_vector_free
+                  (foreign-safe-lambda void ,(format "~a_free" file-prefix) gsl_vector))
+
+                (define gsl_vector_alloc
+                  (foreign-safe-lambda gsl_vector ,(format "~a_alloc" file-prefix) unsigned-int))
+                (define (valloc n)
+                  (set-finalizer! (gsl_vector_alloc n) gsl_vector_free))
+
+                ;; Accessing vector elements
+                (define vref
+                  (complex-foreign-lambda (complex ,base-type) ,(format "~a_get" file-prefix)
+                                          (const gsl_vector)
+                                          (const unsigned-int)))
+
+                (define vset!
+                  (complex-foreign-lambda void ,(format "~a_set" file-prefix)
+                                          gsl_vector
+                                          (const unsigned-int)
+                                          (complex ,base-type)))
+
+                ;; Initializing vector elements
+                (define vfill!
+                  (complex-foreign-lambda void ,(format "~a_set_all" file-prefix) gsl_vector (complex ,base-type)))
+
+                ;; (define gsl_vector_set_zero
+                ;;   (complex-foreign-lambda void ,(format "~a_set_zero" file-prefix) gsl_vector))
+
+                (define vbasis!
+                  (foreign-safe-lambda void ,(format "~a_set_basis" file-prefix) gsl_vector unsigned-int))
+
+                ;; Vector views
+                (define vsubvector
+                  (foreign-safe-lambda* gsl_vector ((gsl_vector v)
+                                                    (unsigned-int offset)
+                                                    (unsigned-int stride)
+                                                    (unsigned-int n))
+                    "gsl_vector_complex *p0 = gsl_vector_complex_alloc(v->size);"
+                    "gsl_vector_complex_view p1 = gsl_vector_complex_subvector_with_stride(v,offset,stride,n);"
+                    "memcpy(p0, &p1.vector, sizeof(gsl_vector_complex));"
+                    "C_return(p0);"))
+
+                ;; Copying vectors
+                (define vcopy!
+                  (foreign-safe-lambda int ,(format "~a_memcpy" file-prefix) gsl_vector gsl_vector))
+
+                ;; Exchanging elements
+                (define vswap!
+                  (foreign-safe-lambda int ,(format "~a_swap_elements" file-prefix)
+                    gsl_vector unsigned-int unsigned-int))
+                (define vreverse!
+                  (foreign-safe-lambda int ,(format "~a_reverse" file-prefix) gsl_vector))
+
+                ;; Vector operations
+                (define v+
+                  (foreign-safe-lambda int ,(format "~a_add" file-prefix) gsl_vector gsl_vector))
+
+                (define v-
+                  (foreign-safe-lambda int ,(format "~a_sub" file-prefix) gsl_vector gsl_vector))
+
+                (define v*
+                  (foreign-safe-lambda int ,(format "~a_mul" file-prefix) gsl_vector gsl_vector))
+
+                (define v/
+                  (foreign-safe-lambda int ,(format "~a_div" file-prefix) gsl_vector gsl_vector))
+
+                (define v*c
+                  (complex-foreign-lambda
+                   int ,(format "~a_scale" file-prefix)
+                   gsl_vector (complex ,base-type)))
+
+                (define v+c
+                  (complex-foreign-lambda
+                   int ,(format "~a_add_constant" file-prefix)
+                   gsl_vector (complex ,base-type)))
+
+                ;; Finding max and min elements of vectors
+                (define (vmax v) (error "Complex numbers have no ordering."))
+                (define (vmin v) (error "Complex numbers have no ordering."))
+                (define (vargmax v) (error "Complex numbers have no ordering."))
+                (define (vargmin v) (error "Complex numbers have no ordering."))
+
+                ;; Vector properties
+                (define vnull? (foreign-safe-lambda bool ,(format "~a_isnull" file-prefix) gsl_vector))
+                (define vpositive? (foreign-safe-lambda bool ,(format "~a_ispos" file-prefix) gsl_vector))
+                (define vnegative? (foreign-safe-lambda bool ,(format "~a_isneg" file-prefix) gsl_vector))
+                (define vnonnegative? (foreign-safe-lambda bool ,(format "~a_isnonneg" file-prefix) gsl_vector))
+                (define vequal? (foreign-safe-lambda bool ,(format "~a_equal" file-prefix) gsl_vector gsl_vector))
+                (define vimag
+                  (foreign-safe-lambda* gsl_vector ((gsl_vector v))
+                    "gsl_vector_complex *p0 = gsl_vector_complex_alloc(v->size);"
+                    "gsl_vector_view p1 = gsl_vector_complex_imag(v);"
+                    "for (int i = 0; i < v->size; i++) { "
+                    "double iz = gsl_vector_get(&p1.vector, i);"
+                    "gsl_vector_complex_set(p0,i,gsl_complex_rect(0, iz));"
+                    "}"
+                    "C_return(p0);"))
+                (define vreal
+                  (foreign-safe-lambda* gsl_vector ((gsl_vector v))
+                    "gsl_vector_complex *p0 = gsl_vector_complex_alloc(v->size);"
+                    "gsl_vector_view p1 = gsl_vector_complex_real(v);"
+                    "for (int i = 0; i < v->size; ++i) { "
+                    "double rz = gsl_vector_get(&p1.vector, i);"
+                    "gsl_vector_complex_set(p0,i,gsl_complex_rect(rz, 0));"
+                    "}"
+                    "C_return(p0);")))))))
