@@ -68,15 +68,17 @@
          (let ((strargs (string-join (map (lambda (x)
                                             (symbol->string (car x)))
                                           named-args) ",")))
-           (if (and (pair? ret-type)
-                    (eq? 'complex (car ret-type)))
-               `(,(format "gsl_complex~a out = ~a(~a);"
-                          (if (eq? (cadr ret-type) 'double)
-                              ""
-                              (conc "_" (cadr ret-type)))
-                          fn strargs)
-                 ,(format "C_return(scheme_make_rect(GSL_REAL(out),GSL_IMAG(out)));"))
-               `(,(format "C_return(~a(~a));" fn strargs)))))
+           (cond ((and (pair? ret-type)
+                       (eq? 'complex (car ret-type)))
+                  `(,(format "gsl_complex~a out = ~a(~a);"
+                             (if (eq? (cadr ret-type) 'double)
+                                 ""
+                                 (conc "_" (cadr ret-type)))
+                             fn strargs)
+                    ,(format "C_return(scheme_make_rect(GSL_REAL(out),GSL_IMAG(out)));")))
+                 ((eq? ret-type 'void)
+                  `(,(format "~a(~a);" fn strargs)))
+                 (else `(,(format "C_return(~a(~a));" fn strargs))))))
        (let* ((foreign-args (make-foreign-args named-args))
               (letvars (make-letvars named-args))
               (inits (make-inits named-args))
