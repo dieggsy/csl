@@ -33,9 +33,13 @@
      vector-map
      vector-map!
      vector-ref
+     vector-set
      vector-set!
+     vector-fill
      vector-fill!
      vector-copy
+     vector-copy!
+     vector-swap
      vector-swap!
      vector-reverse
      vector-reverse!
@@ -74,7 +78,7 @@
                     vector-ref
                     vector-fill!
                     vector-set!)
-            (except (chicken base) subvector)
+            (except (chicken base) subvector vector-copy!)
             M)
 
   (define-record-type vector
@@ -134,26 +138,47 @@
                              (inexact->exact
                               (ceiling (/ (- b a) stride))))))
 
+  (define (vector-set v i n)
+    (let* ((ptr (vector->ptr v))
+           (new (valloc (vlength ptr))))
+      (vcopy! ptr new)
+      (vset! new i n)
+      (ptr->vector new)))
+
   (define (vector-set! v i n)
     (vset! (vector->ptr v) i n))
+
+  (define (vector-fill v n)
+    (let* ((ptr (vector->ptr v))
+           (new (valloc (vlength ptr))))
+      (vcopy! ptr new)
+      (vfill! new n)
+      (ptr->vector new)))
 
   (define (vector-fill! v n)
     (vfill! (vector->ptr v) n))
 
   (define (vector-copy v)
-    (let ((c (valloc (vector-length v)))
-          (d (vector->ptr v)))
-      (vcopy! c d)
-      (ptr->vector c)))
+    (let ((new (valloc (vector-length v))))
+      (vcopy! new (vector->ptr v))
+      (ptr->vector new)))
+
+  (define (vector-copy! v1 v2)
+    (vcopy! (vector->ptr v1) (vector->ptr v2)))
+
+  (define (vector-swap v n1 n2)
+    (let ((new ((valloc (vector-length v)))))
+      (vswap! new n1 n2)
+      (ptr->vector new)))
 
   (define (vector-swap! v n1 n2)
     (vswap! (vector->ptr v) n1 n2))
 
   (define (vector-reverse v)
-    (let ((r (valloc (vector-length v))))
-      (vcopy! r (vector->ptr v))
-      (vreverse! r)
-      (ptr->vector r)))
+    (let ((new (valloc (vector-length v))))
+      (vcopy! new (vector->ptr v))
+      (vreverse! new)
+      (ptr->vector new)))
 
   (define (vector-reverse! v)
     (vreverse! (vector->ptr v)))
