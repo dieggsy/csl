@@ -386,8 +386,11 @@
 (define-syntax make-zvector-module
   (ir-macro-transformer
    (lambda (e i c)
-     (let ((file-prefix (caddr e))
-           (base-type (cadddr e)))
+     (let* ((file-prefix (caddr e))
+            (base-type (cadddr e))
+            (type-suffix (if (eq? (strip-syntax base-type) 'double)
+                             ""
+                             (string-append "_" (symbol->string (strip-syntax base-type))))))
        `(module ,(cadr e) = generic-vector
                 (import scheme
                         (chicken base)
@@ -395,29 +398,24 @@
                         (chicken foreign)
                         foreigners)
 
-                (include "../csl-error")
+                (include "../csl-error.scm")
                 (include "../complex-foreign-lambda.scm")
 
                 (define-external (scheme_make_rect (,base-type r) (,base-type i)) scheme-object
                   (%make-rectangular r i))
 
-                (foreign-declare ,(format "#include <gsl/gsl_block_complex~a.h>"
-                                          (string-append "_" (symbol->string (strip-syntax base-type)))))
+                (foreign-declare ,(format "#include <gsl/gsl_block_complex_~a.h>"
+                                          (symbol->string (strip-syntax base-type))))
 
-                (define-foreign-record-type (gsl_block ,(format "gsl_block_complex~a"
-                                                                (if (eq? base-type (i 'double))
-                                                                    ""
-                                                                    (string-append "_" (symbol->string (strip-syntax base-type))))))
+                (define-foreign-record-type (gsl_block ,(format "gsl_block_complex~a" type-suffix))
                   (unsigned-int size gsl_block.size)
                   ((c-pointer ,base-type) data gsl_block.data))
                 ;; (include "gsl-block.scm")
 
-                (foreign-declare ,(format "#include <gsl/~a.h>"
-                                          (if (equal? file-prefix "gsl_vector_complex")
-                                              "gsl_vector_complex_double"
-                                              file-prefix)))
+                (foreign-declare ,(format "#include <gsl/gsl_vector_complex_~a.h>"
+                                          (symbol->string (strip-syntax base-type))))
                 (foreign-declare "#include <gsl/gsl_complex.h>")
-                (foreign-declare "#include <gsl/gsl_complex_math.h>")
+                ;; (foreign-declare "#include <gsl/gsl_complex_math.h>")
 
                 (define-foreign-record-type (gsl_vector ,file-prefix)
                   (unsigned-int size vlength)
@@ -463,9 +461,9 @@
                                                     (unsigned-int offset)
                                                     (unsigned-int stride)
                                                     (unsigned-int n))
-                    "gsl_vector_complex *p0 = gsl_vector_complex_alloc(v->size);"
-                    "gsl_vector_complex_view p1 = gsl_vector_complex_subvector_with_stride(v,offset,stride,n);"
-                    "memcpy(p0, &p1.vector, sizeof(gsl_vector_complex));"
+                    ,(format "~a *p0 = ~a_alloc(v->size);" file-prefix file-prefix)
+                    ,(format "~a_view p1 = ~a_subvector_with_stride(v,offset,stride,n);" file-prefix file-prefix)
+                    ,(format "memcpy(p0, &p1.vector, sizeof(~a));" file-prefix)
                     "C_return(p0);"))
 
                 ;; Copying vectors
@@ -516,19 +514,24 @@
                 (define vequal? (foreign-safe-lambda bool ,(format "~a_equal" file-prefix) gsl_vector gsl_vector))
                 (define vimag
                   (foreign-safe-lambda* gsl_vector ((gsl_vector v))
-                    "gsl_vector_complex *p0 = gsl_vector_complex_alloc(v->size);"
-                    "gsl_vector_view p1 = gsl_vector_complex_imag(v);"
+                    ,(format "~a *p0 = ~a_alloc(v->size);" file-prefix file-prefix)
+                    ,(format "gsl_vector~a_view p1 = ~a_imag(v);" type-suffix file-prefix)
                     "for (int i = 0; i < v->size; i++) { "
-                    "double iz = gsl_vector_get(&p1.vector, i);"
-                    "gsl_vector_complex_set(p0,i,gsl_complex_rect(0, iz));"
+                    ,(format "~a iz = gsl_vector~a_get(&p1.vector, i);" (strip-syntax base-type) type-suffix)
+                    ,(format "gsl_complex~a z;" type-suffix)
+                    "GSL_SET_COMPLEX(&z, 0, iz);"
+                    ,(format "~a_set(p0,i,z);" file-prefix)
                     "}"
                     "C_return(p0);"))
                 (define vreal
                   (foreign-safe-lambda* gsl_vector ((gsl_vector v))
-                    "gsl_vector_complex *p0 = gsl_vector_complex_alloc(v->size);"
-                    "gsl_vector_view p1 = gsl_vector_complex_real(v);"
+                    ,(format "~a *p0 = ~a_alloc(v->size);" file-prefix file-prefix)
+                    ,(format "gsl_vector~a_view p1 = ~a_real(v);" type-suffix file-prefix)
                     "for (int i = 0; i < v->size; ++i) { "
-                    "double rz = gsl_vector_get(&p1.vector, i);"
-                    "gsl_vector_complex_set(p0,i,gsl_complex_rect(rz, 0));"
+                    ,(format "~a rz = gsl_vector~a_get(&p1.vector, i);" (strip-syntax base-type) type-suffix)
+                    ,(format "gsl_complex~a z;" type-suffix)
+                    "GSL_SET_COMPLEX(&z, rz, 0);"
+                    ,(format "~a_set(p0,i,z);" file-prefix)
                     "}"
                     "C_return(p0);")))))))
+

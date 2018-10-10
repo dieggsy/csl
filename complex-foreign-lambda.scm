@@ -54,10 +54,11 @@
                    (cons
                     (let ((name (car x))
                           (type (caddr x)))
-                      (format "gsl_complex~a ~a = gsl_complex_rect(~a,~a);"
+                      (format "gsl_complex~a ~a; \nGSL_SET_COMPLEX(&~a,~a,~a);"
                               (if (eq? type 'double)
                                   ""
                                   (conc "_" type))
+                              (symbol->string name)
                               (symbol->string name)
                               (conc "r" name)
                               (conc "i" name)))

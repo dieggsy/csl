@@ -3,5 +3,5 @@
 (make-zvector-module csl.zdvector "gsl_vector_complex" double)
 
 ;; Local Variables:
-;; compile-command: "csc -s csl.zdvector.scm -j csl.zdvector -L -lgsl -L -lgslcblas"
+;; compile-command: "csc -s csl.zdvector.scm -J -L -lgsl -L -lgslcblas"
 ;; End:
