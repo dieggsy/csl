@@ -46,9 +46,9 @@
   (import scheme
           (chicken module)
           (chicken base)
-          (except
+          (rename
            (srfi 133)
-           vector=))
+           %vector=))
 
   (reexport (only scheme
                   vector?
@@ -97,30 +97,29 @@
   (define (vector-imag-part v)
     (vector-map imag-part v))
 
+  (define (vector+ . vectors)
+    (apply (cut vector-map + <...>) vectors))
 
-  (define (vector+ v1 v2)
-    (vector-map + v1 v2))
+  (define (vector+! . vectors)
+    (apply (cut vector-map! + <...>) vectors))
 
-  (define (vector+! v1 v2)
-    (vector-map! + v1 v2))
+  (define (vector- . vectors)
+    (apply (cut vector-map - <...>) vectors))
 
-  (define (vector- v1 v2)
-    (vector-map - v1 v2))
+  (define (vector-! . vectors)
+    (apply (cut vector-map! - <...>) vectors))
 
-  (define (vector-! v1 v2)
-    (vector-map! - v1 v2))
+  (define (vector* . vectors)
+    (apply (cut vector-map * <...>) vectors))
 
-  (define (vector* v1 v2)
-    (vector-map * v1 v2))
+  (define (vector*! . vectors)
+    (apply (cut vector-map! * <...>) vectors))
 
-  (define (vector*! v1 v2)
-    (vector-map! * v1 v2))
+  (define (vector/ . vectors)
+    (apply (cut vector-map / <...>) vectors))
 
-  (define (vector/ v1 v2)
-    (vector-map / v1 v2))
-
-  (define (vector/! v1 v2)
-    (vector-map! / v1 v2))
+  (define (vector/! . vectors)
+    (apply (cut vector-map! / <...>) vectors))
 
   (define (vector-scale v n)
     (vector-map (cut * <> n) v))
@@ -146,8 +145,8 @@
   (define (vector-nonnegative? v)
     (vector-every (cut > <> 0) v))
 
-  (define (vector= v1 v2)
-    (vector-every = v1 v2))
+  (define (vector= . vectors)
+    (apply (cut %vector= = <...>) vectors))
 
   (define (vector-max v)
     (apply max (vector->list v)))
