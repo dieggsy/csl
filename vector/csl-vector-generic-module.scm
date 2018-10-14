@@ -243,18 +243,22 @@
 
 
   (define (vector-scale v n)
-    (let ((c (vector-copy v)))
-      (v*c (vector->ptr c) n)
-      c))
+    (let* ((ptr (vector->ptr v))
+           (new (valloc (vlength ptr))))
+      (vcopy! new ptr)
+      (v*c new n)
+      (ptr->vector new)))
 
   (define (vector-scale! v n)
     (v*c (vector->ptr v) n)
     (void))
 
   (define (vector-add-constant v n)
-    (let ((c (vector-copy v)))
-      (v+c (vector->ptr c) n)
-      c))
+    (let* ((ptr (vector->ptr v))
+           (new (valloc (vlength ptr))))
+      (vcopy! new ptr)
+      (v+c new n)
+      (ptr->vector new)))
 
   (define (vector-add-constant! v n)
     (v+c (vector->ptr v) n)
