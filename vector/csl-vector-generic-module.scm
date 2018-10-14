@@ -142,7 +142,7 @@
   (define (vector-set v i n)
     (let* ((ptr (vector->ptr v))
            (new (valloc (vlength ptr))))
-      (vcopy! ptr new)
+      (vcopy! new ptr)
       (vset! new i n)
       (ptr->vector new)))
 
@@ -152,7 +152,7 @@
   (define (vector-fill v n)
     (let* ((ptr (vector->ptr v))
            (new (valloc (vlength ptr))))
-      (vcopy! ptr new)
+      (vcopy! new ptr)
       (vfill! new n)
       (ptr->vector new)))
 
