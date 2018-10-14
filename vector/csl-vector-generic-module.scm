@@ -43,6 +43,7 @@
      vector-swap!
      vector-reverse
      vector-reverse!
+     vector-append
      vector-real-part
      vector-imag-part
      vector+
@@ -182,6 +183,21 @@
 
   (define (vector-reverse! v)
     (vreverse! (vector->ptr v)))
+
+  (define (vector-append v1 v2)
+    (let* ((ptr1 (vector->ptr v1))
+           (ptr2 (vector->ptr v2))
+           (len1 (vlength ptr1))
+           (len2 (vlength ptr2))
+           (newlen (+ len1 len2))
+           (new (valloc newlen)))
+      (do ((i 0 (+ i 1)))
+          ((= i len1))
+        (vset! new i (vref ptr1 i)))
+      (do ((i len1 (+ i 1)))
+          ((= i newlen))
+        (vset! new i (vref ptr2 (- i len1))))
+      (ptr->vector new)))
 
   (define (vector-real-part v)
     (ptr->vector (vreal (vector->ptr v))))
