@@ -45,10 +45,8 @@
                     subvector)
   (import scheme
           (chicken module)
-          (chicken base)
-          (rename
-           (srfi 133)
-           %vector=))
+          (rename (chicken base) (subvector %subvector))
+          (rename (srfi 133) (vector= %vector=)))
 
   (reexport (only scheme
                   vector?
@@ -58,7 +56,6 @@
                   vector-ref
                   vector-set!
                   vector-fill!))
-  (reexport (only (chicken base) subvector))
   (reexport (only srfi-133
                   list->vector
                   vector->list
@@ -181,4 +178,15 @@
   (define (vector-basis! v i)
     (let ((v (make-vector (vector-length v) 0)))
       (vector-set! v i 0)
-      v)))
+      v))
+
+  (define (subvector v a b #!optional (stride 1))
+    (let ((subv (%subvector v a b)))
+      (if (> stride 1)
+          (let* ((newlen (ceiling (/ (- b a) stride)))
+                 (new (make-vector newlen)))
+            (do ((i 0 (+ i 1))
+                 (j 0 (+ j stride)))
+                ((= i newlen) new)
+              (vector-set! new i (vector-ref subv j))))
+          subv))))
