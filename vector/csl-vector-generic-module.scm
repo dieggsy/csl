@@ -115,20 +115,20 @@
   (define (vector-length v)
     (vlength (vector->ptr v)))
 
-  (define (vector-map f . v)
-    (let* ((len (apply min (map vector-length v)))
-           (d (map vector->ptr v))
-           (r (valloc len)))
+  (define (vector-map fn . vectors)
+    (let* ((ptrs (map vector->ptr vectors))
+           (len (apply min (map vlength ptrs)))
+           (new (valloc len)))
       (do ((i 0 (+ i 1)))
-          ((= i len) (ptr->vector r))
-        (vset! r i (apply f (map (cut vref <> i) d))))))
+          ((= i len) (ptr->vector new))
+        (vset! new i (apply fn (map (cut vref <> i) ptrs))))))
 
-  (define (vector-map! f . v)
-    (let* ((len (apply min (map vector-length v)))
-           (d (map vector->ptr v)))
+  (define (vector-map! fn . vvectors)
+    (let* ((ptrs (map vector->ptr vectors))
+           (len (apply min (map vlength ptrs))))
       (do ((i 0 (+ i 1)))
           ((= i len))
-        (vset! (car d) i (apply f (map (cut vref <> i) d))))))
+        (vset! (car ptrs) i (apply fn (map (cut vref <> i) ptrs))))))
 
   (define (vector-ref v i)
     (vref (vector->ptr v) i))
@@ -160,15 +160,17 @@
     (vfill! (vector->ptr v) n))
 
   (define (vector-copy v)
-    (let ((new (valloc (vector-length v))))
-      (vcopy! new (vector->ptr v))
+    (let ((ptr (vector->ptr v))
+          (new (valloc (vlength v))))
+      (vcopy! new ptr)
       (ptr->vector new)))
 
   (define (vector-copy! v1 v2)
     (vcopy! (vector->ptr v1) (vector->ptr v2)))
 
   (define (vector-swap v n1 n2)
-    (let ((new ((valloc (vector-length v)))))
+    (let ((ptr (vector->ptr v))
+          (new ((valloc (vlength ptr)))))
       (vswap! new n1 n2)
       (ptr->vector new)))
 
@@ -176,8 +178,9 @@
     (vswap! (vector->ptr v) n1 n2))
 
   (define (vector-reverse v)
-    (let ((new (valloc (vector-length v))))
-      (vcopy! new (vector->ptr v))
+    (let* ((ptr (vector->ptr v))
+           (new (valloc (vlength ptr))))
+      (vcopy! new ptr)
       (vreverse! new)
       (ptr->vector new)))
 
