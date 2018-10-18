@@ -153,7 +153,6 @@
   (define (vector-fill v n)
     (let* ((ptr (vector->ptr v))
            (new (valloc (vlength ptr))))
-      (vcopy! new ptr)
       (vfill! new n)
       (ptr->vector new)))
 
