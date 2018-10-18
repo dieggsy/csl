@@ -67,6 +67,7 @@
      vector-min
      vector-argmax
      vector-argmin
+     make-basis-vector
      vector-basis!
      subvector)
     (import (except scheme
@@ -302,6 +303,11 @@
               y))
            #t
            (map vector->ptr (cdr vectors))))
+
+  (define (make-basis-vector len n)
+    (let ((ptr (valloc len)))
+      (vbasis! ptr n)
+      (ptr->vector ptr)))
 
   (define (vector-basis! v n)
     (vbasis! (vector->ptr v) n)
