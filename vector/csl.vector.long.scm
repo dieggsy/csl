@@ -1,4 +1,5 @@
-(include "csl-vector-generic-module.scm")
+(include "vector-functor.scm")
+(include "real-vector-module.scm")
 
 (make-rvector-module csl.vector.long "gsl_vector_long" long)
 

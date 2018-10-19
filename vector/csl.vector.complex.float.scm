@@ -1,6 +1,7 @@
-(include "csl-vector-generic-module.scm")
+(include "vector-functor.scm")
+(include "vector-module.scm")
 
-(make-zvector-module csl.vector.complex.float "gsl_vector_complex_float" float)
+(make-vector-module csl.vector.complex.float "gsl_vector_complex_float" (complex float))
 
 ;; Local Variables:
 ;; compile-command: "csc -s csl.vector.complex.float.scm -J -L -lgsl -L -lgslcblas"
