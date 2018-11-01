@@ -1,8 +1,8 @@
 (include "vector-functor.scm")
-(include "vector-module.scm")
+(include "gsl.vector.int.scm")
 
-(make-vector-module csl.vector.int "gsl_vector_int" int)
+(module csl.vector.int = (generic-vector gsl.vector.int))
 
 ;; Local Variables:
-;; compile-command: "csc -s csl.vector.int.scm -j csl.vector.int -L -lgsl -L -lgslcblas"
+;; compile-command: "csc -vs csl.vector.int.scm -J -L \"$(pkg-config --libs gsl)\""
 ;; End:

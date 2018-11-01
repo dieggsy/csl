@@ -1,8 +1,8 @@
 (include "vector-functor.scm")
-(include "real-vector-module.scm")
+(include "gsl.vector.long.scm")
 
-(make-rvector-module csl.vector.long "gsl_vector_long" long)
+(module csl.vector.long = (generic-vector gsl.vector.long))
 
 ;; Local Variables:
-;; compile-command: "csc -s csl.vector.long.scm -j csl.vector.long -L -lgsl -L -lgslcblas"
+;; compile-command: "csc -vs csl.vector.long.scm -J -L \"$(pkg-config --libs gsl)\""
 ;; End:

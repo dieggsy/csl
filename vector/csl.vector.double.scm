@@ -1,8 +1,8 @@
 (include "vector-functor.scm")
-(include "vector-module.scm")
+(include "gsl.vector.double.scm")
 
-(make-vector-module csl.vector.double "gsl_vector" double)
+(module csl.vector.double = (generic-vector gsl.vector.double))
 
 ;; Local Variables:
-;; compile-command: "csc -s csl.vector.double.scm -j csl.vector.double -L -lgsl -L -lgslcblas"
+;; compile-command: "csc -vs csl.vector.double.scm -J -L \"$(pkg-config --libs gsl)\""
 ;; End:

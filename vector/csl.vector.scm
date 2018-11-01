@@ -190,3 +190,7 @@
                 ((= i newlen) new)
               (vector-set! new i (vector-ref subv j))))
           subv))))
+
+;; Local Variables:
+;; compile-command: "csc -vs csl.vector.scm -J"
+;; End:

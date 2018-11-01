@@ -1,8 +1,8 @@
 (include "vector-functor.scm")
-(include "vector-module.scm")
+(include "gsl.vector.float.scm")
 
-(make-vector-module csl.vector.float "gsl_vector_float" float)
+(module csl.vector.float = (generic-vector gsl.vector.float))
 
 ;; Local Variables:
-;; compile-command: "csc -s csl.vector.float.scm -j csl.vector.float -L -lgsl -L -lgslcblas"
+;; compile-command: "csc -vs csl.vector.float.scm -J -L \"$(pkg-config --libs gsl)\""
 ;; End:
