@@ -1,5 +1,5 @@
-(include "vector-functor.scm")
-(include "gsl.vector.long.scm")
+(include-relative "vector-functor.scm")
+(include-relative "gsl.vector.long.scm")
 
 (module csl.vector.long = (generic-vector gsl.vector.long))
 

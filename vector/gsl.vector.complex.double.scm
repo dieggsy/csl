@@ -1,4 +1,4 @@
-(include "vector-module.scm")
+(include-relative "vector-module.scm")
 
 (make-vector-module gsl.vector.complex.double "gsl_vector_complex" (complex double))
 

@@ -61,9 +61,9 @@
                   (chicken memory)
                   foreigners)
 
-          (include "../csl-error.scm")
+          (include-relative "../csl-error.scm")
           ,@(if complex
-                '((include "../complex-foreign-lambda.scm"))
+                '((include-relative "../complex-foreign-lambda.scm"))
                 '())
 
           ,@(if complex

@@ -1,4 +1,4 @@
-(include "vector-module.scm")
+(include-relative "vector-module.scm")
 
 (make-vector-module gsl.vector.long "gsl_vector_long" long)
 

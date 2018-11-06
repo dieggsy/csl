@@ -66,7 +66,7 @@
   (foreign-declare "#include <gsl/gsl_complex.h>")
   (foreign-declare "#include <gsl/gsl_complex_math.h>")
 
-  (include "../complex-foreign-lambda.scm")
+  (include-relative "../complex-foreign-lambda.scm")
 
   (define-external (scheme_make_rect (double r) (double i)) scheme-object
     (%make-rectangular r i))

@@ -1,4 +1,4 @@
-(include "vector-module.scm")
+(include-relative "vector-module.scm")
 
 (make-vector-module gsl.vector.float "gsl_vector_float" float)
 
