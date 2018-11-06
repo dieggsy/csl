@@ -64,20 +64,22 @@
             (int owner gsl_vector.owner))
 
           ;; Vector allocation
-          (define vector-alloc
-            (o (cut tag-pointer <> ',module-name)
-               (foreign-safe-lambda gsl_vector ,(format "~a_alloc" file-prefix) unsigned-int)))
+          (define (vector-alloc n)
+            (tag-pointer
+             (set-finalizer!
+              ((foreign-safe-lambda gsl_vector ,(format "~a_alloc" file-prefix) unsigned-int) n)
+              vector-free!)
+             ',module-name))
 
-          (define vector-calloc
-            (o (cut tag-pointer <> ',module-name)
-               (foreign-safe-lambda gsl_vector ,(format "~a_calloc" file-prefix) unsigned-int)))
+          (define (vector-calloc n)
+            (tag-pointer
+             (set-finalizer!
+              ((foreign-safe-lambda gsl_vector ,(format "~a_calloc" file-prefix) unsigned-int) n)
+              vector-free!)
+             ',module-name))
 
           (define vector-free!
             (foreign-safe-lambda void ,(format "~a_free" file-prefix) gsl_vector))
-
-          ;; added for convenience
-          (define (vector-alloc-gc n)
-            (set-finalizer! (vector-alloc n) vector-free!))
 
           ;; Accessing vector elements
           (define vector-get
@@ -107,35 +109,44 @@
           ;; omitted
 
           ;; Vector views
-          (define vector-subvector
-            (compose (cut tag-pointer <> ',module-name)
-                     (foreign-safe-lambda* gsl_vector ((gsl_vector v)
-                                                       (unsigned-int offset)
-                                                       (unsigned-int n))
-                       ,(format "~a *p0 = ~a_alloc(v->size);" file-prefix file-prefix)
-                       ,(format "~a_view p1 = ~a_subvector(v,offset,n);" file-prefix file-prefix)
-                       ,(format "memcpy(p0, &p1.vector, sizeof(~a));" file-prefix)
-                       "C_return(p0);")))
+          (define (vector-subvector v offset n)
+            (tag-pointer
+             (set-finalizer!
+              ((foreign-safe-lambda* gsl_vector ((gsl_vector v)
+                                                 (unsigned-int offset)
+                                                 (unsigned-int n))
+                 ,(format "~a *p0 = ~a_alloc(v->size);" file-prefix file-prefix)
+                 ,(format "~a_view p1 = ~a_subvector(v,offset,n);" file-prefix file-prefix)
+                 ,(format "memcpy(p0, &p1.vector, sizeof(~a));" file-prefix)
+                 "C_return(p0);")
+               v offset n)
+              vector-free!)
+             ',module-name))
 
           ;; vector-const-subvector omitted
 
-          (define vector-subvector-with-stride
-            (compose (cut tag-pointer <> ',module-name)
-                     (foreign-safe-lambda* gsl_vector ((gsl_vector v)
-                                                       (unsigned-int offset)
-                                                       (unsigned-int stride)
-                                                       (unsigned-int n))
-                       ,(format "~a *p0 = ~a_alloc(v->size);" file-prefix file-prefix)
-                       ,(format "~a_view p1 = ~a_subvector_with_stride(v,offset,stride,n);" file-prefix file-prefix)
-                       ,(format "memcpy(p0, &p1.vector, sizeof(~a));" file-prefix)
-                       "C_return(p0);")))
+          (define (vector-subvector-with-stride v offset stride n)
+            (tag-pointer
+             (set-finalizer!
+              ((foreign-safe-lambda* gsl_vector ((gsl_vector v)
+                                                 (unsigned-int offset)
+                                                 (unsigned-int stride)
+                                                 (unsigned-int n))
+                 ,(format "~a *p0 = ~a_alloc(v->size);" file-prefix file-prefix)
+                 ,(format "~a_view p1 = ~a_subvector_with_stride(v,offset,stride,n);" file-prefix file-prefix)
+                 ,(format "memcpy(p0, &p1.vector, sizeof(~a));" file-prefix)
+                 "C_return(p0);")
+               v offset stride n)
+              vector-free!)
+             ',module-name))
 
           ;; vector-const-subvector-with-stride omitted
 
-          (define vector-imag
+          (define (vector-imag v)
             ,(if complex
-                 `(o (cut tag-pointer <> ',module-name)
-                     (foreign-safe-lambda* gsl_vector ((gsl_vector v))
+                 `(tag-pointer
+                   (set-finalizer!
+                    ((foreign-safe-lambda* gsl_vector ((gsl_vector v))
                        ,(format "~a *p0 = ~a_alloc(v->size);" file-prefix file-prefix)
                        ,(format "gsl_vector~a_view p1 = ~a_imag(v);" rtype-suffix file-prefix)
                        "for (int i = 0; i < v->size; i++) { "
@@ -144,16 +155,17 @@
                        "GSL_SET_COMPLEX(&z, 0, iz);"
                        ,(format "~a_set(p0,i,z);" file-prefix)
                        "}"
-                       "C_return(p0);"))
-                 '(lambda (v)
-                    (let ((v (vector-alloc-gc (vector-size v))))
-                      (vector-set-all! v 0)
-                      v))))
+                       "C_return(p0);")
+                     v)
+                    vector-free!)
+                   ',module-name)
+                 '(vector-calloc (vector-size v))))
 
-          (define vector-real
+          (define (vector-real v)
             ,(if complex
-                 `(o (cut tag-pointer <> ',module-name)
-                     (foreign-safe-lambda* gsl_vector ((gsl_vector v))
+                 `(tag-pointer
+                   (set-finalizer!
+                    ((foreign-safe-lambda* gsl_vector ((gsl_vector v))
                        ,(format "~a *p0 = ~a_alloc(v->size);" file-prefix file-prefix)
                        ,(format "gsl_vector~a_view p1 = ~a_real(v);" rtype-suffix file-prefix)
                        "for (int i = 0; i < v->size; ++i) { "
@@ -162,8 +174,13 @@
                        "GSL_SET_COMPLEX(&z, rz, 0);"
                        ,(format "~a_set(p0,i,z);" file-prefix)
                        "}"
-                       "C_return(p0);"))
-                 'identity))
+                       "C_return(p0);")
+                     v)
+                    vector-free!)
+                   ',module-name)
+                 `(let ((new (vector-alloc (vector-size v))))
+                    (vector-memcpy! new v)
+                    new)))
 
           ;; vector-view-array omitted
           ;; vector-const-view-array omitted
