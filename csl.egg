@@ -1,0 +1,41 @@
+((author "Diego Mundo")
+ (synopsis "An opinionated wrapper around gsl.")
+ (category math)
+ (license "GPL-3.0")
+ (component-options
+  (csc-options "-O3" "-C" "-O3")
+  (link-options "-L" "-lgsl" "-L" "-lgslcblas" "-L" "-lm"))
+ (components
+
+  ;; Mathematical Functions (real)
+  (extension csl.math.double (source "math/csl.math.double.scm"))
+
+  ;; Complex Numbers (+ math)
+  (extension csl.math.complex (source "math/csl.math.complex.scm"))
+
+  ;; Polynomials
+  (extension csl.poly (source "csl.poly.scm"))
+
+  ;; Vectors (low level)
+  (extension gsl.vector.complex.double (source "vector/gsl.vector.complex.double.scm"))
+  (extension gsl.vector.complex.float (source "vector/gsl.vector.complex.float.scm"))
+  (extension gsl.vector.double (source "vector/gsl.vector.double.scm"))
+  (extension gsl.vector.float (source "vector/gsl.vector.float.scm"))
+  (extension gsl.vector.int (source "vector/gsl.vector.int.scm"))
+  (extension gsl.vector.long (source "vector/gsl.vector.long.scm"))
+  ;; Vectors (high level)
+  (extension csl.vector.complex.double (source "vector/csl.vector.complex.double.scm"))
+  (extension csl.vector.complex.float (source "vector/csl.vector.complex.float.scm"))
+  (extension csl.vector.double (source "vector/csl.vector.double.scm"))
+  (extension csl.vector.float (source "vector/csl.vector.float.scm"))
+  (extension csl.vector.int (source "vector/csl.vector.int.scm"))
+  (extension csl.vector.long (source "vector/csl.vector.long.scm"))
+
+  ;; Random number generation
+  (extension csl.rng (source "csl.rng.scm"))
+
+  ;; Physical constants
+  (extension csl.mksa (source "const/csl.mksa.scm"))
+  (extension csl.cgsm (source "const/csl.cgsm.scm"))
+  (extension csl.num (source "const/csl.num.scm"))
+  ))
