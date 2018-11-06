@@ -21,7 +21,37 @@
             (type-suffix (if complex
                              (string-append "_complex" rtype-suffix)
                              rtype-suffix)))
-       `(module ,module-name *
+       `(module ,module-name (vector-size
+                              vector-alloc
+                              vector-calloc
+                              vector-free!
+                              vector-get
+                              vector-set!
+                              vector-set-all!
+                              vector-set-zero!
+                              vector-set-basis!
+                              vector-subvector
+                              vector-subvector-with-stride
+                              vector-imag
+                              vector-real
+                              vector-memcpy!
+                              vector-swap!
+                              vector-swap-elements!
+                              vector-add!
+                              vector-sub!
+                              vector-mul!
+                              vector-div!
+                              vector-scale!
+                              vector-add-constant!
+                              vector-max
+                              vector-min
+                              vector-max-index
+                              vector-min-index
+                              vector-isnull?
+                              vector-ispositive?
+                              vector-isnegative?
+                              vector-isnonneg?
+                              vector-equal?)
           (import (except scheme
                           vector-set!)
                   (chicken base)
