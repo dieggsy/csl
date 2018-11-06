@@ -24,7 +24,6 @@
   (define-external (scheme_make_rect (double r) (double i)) scheme-object
     (make-rectangular r i))
 
-  ;; (include "gsl-poly.scm")
   (define (poly-eval c z)
     (let ((r (real-part z))
           (i (imag-part z))
