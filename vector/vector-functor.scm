@@ -173,7 +173,7 @@
 
   (define (vector-swap v n1 n2)
     (let* ((ptr (vector->ptr v))
-           (new ((gsl:vector-alloc (gsl:vector-size ptr)))))
+           (new (gsl:vector-alloc (gsl:vector-size ptr))))
       (gsl:vector-swap-elements! new n1 n2)
       (ptr->vector new)))
 
