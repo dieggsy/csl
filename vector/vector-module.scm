@@ -37,6 +37,7 @@
                               vector-memcpy!
                               vector-swap!
                               vector-swap-elements!
+                              vector-reverse!
                               vector-add!
                               vector-sub!
                               vector-mul!
