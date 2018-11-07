@@ -31,6 +31,14 @@
   (extension csl.vector.int (source "vector/csl.vector.int.scm"))
   (extension csl.vector.long (source "vector/csl.vector.long.scm"))
 
+  ;; Matrices (low level)
+  (extension gsl.matrix.complex.double (source "matrix/gsl.matrix.complex.double.scm"))
+  (extension gsl.matrix.complex.float (source "matrix/gsl.matrix.complex.float.scm"))
+  (extension gsl.matrix.double (source "matrix/gsl.matrix.double.scm"))
+  (extension gsl.matrix.float (source "matrix/gsl.matrix.float.scm"))
+  (extension gsl.matrix.int (source "matrix/gsl.matrix.int.scm"))
+  (extension gsl.matrix.long (source "matrix/gsl.matrix.long.scm"))
+
   ;; Random number generation
   (extension csl.rng (source "csl.rng.scm"))
 
