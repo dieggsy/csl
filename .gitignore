@@ -1,3 +1,7 @@
 *.import.scm
 *.so
+*.install.sh
+*.build.sh
+*.static.o
+*.link
 .python-version
