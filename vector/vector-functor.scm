@@ -124,7 +124,8 @@
            (new (gsl:vector-alloc len)))
       (do ((i 0 (+ i 1)))
           ((= i len) (ptr->vector new))
-        (gsl:vector-set! new i (apply fn (map (cut gsl:vector-get <> i) ptrs))))))
+        (gsl:vector-set! new i (apply fn (map (cut gsl:vector-get <> i) ptrs))))
+      (ptr->vector new)))
 
   (define (vector-map! fn . vectors)
     (let* ((ptrs (map vector->ptr vectors))
@@ -304,7 +305,7 @@
   (define (vector= . vectors)
     (foldr (lambda (x y)
              (and
-              (gsl:vector-equal? (car vectors) x)
+              (gsl:vector-equal? (vector->ptr (car vectors)) x)
               y))
            #t
            (map vector->ptr (cdr vectors))))
