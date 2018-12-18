@@ -7,13 +7,10 @@
                     vector-map
                     vector-map!
                     vector-ref
-                    vector-set
                     vector-set!
-                    vector-fill
                     vector-fill!
                     vector-copy
                     vector-copy!
-                    vector-swap
                     vector-swap!
                     vector-reverse
                     vector-reverse!
@@ -67,21 +64,6 @@
                   vector-swap!
                   vector-reverse!
                   vector-append))
-
-  (define (vector-set v i n)
-    (let ((v (vector-copy v)))
-      (vector-set! v i n)
-      v))
-
-  (define (vector-fill v i n)
-    (let ((v (vector-copy v)))
-      (vector-fill! v i n)
-      v))
-
-  (define (vector-swap v i j)
-    (let ((v (vector-copy v)))
-      (vector-swap! v i j)
-      v))
 
   (define (vector-reverse v)
     (let ((v (vector-copy v)))

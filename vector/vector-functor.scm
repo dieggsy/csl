@@ -36,13 +36,10 @@
      vector-map
      vector-map!
      vector-ref
-     vector-set
      vector-set!
-     vector-fill
      vector-fill!
      vector-copy
      vector-copy!
-     vector-swap
      vector-swap!
      vector-reverse
      vector-reverse!
@@ -144,21 +141,8 @@
                                                    (inexact->exact
                                                     (ceiling (/ (- b a) stride))))))
 
-  (define (vector-set v i n)
-    (let* ((ptr (vector->ptr v))
-           (new (gsl:vector-alloc (gsl:vector-size ptr))))
-      (gsl:vector-memcpy! new ptr)
-      (gsl:vector-set! new i n)
-      (ptr->vector new)))
-
   (define (vector-set! v i n)
     (gsl:vector-set! (vector->ptr v) i n))
-
-  (define (vector-fill v n)
-    (let* ((ptr (vector->ptr v))
-           (new (gsl:vector-alloc (gsl:vector-size ptr))))
-      (gsl:vector-set-all! new n)
-      (ptr->vector new)))
 
   (define (vector-fill! v n)
     (gsl:vector-set-all! (vector->ptr v) n))
@@ -171,12 +155,6 @@
 
   (define (vector-copy! v1 v2)
     (gsl:vector-memcpy! (vector->ptr v1) (vector->ptr v2)))
-
-  (define (vector-swap v n1 n2)
-    (let* ((ptr (vector->ptr v))
-           (new (gsl:vector-alloc (gsl:vector-size ptr))))
-      (gsl:vector-swap-elements! new n1 n2)
-      (ptr->vector new)))
 
   (define (vector-swap! v n1 n2)
     (gsl:vector-swap-elements! (vector->ptr v) n1 n2))
