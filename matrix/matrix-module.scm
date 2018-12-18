@@ -3,7 +3,7 @@
 
 (define-syntax make-matrix-module
   (er-macro-transformer
-   (lambda (e i c)
+   (lambda (e i compare)
      (let* ((module-name (cadr e))
             (file-prefix (caddr e))
             (base-type* (cadddr e))
@@ -22,8 +22,8 @@
                      'complex-foreign-lambda
                      'foreign-safe-lambda))
             (rtype-suffix (if (or (and complex
-                                       (eq? (strip-syntax (cadr base-type*)) 'double))
-                                  (eq? (strip-syntax base-type*) 'double))
+                                       (compare (cadr base-type*) 'double))
+                                  (compare base-type* 'double))
                               ""
                               (string-append "_" (symbol->string (strip-syntax base-type)))))
             (type-suffix (if complex
@@ -82,11 +82,7 @@
                                      base-type*
                                      `(,base-type)))
                    vector-size))
-          (reexport (only (csl vector ,@(if complex
-                                            base-type*
-                                            `(,base-type)))
-                          ptr->vector
-                          vector->ptr))
+
           (include-relative "../csl-error.scm")
           ,@(if complex
                 '((include-relative "../complex-foreign-lambda.scm"))
@@ -98,7 +94,7 @@
                 '())
 
           (foreign-declare ,(format "#include <gsl/gsl_block~a~a.h>" type-suffix
-                                    (if (and complex (eq? (strip-syntax base-type) 'double))
+                                    (if (and complex (compare base-type 'double))
                                         "_double"
                                         "")))
 
