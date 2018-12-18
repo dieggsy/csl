@@ -50,10 +50,10 @@
      vector+!
      vector-
      vector-!
-     vector*
-     vector*!
-     vector/
-     vector/!
+     vector~*
+     vector~*!
+     vector~/
+     vector~/!
      vector-scale
      vector-scale!
      vector-add-constant
@@ -214,25 +214,25 @@
     (let* ((ptr1 (vector->ptr (car vectors))))
       (for-each (cut gsl:vector-sub! ptr1 <>) (map vector->ptr (cdr vectors)))))
 
-  (define (vector* . vectors)
+  (define (vector~* . vectors)
     (let* ((ptr1 (vector->ptr (car vectors)))
            (new (gsl:vector-alloc (gsl:vector-size ptr1))))
       (gsl:vector-memcpy! new ptr1)
       (for-each (cut gsl:vector-mul! new <>) (map vector->ptr (cdr vectors)))
       (ptr->vector new)))
 
-  (define (vector*! . vectors)
+  (define (vector~*! . vectors)
     (let* ((ptr1 (vector->ptr (car vectors))))
       (for-each (cut gsl:vector-mul! ptr1 <>) (map vector->ptr (cdr vectors)))))
 
-  (define (vector/ . vectors)
+  (define (vector~/ . vectors)
     (let* ((ptr1 (vector->ptr (car vectors)))
            (new (gsl:vector-alloc (gsl:vector-size ptr1))))
       (gsl:vector-memcpy! new ptr1)
       (for-each (cut gsl:vector-div! new <>) (map vector->ptr (cdr vectors)))
       (ptr->vector new)))
 
-  (define (vector/! . vectors)
+  (define (vector~/! . vectors)
     (let* ((ptr1 (vector->ptr (car vectors))))
       (for-each (cut gsl:vector-div! ptr1 <>) (map vector->ptr (cdr vectors)))))
 
