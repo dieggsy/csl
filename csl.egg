@@ -39,6 +39,13 @@
   (extension gsl.matrix.float (source "matrix/gsl.matrix.float.scm"))
   (extension gsl.matrix.int (source "matrix/gsl.matrix.int.scm"))
   (extension gsl.matrix.long (source "matrix/gsl.matrix.long.scm"))
+  ;; Matrices (high level)
+  (extension csl.matrix.complex.double (source "matrix/csl.matrix.complex.double.scm"))
+  (extension csl.matrix.complex.float (source "matrix/csl.matrix.complex.float.scm"))
+  (extension csl.matrix.double (source "matrix/csl.matrix.double.scm"))
+  (extension csl.matrix.float (source "matrix/csl.matrix.float.scm"))
+  (extension csl.matrix.int (source "matrix/csl.matrix.int.scm"))
+  (extension csl.matrix.long (source "matrix/csl.matrix.long.scm"))
 
   ;; Random number generation
   (extension csl.rng (source "csl.rng.scm"))
