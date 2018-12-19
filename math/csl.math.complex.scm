@@ -1,27 +1,27 @@
-(module csl.math.complex (make-rectangular
-                          make-polar
-                          angle
-                          magnitude
+(module csl.math.complex (!make-rectangular
+                          !make-polar
+                          !angle
+                          !magnitude
                           magnitude-squared
                           log-magnitude
                           conjugate
                           inverse
-                          negative
-                          +
-                          -
-                          *
-                          /
-                          sqrt
-                          expt
-                          exp
-                          log10
-                          log
-                          sin
-                          asin
-                          cos
-                          acos
-                          tan
-                          atan
+                          !negative
+                          !+
+                          !-
+                          !*
+                          !/
+                          !sqrt
+                          !expt
+                          !exp
+                          !log10
+                          !log
+                          !sin
+                          !asin
+                          !cos
+                          !acos
+                          !tan
+                          !atan
                           sec
                           asec
                           csc
@@ -72,12 +72,12 @@
     (%make-rectangular r i))
 
   ;; Representation/conversion
-  (define make-rectangular (complex-foreign-lambda (complex double) "gsl_complex_rect" double double))
-  (define make-polar (complex-foreign-lambda (complex double) "gsl_complex_polar" double double))
+  (define !make-rectangular (complex-foreign-lambda (complex double) "gsl_complex_rect" double double))
+  (define !make-polar (complex-foreign-lambda (complex double) "gsl_complex_polar" double double))
 
   ;; Properties
-  (define angle (complex-foreign-lambda double "gsl_complex_arg" (complex double)))
-  (define magnitude (complex-foreign-lambda double "gsl_complex_abs" (complex double)))
+  (define !angle (complex-foreign-lambda double "gsl_complex_arg" (complex double)))
+  (define !magnitude (complex-foreign-lambda double "gsl_complex_abs" (complex double)))
 
   (define magnitude-squared (complex-foreign-lambda double "gsl_complex_abs2" (complex double)))
   (define log-magnitude (complex-foreign-lambda double "gsl_complex_logabs" (complex double)))
@@ -85,15 +85,15 @@
   ;; Arithmetic operators
   (define conjugate (complex-foreign-lambda (complex double) "gsl_complex_conjugate" (complex double)))
   (define inverse (complex-foreign-lambda (complex double) "gsl_complex_inverse" (complex double)))
-  (define negative (complex-foreign-lambda (complex double) "gsl_complex_negative" (complex double)))
+  (define !negative (complex-foreign-lambda (complex double) "gsl_complex_negative" (complex double)))
   (define %+ (complex-foreign-lambda (complex double) "gsl_complex_add" (complex double) (complex double)))
-  (define (+ . args)
+  (define (!+ . args)
     (do ((r args (cdr r))
          (sum 0 (%+ (car r) sum)))
         ((null? r) sum)))
 
   (define %- (complex-foreign-lambda (complex double) "gsl_complex_sub" (complex double) (complex double)))
-  (define (- . args)
+  (define (!- . args)
     (if (= (length args) 1)
         (negative (car args))
         (do ((r args (cdr r))
@@ -101,13 +101,13 @@
             ((null? r) sum))))
 
   (define %* (complex-foreign-lambda (complex double) "gsl_complex_mul" (complex double) (complex double)))
-  (define (* . args)
+  (define (!* . args)
     (do ((r args (cdr r))
          (prod 1 (%* (car r) prod)))
         ((null? r) prod)))
 
   (define %/ (complex-foreign-lambda (complex double) "gsl_complex_div" (complex double) (complex double)))
-  (define (/ . args)
+  (define (!/ . args)
     (if (= (length args) 1)
         (inverse (car args))
         (do ((r (cdr args) (cdr r))
@@ -123,27 +123,27 @@
   ;; (defcomplex (complex "div_imag" (complex double) double))
 
   ;; Elementary functions
-  (define sqrt (complex-foreign-lambda (complex double) "gsl_complex_sqrt" (complex double)))
+  (define !sqrt (complex-foreign-lambda (complex double) "gsl_complex_sqrt" (complex double)))
   ;; (defcomplex (complex "sqrt_real" double))
-  (define expt (complex-foreign-lambda (complex double) "gsl_complex_pow" (complex double) (complex double)))
+  (define !expt (complex-foreign-lambda (complex double) "gsl_complex_pow" (complex double) (complex double)))
   ;; (defcomplex (complex "pow_real" (complex double) double) expt-real)
-  (define exp (complex-foreign-lambda (complex double) "gsl_complex_exp" (complex double)))
-  (define log10 (complex-foreign-lambda (complex double) "gsl_complex_log10" (complex double)))
-  (define log (complex-foreign-lambda (complex double) "gsl_complex_log" (complex double)))
+  (define !exp (complex-foreign-lambda (complex double) "gsl_complex_exp" (complex double)))
+  (define !log10 (complex-foreign-lambda (complex double) "gsl_complex_log10" (complex double)))
+  (define !log (complex-foreign-lambda (complex double) "gsl_complex_log" (complex double)))
 
   ;; Trigonometric functions
-  (define sin (complex-foreign-lambda (complex double) "gsl_complex_sin" (complex double)))
-  (define cos (complex-foreign-lambda (complex double) "gsl_complex_cos" (complex double)))
-  (define tan (complex-foreign-lambda (complex double) "gsl_complex_tan" (complex double)))
+  (define !sin (complex-foreign-lambda (complex double) "gsl_complex_sin" (complex double)))
+  (define !cos (complex-foreign-lambda (complex double) "gsl_complex_cos" (complex double)))
+  (define !tan (complex-foreign-lambda (complex double) "gsl_complex_tan" (complex double)))
   (define sec (complex-foreign-lambda (complex double) "gsl_complex_sec" (complex double)))
   (define csc (complex-foreign-lambda (complex double) "gsl_complex_csc" (complex double)))
   (define cot (complex-foreign-lambda (complex double) "gsl_complex_cot" (complex double)))
 
-  (define asin (complex-foreign-lambda (complex double) "gsl_complex_arcsin" (complex double)))
+  (define !asin (complex-foreign-lambda (complex double) "gsl_complex_arcsin" (complex double)))
   ;; (defcomplex (complex "arcsin_real" double) asin-real)
-  (define acos (complex-foreign-lambda (complex double) "gsl_complex_arccos" (complex double)))
+  (define !acos (complex-foreign-lambda (complex double) "gsl_complex_arccos" (complex double)))
   ;; (defcomplex (complex "arccos_real" double) acos-real)
-  (define atan (complex-foreign-lambda (complex double) "gsl_complex_arctan" (complex double)))
+  (define !atan (complex-foreign-lambda (complex double) "gsl_complex_arctan" (complex double)))
 
   (define asec (complex-foreign-lambda (complex double) "gsl_complex_arcsec" (complex double)))
   ;; (defcomplex (complex "arcsec_real" double) asec-real)
