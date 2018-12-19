@@ -30,6 +30,7 @@
   (extension csl.vector.float (source "vector/csl.vector.float.scm"))
   (extension csl.vector.int (source "vector/csl.vector.int.scm"))
   (extension csl.vector.long (source "vector/csl.vector.long.scm"))
+  (extension csl.vector (source "vector/csl.vector.scm"))
 
   ;; Matrices (low level)
   (extension gsl.matrix.complex.double (source "matrix/gsl.matrix.complex.double.scm"))
