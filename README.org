@@ -1,8 +1,65 @@
-* CSL: Chicken Scientific Library
+#+title: CSL: Chicken Scientific Library
 
-*This egg is very much still incomplete, but some basic double/complex/vector/matrix
-representation and operations do currently work.*
+*NOTE: This egg is still very much a work in progress, but some basic vector and matrix
+operations do currently work.*
 
 This is a [[https://call-cc.org/][Chicken Scheme]] egg for the [[https://www.gnu.org/software/gsl/][GNU Scientific Library (GSL)]], providing
 both low-level bindings and a more scheme-y api, as well as some generic
 functions for convenience.
+
+For GSL function/variable reference, see [[https://www.gnu.org/software/gsl/doc/html/][the official gsl documentation]]. This
+document will mostly parallel that, but to avoid redundancy I'll only explain
+what has changed between the C and scheme apis and other such major points.
+
+* Mathematical Functions
+
+** Mathematical Constants
+| CSL Name | GSL Name   |
+|----------+------------|
+| e        | M_E        |
+| log2e    | M_LOG2E    |
+| sqrt2    | M_SQRT2    |
+| sqrt1/2  | M_SQRT1_2  |
+| sqrt3    | M_SQRT3    |
+| pi       | M_PI       |
+| pi/2     | M_PI_2     |
+| pi/4     | M_PI_4     |
+| sqrtpi   | M_SQRTPI   |
+| 2/sqrtpi | M_2_SQRTPI |
+| 1/pi     | M_1_PI     |
+| 2/pi     | M_2_PI     |
+| ln10     | M_LN10     |
+| ln2      | M_LN2      |
+| lnpi     | M_LNPI     |
+| euler    | M_EULER    |
+
+** Infinities and Not-a-number
+*** Constants
+| CSL Name | GSL Name   |
+|----------+------------|
+|     +inf | GSL_POSINF |
+|     -inf | GSL_NAN    |
+|      nan | GSL_NAN    |
+*** Functions
+| CSL NAME  | GSL Name   |
+|-----------+------------|
+| nan?      | gsl_isnan  |
+| infinite? | gsl_isinf  |
+| finite?   | gsl_finite |
+
+** Elementary Functions
+| CSL Name | GSL Name    |
+|----------+-------------|
+| log1+    | gsl_log1p   |
+| exp-1    | gsl_expm1   |
+| hypot2   | gsl-hypot   |
+| hypot3   | gsl_hypot3  |
+| expt-int | gsl_pow_int |
+| expt2    | gsl_pow_2   |
+| expt3    | gsl-pow_3   |
+| expt4    | gsl-pow_4   |
+| expt5    | gsl-pow_5   |
+| expt6    | gsl-pow_6   |
+| expt7    | gsl-pow_7   |
+| expt8    | gsl-pow_8   |
+| expt9    | gsl-pow_9   |
