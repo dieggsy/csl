@@ -119,7 +119,6 @@
 
   ;; Small integer powers
   (define expt-int (foreign-lambda  double "gsl_pow_int" double int))
-  ;; (define expt-uint (foreign-lambda  double "pow-uint" double int))
   (define expt2 (foreign-lambda double "gsl_pow_2" (const double)))
   (define expt3 (foreign-lambda double "gsl_pow_3" (const double)))
   (define expt4 (foreign-lambda double "gsl_pow_4" (const double)))
@@ -129,7 +128,10 @@
   (define expt8 (foreign-lambda double "gsl_pow_8" (const double)))
   (define expt9 (foreign-lambda double "gsl_pow_9" (const double)))
 
+  ;; Testing the sign of numbers
   (define sign (foreign-lambda* int ((double x)) "C_return(GSL_SIGN(x));"))
+
+  ;; Testing for odd and even numbers
   (define odd? (foreign-lambda* bool ((int x)) "C_return(GSL_IS_ODD(x));"))
   (define even? (foreign-lambda* bool ((int x)) "C_return(GSL_IS_EVEN(x));"))
 
