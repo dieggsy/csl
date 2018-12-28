@@ -95,7 +95,7 @@
   (define %- (complex-foreign-lambda (complex double) "gsl_complex_sub" (complex double) (complex double)))
   (define (!- . args)
     (if (= (length args) 1)
-        (negative (car args))
+        (!negative (car args))
         (do ((r args (cdr r))
              (sum 0 (%- (car r) sum)))
             ((null? r) sum))))
