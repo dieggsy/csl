@@ -8,9 +8,12 @@
                   solve-quadratic
                   solve-quadratic*
                   solve-cubic
+                  solve-cubic*
                   poly-solve)
 
   (import scheme
+          (only csl.math.double pi)
+          (chicken sort)
           (chicken base)
           (chicken foreign)
           (srfi 1)
@@ -119,8 +122,7 @@
        (location w))
       (f64vector->list c)))
 
-  ;; ;; TODO
-  ;; ;; (define (csl:dd-hermite-init xa ya dya size))
+  ;; TODO (define (csl:dd-hermite-init xa ya dya size))
 
   (define (solve-quadratic a b c)
     (let-values (((r0 i0 r1 i1)
@@ -175,6 +177,53 @@
       (values (make-rectangular r1 i1)
               (make-rectangular r2 i2)
               (make-rectangular r3 i3))))
+
+  (define (solve-cubic* a b c)
+    (let* ((q (- (* a a) (* 3 b)))
+           (r (+ (* 2 a a a) (* -9 a b) (* 27 c)))
+           (Q (/ q 9))
+           (R (/ r 54))
+           (Q3 (* Q Q Q))
+           (R2 (* R R))
+           (CR2 (* 729 r r))
+           (CQ3 (* 2916 q q q)))
+      (cond ((and (= R 0) (= Q 0))
+             (let ((res (/ a -3)))
+               (values res res res)))
+            ((= CR2 CQ3)
+             (let ((sqrtQ (sqrt Q)))
+               (if (> R 0)
+                   (values (- (* -2 sqrtQ) (/ a 3))
+                           (- sqrtQ (/ a 3))
+                           (- sqrtQ (/ a 3)))
+                   (values (- (- sqrtQ) (/ a 3))
+                           (- (- sqrtQ) (/ a 3))
+                           (- (* 2 sqrtQ) (/ a 3))))))
+            ((< R2 Q3)
+             (let* ((sgnR (if (>= R 0) 1 -1))
+                    (ratio (* sgnR (sqrt (/ R2 Q3))))
+                    (theta (acos ratio))
+                    (norm (* -2 (sqrt Q)))
+                    (results (list (- (* norm (cos (/ theta 3)))
+                                      (/ a 3))
+                                   (- (* norm (cos (/ (+ theta (* 2 pi)) 3))) (/ a 3))
+                                   (- (* norm (cos (/ (- theta (* 2 pi)) 3))) (/ a 3)))))
+               (apply values (sort results <))))
+            (else
+             (let* ((sgnR (if (>= R 0) 1 -1))
+                    (A (- (* sgnR (expt (+ (abs R) (sqrt (- R2 Q3))) (/ 1 3)))))
+                    (B (/ Q A)))
+               (if (< (+ A B) 0)
+                   (values (+ A B (- (/ a 3)))
+                           (make-rectangular (- (+ (/ (+ A B) 2) (/ a 3)))
+                                             (* -1 (sqrt 3) 1/2 (abs (- A B))))
+                           (make-rectangular (- (+ (/ (+ A B) 2) (/ a 3)))
+                                             (* (sqrt 3) 1/2 (abs (- A B)))))
+                   (values (make-rectangular (- (+ (/ (+ A B) 2) (/ a 3)))
+                                             (* -1 (sqrt 3) 1/2 (abs (- A B))))
+                           (make-rectangular (- (+ (/ (+ A B) 2) (/ a 3)))
+                                             (* (sqrt 3) 1/2 (abs (- A B))))
+                           (+ A B (- (/ a 3))))))))))
 
   (define (poly-solve a)
     (let* ((a (let loop ((coeffs a))
