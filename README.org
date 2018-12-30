@@ -1,65 +1,323 @@
 #+title: CSL: Chicken Scientific Library
 
-*NOTE: This egg is still very much a work in progress, but some basic vector and matrix
-operations do currently work.*
+*NOTE: This egg is still very much a work in progress.*
 
 This is a [[https://call-cc.org/][Chicken Scheme]] egg for the [[https://www.gnu.org/software/gsl/][GNU Scientific Library (GSL)]], providing
 both low-level bindings and a more scheme-y api, as well as some generic
 functions for convenience.
 
-For GSL function/variable reference, see [[https://www.gnu.org/software/gsl/doc/html/][the official gsl documentation]]. This
-document will mostly parallel that, but to avoid redundancy I'll only explain
-what has changed between the C and scheme apis and other such major points.
+For GSL function/variable reference, see [[https://www.gnu.org/software/gsl/doc/html/][the official gsl documentation]]. In
+this document I'll only point out functions that have been added, omitted, or
+whose names have changed.
+
+If a function or constant is not listed, you can safely assume the name and
+parameters are the same as in gsl but with the prefix dropped.
+
+Functions prefixed with ~!~ are provided despite there being an equal (or
+better) built-in alternative (this might be opinionated, and is open to
+discussion).
+
+Note that because of the way I've wrapped GSL's representation of complex
+numbers, GSL functions that work on complex numbers in GSL should work on both
+complex and real numbers in CSL.
 
 * Mathematical Functions
-
+#+begin_src scheme
+(import (csl math double))
+;; equivalently: (import csl.math.double)
+#+end_src
+GSL prefix: ~gsl_~ (except constants, all of which were changed)
 ** Mathematical Constants
-| CSL Name | GSL Name   |
-|----------+------------|
-| e        | M_E        |
-| log2e    | M_LOG2E    |
-| sqrt2    | M_SQRT2    |
-| sqrt1/2  | M_SQRT1_2  |
-| sqrt3    | M_SQRT3    |
-| pi       | M_PI       |
-| pi/2     | M_PI_2     |
-| pi/4     | M_PI_4     |
-| sqrtpi   | M_SQRTPI   |
-| 2/sqrtpi | M_2_SQRTPI |
-| 1/pi     | M_1_PI     |
-| 2/pi     | M_2_PI     |
-| ln10     | M_LN10     |
-| ln2      | M_LN2      |
-| lnpi     | M_LNPI     |
-| euler    | M_EULER    |
+| CSL        | GSL          |
+|------------+--------------|
+| ~e~        | ~M_E~        |
+| ~log2e~    | ~M_LOG2E~    |
+| ~sqrt2~    | ~M_SQRT2~    |
+| ~sqrt1/2~  | ~M_SQRT1_2~  |
+| ~sqrt3~    | ~M_SQRT3~    |
+| ~pi~       | ~M_PI~       |
+| ~pi/2~     | ~M_PI_2~     |
+| ~pi/4~     | ~M_PI_4~     |
+| ~sqrtpi~   | ~M_SQRTPI~   |
+| ~2/sqrtpi~ | ~M_2_SQRTPI~ |
+| ~1/pi~     | ~M_1_PI~     |
+| ~2/pi~     | ~M_2_PI~     |
+| ~ln10~     | ~M_LN10~     |
+| ~ln2~      | ~M_LN2~      |
+| ~lnpi~     | ~M_LNPI~     |
+| ~euler~    | ~M_EULER~    |
 
 ** Infinities and Not-a-number
 *** Constants
-| CSL Name | GSL Name   |
-|----------+------------|
-|     +inf | GSL_POSINF |
-|     -inf | GSL_NAN    |
-|      nan | GSL_NAN    |
+| CSL    | GSL          |
+|--------+--------------|
+| ~+inf~ | ~GSL_POSINF~ |
+| ~-inf~ | ~GSL_NAN~    |
+| ~nan~  | ~GSL_NAN~    |
 *** Functions
-| CSL NAME  | GSL Name   |
-|-----------+------------|
-| nan?      | gsl_isnan  |
-| infinite? | gsl_isinf  |
-| finite?   | gsl_finite |
+| CSL NAME     | GSL          |
+|--------------+--------------|
+| ~!nan?~      | ~gsl_isnan~  |
+| ~!infinite?~ | ~gsl_isinf~  |
+| ~!finite?~   | ~gsl_finite~ |
 
 ** Elementary Functions
-| CSL Name | GSL Name    |
+| CSL      | GSL         |
 |----------+-------------|
-| log1+    | gsl_log1p   |
-| exp-1    | gsl_expm1   |
-| hypot2   | gsl-hypot   |
-| hypot3   | gsl_hypot3  |
-| expt-int | gsl_pow_int |
-| expt2    | gsl_pow_2   |
-| expt3    | gsl-pow_3   |
-| expt4    | gsl-pow_4   |
-| expt5    | gsl-pow_5   |
-| expt6    | gsl-pow_6   |
-| expt7    | gsl-pow_7   |
-| expt8    | gsl-pow_8   |
-| expt9    | gsl-pow_9   |
+| ~log1+~  | ~gsl_log1p~ |
+| ~exp-1~  | ~gsl_expm1~ |
+| ~hypot2~ | ~gsl_hypot~ |
+
+*** Modified
+#+begin_example
+[procedure] (frexp x)
+#+end_example
+Splits the number x into its normalized fraction (double) ~f~ and exponent ~e~,
+such that ~(= x (* f (expt 2 e)))~ and ~(and (<= 0.5 f) (< f 1))~. Returns ~f~
+and ~e~ as multiple values.
+
+Modification reason: 'Out parameters' are messy in compiled chicken,
+unavailable in interpreted chicken, and un-idiomatic in both.
+*** Added
+#+begin_example
+[procedure] (hypot a b [c])
+#+end_example
+Computes the value of ~(sqrt (expt a 2) (expt b 2))~ or ~(sqrt (expt a 2) (expt
+b 2) (expt c 2))~ as needed, using ~hypot2~ or ~hypot3~, respectively.
+
+Addition reason: In scheme, optional parameters are more convenient than multiple functions.
+
+#+begin_example
+[procedure] (cosh x)
+[procedure] (sinh x)
+[procedure] (tanh x)
+#+end_example
+
+Compute the hyperbolic sine, cosine, and tangent of ~x~, respectively. These
+come from ~math.h~.
+
+Addition reason: GSL provides the inverse of these, but does not provide its
+own versions of these with the assumption that the user will utilize the
+~math.h~ versions, but Chicken doesn't provide these either, so it's convenient
+to provide provide these as well.
+
+** Small integer powers
+| CSL        | GSL           |
+|------------+---------------|
+| ~expt-int~ | ~gsl_pow_int~ |
+| ~expt2~    | ~gsl_pow_2~   |
+| ~expt3~    | ~gsl_pow_3~   |
+| ~expt4~    | ~gsl_pow_4~   |
+| ~expt5~    | ~gsl_pow_5~   |
+| ~expt6~    | ~gsl_pow_6~   |
+| ~expt7~    | ~gsl_pow_7~   |
+| ~expt8~    | ~gsl_pow_8~   |
+| ~expt9~    | ~gsl_pow_9~   |
+
+** Testing the sign of numbers
+| CSL    | GSL        |
+|--------+------------|
+| ~sign~ | ~GSL_SIGN~ |
+
+** Testing for odd and even numbers
+
+| CSL      | GSL           |
+|----------+---------------|
+| ~!odd?~  | ~GSL_IS_ODD~  |
+| ~!even?~ | ~GSL_IS_EVEN~ |
+
+** Maximum and minimum functions
+| CSL         | GSL            |
+|-------------+----------------|
+| ~!max-dbl~  | ~GSL_MAX_DBL~  |
+| ~!min-dbl~  | ~GSL_MIN_DBL~  |
+| ~!max-int~  | ~GSL_MAX_INT~  |
+| ~!min-int~  | ~GSL_MIN_INT~  |
+| ~!max-ldbl~ | ~GSL_MAX_LDBL~ |
+| ~!min-ldbl~ | ~GSL_MIN_LDBL~ |
+
+*** Modified
+#+begin_example
+[procedure] (!max . args)
+[procedure] (!min . args)
+#+end_example
+Get the maximum and minimum argument, respectively. Wrap ~GSL_MAX~ and
+~GSL_MIN~.
+
+Modification reason: accept multiple args.
+
+* Complex Numbers
+#+begin_src scheme
+(import (csl math complex))
+;; equivalently: (import csl.math.complex)
+#+end_src
+GSL prefix: ~gsl_complex_~
+** Representation of complex numbers
+| CSL                 | GSL                    |
+|---------------------+------------------------|
+| ~!make-rectangular~ | ~gsl_complex_rect~     |
+| ~!make-polar~       | ~gsl_complex_polar~    |
+| ~!angle~            | ~gsl_complex_arg~      |
+| ~!magnitude~        | ~gsl_complex_abs~      |
+| ~magnitude-squared~ | ~gsl_complex_abs2~     |
+| ~log-magnitude~     | ~gsl_logabs~           |
+| ~!negative~         | ~gsl_complex_negative~ |
+| ~!sqrt~             | ~gsl_complex_sqrt~     |
+| ~!expt~             | ~gsl_complex_pow~      |
+| ~!exp~              | ~gsl_complex_exp~      |
+| ~!log10~            | ~gsl_complex_log10~    |
+| ~!log~              | ~gsl_complex_log~      |
+| ~!sin~              | ~gsl_complex_sin~      |
+| ~!asin~              | ~gsl_complex_asin~      |
+| ~!cos~              | ~gsl_complex_cos~      |
+| ~!acos~              | ~gsl_complex_acos~      |
+| ~!tan~              | ~gsl_complex_tan~      |
+| ~!atan~              | ~gsl_complex_atan~      |
+
+*** Modified
+#+begin_example
+[procedure] (!+ . args)
+[procedure] (!- . args)
+[procedure] (!* . args)
+[procedure] (!/ . args)
+#+end_example
+Add, subtract, multiply, and divide numbers, based on ~gsl_complex_add~,
+~gsl_complex_sub~, ~gsl_complex_mul~, and ~gsl_complex_div~, respectively, but
+accept an arbitrary number of arguments.
+
+Modification reason: accept multiple args.
+
+* Polynomials
+#+begin_src scheme
+(import (csl poly))
+;; equivalently: (import csl.poly)
+#+end_src
+GSL prefix: ~gsl_~
+** Polynomial evaluation
+*** Omitted
+| Function                | Reason                                                      |
+|-------------------------+-------------------------------------------------------------|
+| ~gsl_poly_eval~         | Functionality is covered by ~gsl_complex_poly_complex_eval~ |
+| ~gsl_poly_complex_eval~ | See above                                                   |
+
+*** Modified
+#+begin_example
+[procedure] (poly-eval c z)
+#+end_example
+Wraps ~gsl_complex_poly_complex_eval~. Evaluates a polynomial with complex or
+real coefficients given by list ~c~ for the complex or real variable ~x~.
+
+Modification reason: Handles either complex or real doubles. Working with
+pointers to C arrays isn't available in interpreted scheme.
+
+#+begin_example
+[procedure] (poly-eval-derivs c x [num-derivs])
+#+end_example
+Evaluates a polynomial and its derivatives, returning a list of the results.
+
+Modification reason: Working with pointers to C arrays isn't available in
+interpreted scheme.
+
+*** Added
+#+begin_example
+[procedure] (poly-eval* c z)
+#+end_example
+Similar to ~poly-eval~, but implemented purely in scheme - should be able to
+handle all numerical types supported by Chicken Scheme, including exact numbers
+and bignums.
+
+Addition reason: support more numerical types.
+
+#+begin_example
+[procedure] (poly-eval-derivs* c z)
+#+end_example
+Similar to ~poly-eval-derivs~, but implemented purely in scheme - should be
+able to handle all numerical types supported by Chicken Scheme, including
+complex numbers, exact numbers, and bignums.
+
+Addition reason: support more numerical types
+** Divided Difference Representation of Polynomials
+*** Modified
+#+begin_example
+[procedure] (poly-dd-init xa ya)
+#+end_example
+Computes a divided-difference representation of the interpolating polynomial
+for the points (x, y) stored in the lists ~xa~ and ~ya~ of equal size.
+
+Modification reason: Pointers to arrays and out paramaters aren't easy to work
+with in interpreted scheme.
+
+#+begin_example
+[procedure] (poly-dd-eval dd xa x)
+#+end_example
+Evaluates the polynomial stored in divided-difference form in the lists ~dd~ and
+~xa~ of equal length at point ~x~.
+
+Modification reason: Pointers to arrays aren't easy to work with in interpreted
+scheme.
+
+#+begin_example
+[procedure] (poly-dd-taylor xp dd xa)
+#+end_example
+Converts the divided-difference representation of a polynomial to a Taylor
+expansion. The divided-difference representation is supplied in the lists ~dd~
+and ~xa~ of equal size. On output the Taylor coefficients of the polynomial
+expanded about the point ~xp~ are returned as an array.
+** Quadratic Equations
+*** Omitted
+| Function                   | Reason                                                 |
+|----------------------------+--------------------------------------------------------|
+| ~gsl_poly_solve_quadratic~ | Functionality is covered by ~gsl_poly_complex_solve_quadratic~ |
+*** Modified
+#+begin_example
+[procedure] (solve-quadratic a b c)
+#+end_example
+Wraps ~gsl_poly_complex_solve_quadratic~. Returns two roots, or one root and ~#f~,
+as multiple values.
+
+Modification reason: Out parameters and C pointers.
+*** Added
+#+begin_example
+[procedure] (solve-quadratic* a b c)
+#+end_example
+Like ~solve-quadratic~, but implemented purely in scheme - should be able to
+handle all numerical types supported by Chicken Scheme, including complex
+numbers, exact numbers, and bignums.
+
+Addition reason: support more numerical types.
+** Cubic Equations
+*** Omitted
+| Function                   | Reason                                                 |
+|----------------------------+--------------------------------------------------------|
+| ~gsl_poly_solve_cubic~ | Functionality is covered by ~gsl_poly_complex_solve_cubic~ |
+*** Modified
+#+begin_example
+[procedure] (solve-cubic a b c)
+#+end_example
+Wraps ~gsl_poly_complex_solve_cubic~. Returns three roots as multiple values.
+
+Modification reason: Out parameters and C pointers.
+*** Added
+example
+[procedure] (solve-cubic* a b c)
+#+end_example
+Like ~solve-cubic~, but implemented purely in scheme - should be able to
+handle all numerical types supported by Chicken Scheme, including complex
+numbers, exact numbers, and bignums.
+
+Addition reason: support more numerical types.
+** General Polynomial Equations
+*** Modified
+#+begin_example
+[procedure] (poly-solve a)
+#+end_example
+Wraps ~gsl_poly_complex_solve~. Computes the roots of the general polynomial
+whose coefficients are given by the list ~a~. The coefficient of the highest
+order term must be non-zero.
+
+Modification reason: Out parameters and C pointers.
+
+* TODO Special Functions
+
+* Vectors and Matrices
+
