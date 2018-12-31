@@ -496,13 +496,9 @@
             (define (matrix-argmin v)
               (gsl:matrix-min-index (matrix->ptr v)))
 
-            (define (matrix-diagonal m)
-              (ptr->vector (gsl:matrix-diagonal (matrix->ptr m))))
-
-            (define (matrix-subdiagonal m k)
-              (ptr->vector (gsl:matrix-subdiagonal (matrix->ptr m) k)))
-
-            (define (matrix-superdiagonal m k)
-              (ptr->vector (gsl:matrix-superdiagonal (matrix->ptr m) k))))
+            (define (matrix-diagonal m #!optional (k 0))
+              (if (negative? k)
+                  (ptr->vector (gsl:matrix-subdiagonal (matrix->ptr m) (- k)))
+                  (ptr->vector (gsl:matrix-superdiagonal (matrix->ptr m) k)))))
           (module ,@(cdr e)))))))
 
