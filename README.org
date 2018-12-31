@@ -10,16 +10,17 @@ For GSL function/variable reference, see [[https://www.gnu.org/software/gsl/doc/
 this document I'll only point out functions that have been added, omitted, or
 whose names have changed.
 
-If a function or constant is not listed, you can safely assume the name and
-parameters are the same as in gsl but with the prefix dropped.
+- If a function or constant is not listed, you can safely assume the name and
+  parameters are the same as in gsl but with the prefix dropped and underscores
+  changed to dashes.
 
-Functions prefixed with ~!~ are provided despite there being an equal (or
-better) built-in alternative (this might be opinionated, and is open to
-discussion).
+- Functions prefixed with ~!~ are provided despite there being an equal (or
+  better) built-in alternative (this might be opinionated, and is open to
+  discussion).
 
-Note that because of the way I've wrapped GSL's representation of complex
-numbers, GSL functions that work on complex numbers in GSL should work on both
-complex and real numbers in CSL.
+- Because of the way GSL's representation of complex numbers is wrapped, GSL
+  functions that work on complex numbers in GSL should work on both complex and
+  real numbers in CSL.
 
 * Mathematical Functions
 #+begin_src scheme
