@@ -503,8 +503,6 @@
               (ptr->vector (gsl:matrix-subdiagonal (matrix->ptr m) k)))
 
             (define (matrix-superdiagonal m k)
-              (ptr->vector (gsl:matrix-superdiagonal (matrix->ptr m) k)))
-            )
-          (module ,@(cdr e))
-          )))))
+              (ptr->vector (gsl:matrix-superdiagonal (matrix->ptr m) k))))
+          (module ,@(cdr e)))))))
 

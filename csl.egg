@@ -53,5 +53,4 @@
   ;; Physical constants
   (extension csl.mksa (source "const/csl.mksa.scm"))
   (extension csl.cgsm (source "const/csl.cgsm.scm"))
-  (extension csl.num (source "const/csl.num.scm"))
-  ))
+  (extension csl.num (source "const/csl.num.scm"))))
