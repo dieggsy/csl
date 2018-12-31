@@ -1,0 +1,29 @@
+* TODO slicing
+* TODO Include any missing srfi-133 functions to csl vector for compatibility
+* IN-PROGRESS overhaul matrices
+* TODO Take inspiration from racket/numpy array and matrix functions
+* TODO generics?
+* TODO Maybe add a vector-sum/vector-product? maybe?
+* TODO Pretty sure (vector|matrix)-append are more complex than they have to be
+* fix subvector? racket standards vs scheme standards
+* CANCELED use srfi-25?
+CLOSED: [2018-12-31 Mon 09:45]
+* DONE provide schemey alternatives to gsl types/operations (vector to dvector etc.)
+CLOSED: [2018-12-05 Wed 00:38]
+* DONE clean up vector and matrix exports (don't need to export the error/block stuff)
+CLOSED: [2018-12-05 Wed 00:37]
+* CANCELED explore 'shared' subvector/vector views (don't return the view itself, return view->vector)
+CLOSED: [2018-11-06 Tue 01:07]
+* DONE overhaul rng
+CLOSED: [2018-10-13 Sat 23:45]
+* DONE define complex vectors
+CLOSED: [2018-10-10 Wed 02:30]
+* DONE Fix vimag for real vectors
+CLOSED: [2018-10-09 Tue 01:41]
+* DONE include foreign record type def of gsl_block directly in make_rvector_module
+CLOSED: [2018-10-09 Tue 01:31]
+- to account for block types
+* DONE rename arithmetic operators symbolically (vector-add -> vector+)
+CLOSED: [2018-10-07 Sun 11:54]
+* DONE fix sign of square root in poly for complex
+CLOSED: [2018-10-07 Sun 11:51]
