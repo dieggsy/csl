@@ -23,27 +23,27 @@
                     matrix-copy
                     matrix-copy!
                     matrix-swap!
-                    ;; matrix-real-part
-                    ;; matrix-imag-part
-                    ;; matrix+
-                    ;; matrix+!
-                    ;; matrix-
-                    ;; matrix-!
-                    ;; matrix~*
-                    ;; matrix~*!
-                    ;; matrix~/
-                    ;; matrix~/!
-                    ;; matrix-scale
-                    ;; matrix-scale!
-                    ;; matrix-add-constant
-                    ;; matrix-add-constant!
-                    ;; matrix-zero?
-                    ;; matrix-positive?
-                    ;; matrix-negative?
-                    ;; matrix-nonnegative?
-                    ;; matrix=
-                    ;; matrix-max
-                    ;; matrix-min
+                    matrix-real-part
+                    matrix-imag-part
+                    matrix+
+                    matrix+!
+                    matrix-
+                    matrix-!
+                    matrix~*
+                    matrix~*!
+                    matrix~/
+                    matrix~/!
+                    matrix-scale
+                    matrix-scale!
+                    matrix-add-constant
+                    matrix-add-constant!
+                    matrix-zero?
+                    matrix-positive?
+                    matrix-negative?
+                    matrix-nonnegative?
+                    matrix=
+                    matrix-max
+                    matrix-min
                     ;; matrix-argmax
                     ;; matrix-argmin
                     make-identity-matrix
@@ -52,12 +52,9 @@
                     matrix-row-swap!
                     matrix-column-swap!
                     matrix-row-column-swap!
-                    ;; matrix-diagonal
-                    ;; matrix-subdiagonal
-                    ;; matrix-superdiagonal
+                    matrix-diagonal
                     matrix-transpose!
-                    matrix-transpose
-                    )
+                    matrix-transpose)
   (import (except scheme
                   vector-fill!
                   vector->list
@@ -198,27 +195,118 @@
       (matrix-row-set! m i (matrix-column-ref m j))
       (matrix-column-set! m j col)))
 
-  (define (submatrix m i #!optional i2)
-    (define (fix-index lst max)
-      (let ((empty (null? lst)))
-        (list (or (and lst
-                       (not empty)
-                       (not (null? (cdr lst)))
-                       (car lst))
-                  0)
-              (or (and lst
-                       (not empty)
-                       (not (null? (cdr lst)))
-                       (cadr lst))
-                  (and lst
-                       (not (null? lst))
-                       (car lst))
-                  max)
-              (or (and lst
-                       (not empty)
-                       (not (null? (cdr lst)))
-                       (not (null? (cddr lst)))
-                       (caddr lst))
-                  1))))
-    )
+  ;; (define (submatrix m i #!optional i2)
+  ;;   (define (fix-index lst max)
+  ;;     (let ((empty (null? lst)))
+  ;;       (list (or (and lst
+  ;;                      (not empty)
+  ;;                      (not (null? (cdr lst)))
+  ;;                      (car lst))
+  ;;                 0)
+  ;;             (or (and lst
+  ;;                      (not empty)
+  ;;                      (not (null? (cdr lst)))
+  ;;                      (cadr lst))
+  ;;                 (and lst
+  ;;                      (not (null? lst))
+  ;;                      (car lst))
+  ;;                 max)
+  ;;             (or (and lst
+  ;;                      (not empty)
+  ;;                      (not (null? (cdr lst)))
+  ;;                      (not (null? (cddr lst)))
+  ;;                      (caddr lst))
+  ;;                 1))))
+  ;;   )
+
+  (define (matrix+ . matrices)
+    (apply (cut matrix-map + <...>) matrices))
+
+  (define (matrix+! . matrices)
+    (apply (cut matrix-map! + <...>) matrices))
+
+  (define (matrix- . matrices)
+    (apply (cut matrix-map - <...>) matrices))
+
+  (define (matrix-! . matrices)
+    (apply (cut matrix-map! - <...>) matrices))
+
+  (define (matrix~* . matrices)
+    (apply (cut matrix-map * <...>) matrices))
+
+  (define (matrix~*! . matrices)
+    (apply (cut matrix-map! * <...>) matrices))
+
+  (define (matrix~/ . matrices)
+    (apply (cut matrix-map / <...>) matrices))
+
+  (define (matrix~/! . matrices)
+    (apply (cut matrix-map! / <...>) matrices))
+
+  (define (matrix-scale m n)
+    (matrix-map (cut * <> n) m))
+
+  (define (matrix-scale! m n)
+    (matrix-map! (cut * <> n) m))
+
+  (define (matrix-add-constant m n)
+    (matrix-map (cut + <> n) m))
+
+  (define (matrix-add-constant! m n)
+    (matrix-map! (cut + <> n) m))
+
+  (define (matrix-real-part m)
+    (matrix-map real-part m))
+
+  (define (matrix-imag-part m)
+    (matrix-map imag-part m))
+
+  (define (matrix-zero? m)
+    (vector-every identity
+                  (vector-map (cut vector-every zero? <>)
+                              m)))
+
+  (define (matrix-positive? m)
+    (vector-every identity
+                  (vector-map (cut vector-every positive? <>)
+                              m)))
+
+  (define (matrix-negative? m)
+    (vector-every identity
+                  (vector-map (cut vector-every negative? <>)
+                              m)))
+
+  (define (matrix-nonnegative? m)
+    (not
+     (vector-any identity
+                 (vector-map (lambda (v)
+                               (vector-any (cut < <> 0) v))
+                             m))))
+
+  (define (matrix= . matrices)
+    (apply (cut matrix-map = <...>) matrices))
+
+  (define (matrix-max m)
+    (vector-fold max 0 (vector-map (cut vector-fold max 0 <>) m)))
+
+  (define (matrix-min m)
+    (vector-fold min 0 (vector-map (cut vector-fold min 0 <>) m)))
+
+  ;; TODO: Wrote a manual bounds check here since it returned an empty vector
+  ;; on the first out of bounds diagonal. We may want to implement checks like
+  ;; this for... every other function.
+  (define (matrix-diagonal m #!optional (k 0))
+    (let* ((rows (matrix-rows m))
+           (cols (matrix-columns m))
+           (smallest (min cols rows)))
+      (if (>= k 0)
+          (begin
+            (assert (< k cols) "Index out of bounds.")
+            (vector-unfold (lambda (i) (vector-ref (vector-ref m i) (+ i k)))
+                           (min (- cols k) smallest)))
+          (begin
+            (assert (< (- k) rows) "Index out of bounds.")
+            (vector-unfold (lambda (i) (vector-ref (vector-ref m (+ i (- k))) i))
+                           (min (+ rows k) smallest))))))
+
   )

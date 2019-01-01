@@ -3,7 +3,7 @@
 *NOTE: This egg is still very much a work in progress.*
 
 This is a [[https://call-cc.org/][Chicken Scheme]] egg for the [[https://www.gnu.org/software/gsl/][GNU Scientific Library (GSL)]], providing
-both low-level bindings and a more scheme-y api, as well as some generic
+both low-level bindings and a more idiomatic API, as well as some generic
 functions for convenience.
 
 For GSL function/variable reference, see [[https://www.gnu.org/software/gsl/doc/html/][the official gsl documentation]]. In
