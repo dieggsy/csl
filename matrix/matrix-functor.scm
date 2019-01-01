@@ -107,11 +107,8 @@
                matrix-column-swap!
                matrix-row-column-swap!
                matrix-diagonal
-               matrix-subdiagonal
-               matrix-superdiagonal
                matrix-transpose!
-               matrix-transpose
-               )
+               matrix-transpose)
               (import (except scheme
                               vector?
                               list->vector
