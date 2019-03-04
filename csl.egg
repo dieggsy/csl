@@ -5,6 +5,8 @@
  (component-options
   (csc-options "-O3" "-C" "-O3")
   (link-options "-L" "-lgsl" "-L" "-lgslcblas" "-L" "-lm"))
+ (dependencies foreigners srfi-1 srfi-13 srfi-4)
+ (test-dependencies test)
  (components
 
   ;; Mathematical Functions (real)

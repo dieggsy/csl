@@ -44,8 +44,8 @@
                     matrix=
                     matrix-max
                     matrix-min
-                    ;; matrix-argmax
-                    ;; matrix-argmin
+                    matrix-argmax
+                    matrix-argmin
                     make-identity-matrix
                     matrix-identity!
                     ;; submatrix
@@ -195,29 +195,29 @@
       (matrix-row-set! m i (matrix-column-ref m j))
       (matrix-column-set! m j col)))
 
-  ;; (define (submatrix m i #!optional i2)
-  ;;   (define (fix-index lst max)
-  ;;     (let ((empty (null? lst)))
-  ;;       (list (or (and lst
-  ;;                      (not empty)
-  ;;                      (not (null? (cdr lst)))
-  ;;                      (car lst))
-  ;;                 0)
-  ;;             (or (and lst
-  ;;                      (not empty)
-  ;;                      (not (null? (cdr lst)))
-  ;;                      (cadr lst))
-  ;;                 (and lst
-  ;;                      (not (null? lst))
-  ;;                      (car lst))
-  ;;                 max)
-  ;;             (or (and lst
-  ;;                      (not empty)
-  ;;                      (not (null? (cdr lst)))
-  ;;                      (not (null? (cddr lst)))
-  ;;                      (caddr lst))
-  ;;                 1))))
-  ;;   )
+  (define (submatrix m i #!optional i2)
+    (define (fix-index lst max)
+      (let ((empty (null? lst)))
+        (list (or (and lst
+                       (not empty)
+                       (not (null? (cdr lst)))
+                       (car lst))
+                  0)
+              (or (and lst
+                       (not empty)
+                       (not (null? (cdr lst)))
+                       (cadr lst))
+                  (and lst
+                       (not (null? lst))
+                       (car lst))
+                  max)
+              (or (and lst
+                       (not empty)
+                       (not (null? (cdr lst)))
+                       (not (null? (cddr lst)))
+                       (caddr lst))
+                  1))))
+    )
 
   (define (matrix+ . matrices)
     (apply (cut matrix-map + <...>) matrices))
@@ -291,6 +291,38 @@
 
   (define (matrix-min m)
     (vector-fold min 0 (vector-map (cut vector-fold min 0 <>) m)))
+
+  (define (matrix-argmax m)
+    (let ((rows (matrix-rows m))
+          (cols (matrix-columns m)))
+      (let loop ((row 0)
+                 (col 0)
+                 (max-r 0)
+                 (max-c 0)
+                 (max (matrix-ref m 0 0)))
+        (cond ((= rows row)
+               (values max-r max-c))
+              ((= cols col)
+               (loop (+ row 1) 0 max-r max-c max))
+              ((> (matrix-ref m row col) max)
+               (loop row (+ col 1) row col (matrix-ref m row col)))
+              (else (loop row (+ col 1) max-r max-c max))))))
+
+  (define (matrix-argmin m)
+    (let ((rows (matrix-rows m))
+          (cols (matrix-columns m)))
+      (let loop ((row 0)
+                 (col 0)
+                 (min-r 0)
+                 (min-c 0)
+                 (min (matrix-ref m 0 0)))
+        (cond ((= rows row)
+               (values min-r min-c))
+              ((= cols col)
+               (loop (+ row 1) 0 min-r min-c min))
+              ((< (matrix-ref m row col) min)
+               (loop row (+ col 1) row col (matrix-ref m row col)))
+              (else (loop row (+ col 1) min-r min-c min))))))
 
   ;; TODO: Wrote a manual bounds check here since it returned an empty vector
   ;; on the first out of bounds diagonal. We may want to implement checks like

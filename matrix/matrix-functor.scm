@@ -373,15 +373,16 @@
                      (i2b (car i2))
                      (i2s (caddr i2))
                      (i2e (cadr i2)))
-                (gsl:matrix-submatrix-with-stride ptr
-                                                  i1b
-                                                  i2b
-                                                  i1s
-                                                  i2s
-                                                  (inexact->exact
-                                                   (ceiling (/ (- i1e i1b) i1s)))
-                                                  (inexact->exact
-                                                   (ceiling (/ (- i2e i2b) i2s))))))
+                (ptr->matrix
+                 (gsl:matrix-submatrix-with-stride ptr
+                                                   i1b
+                                                   i2b
+                                                   i1s
+                                                   i2s
+                                                   (inexact->exact
+                                                    (ceiling (/ (- i1e i1b) i1s)))
+                                                   (inexact->exact
+                                                    (ceiling (/ (- i2e i2b) i2s)))))))
 
             (define (matrix+ . matrices)
               (let* ((ptr1 (matrix->ptr (car matrices)))
