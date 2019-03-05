@@ -1,10 +1,10 @@
 (import (only chicken.foreign foreign-declare)
         (only srfi-4
               f64vector make-f64vector f64vector->list
-              f32vector make-f32vector f32vector->list
-              ))
+              f32vector make-f32vector f32vector->list)
+        bind)
 
-(foreign-declare "#include <gsl/gsl_complex.h>")
+(foreign-declare "#include <gsl/gsl_complex_math.h>")
 
 (foreign-declare "
 gsl_complex f64_to_complex(double *arg) {
@@ -87,9 +87,15 @@ gsl_complex f64_to_complex(double *arg) {
      (else (bind-foreign-lambda* x rename))))
 
  (define (gsl-arg-transformer* x rename)
+   (define (complex-type? type)
+     (and (pair? type)
+          (eq? (car type) 'struct)
+          (irregex-search "^gsl_complex" (cadr type))
+          ;; (equal? type '(struct "gsl_complex"))
+          ))
    (match x
      ;; return-type is a gsl-complex, need to convert
-     ((foreign-lambda* rtype args body)
+     ((foreign-lambda* rtype (? (lambda (x) (any complex-type? (map car x))) args) body)
       (when (debug)
         (print "----LAMBDA:")
         (pp x)
@@ -120,15 +126,21 @@ gsl_complex f64_to_complex(double *arg) {
                           ,(map gsl-complex->f64vector args)
                         ,(dereference body))
                      rename)
-                   ,@(map (lambda (x) (if (gsl-complex? (type x))
-                                          `(f64vector (exact->inexact (real-part ,x))
-                                                      (exact->inexact (imag-part ,x))
-                                                      )
-                                          x))
+                   ,@(map (lambda (x)
+                            (if (gsl-complex? (type x))
+                                `(f64vector (exact->inexact (real-part ,x))
+                                            (exact->inexact (imag-part ,x)))
+                                x))
                           argnames)))))
           (when (debug)
             (pp final-lambda))
-          final-lambda)))))
+          final-lambda)))
+     (else
+      (gsl-ret-transformer*
+       x
+       rename)
+      )
+     ))
  )
 
 ;; convert any arguments of type (struct "gsl-complex") to f64vectors,
