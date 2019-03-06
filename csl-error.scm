@@ -1,4 +1,5 @@
-(import (chicken format))
+(import (only chicken.format format)
+        (only chicken.base error))
 
 (foreign-declare "#include <gsl/gsl_errno.h>")
 
