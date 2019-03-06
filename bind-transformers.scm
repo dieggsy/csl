@@ -2,6 +2,7 @@
         (only srfi-4
               f64vector make-f64vector f64vector->list
               f32vector make-f32vector f32vector->list)
+        (only chicken.syntax begin-for-syntax)
         bind)
 
 (foreign-declare "#include <gsl/gsl_complex_math.h>")
@@ -26,7 +27,7 @@ gsl_complex f64_to_complex(double *arg) {
 
 (begin-for-syntax
   (define debug (make-parameter #f))
-  (debug #t)
+  (debug #f)
   (when (debug)
     (print "===== compile-time"))
   ;; convert any foreign-lambda with a gsl-complex struct return-type,
@@ -56,6 +57,8 @@ gsl_complex f64_to_complex(double *arg) {
                   (apply make-rectangular (,vec->list destination))))))
         destination-wrapper))
 
+    ;; (write x)
+    ;; (newline)
     (match x
       ;; return-type is a gsl-complex, need to convert
       ((foreign-lambda* ('struct (? (cut irregex-search "^gsl_complex" <>) type)) args body)
@@ -66,7 +69,8 @@ gsl_complex f64_to_complex(double *arg) {
               (make-complex-ret-lambda foreign-lambda* args body
                                        'f32vector 'make-f32vector 'f32vector->list))
              (else (error "Unknown complex type" type))))
-      ((foreign-lambda* ('struct (? (cut irregex-match "gsl_vector_\\w+_view" <>) type)) args body)
+      ((foreign-lambda* ('struct (? (cut irregex-match "gsl_vector(_\\w+)?_view" <>) type)) args body)
+       ;; (print "VECTOR VIEW")
        (let* ((argnames (map cadr args))
               (pref (irregex-match-substring
                      (irregex-match "(gsl_vector(_\\w+)?)_view" type)
@@ -74,7 +78,7 @@ gsl_complex f64_to_complex(double *arg) {
               (lambda-with-destination
                (bind-foreign-lambda*
                 `(,foreign-lambda*
-                     gsl_vector ;; new return type
+                     csl_vector ;; new return type
                      ,args
                    (stmt
                     (= ,(format "~a view" type) ,body) ;; allocate, cast & assign
@@ -84,15 +88,24 @@ gsl_complex f64_to_complex(double *arg) {
                 rename)))
          lambda-with-destination))
       ;; ignore other return-types
+      ((foreign-lambda* ('c-pointer 'double) args body)
+       (bind-foreign-lambda*
+        `(,foreign-lambda*
+          f64vector
+          ,args
+          ,body)
+        ename)
+       ;; (write x)
+       ;; (newline)
+       ;; (bind-foreign-lambda* x rename)
+       )
       (else (bind-foreign-lambda* x rename))))
 
-  (define (gsl-arg-transformer* x rename)
+  (define (foo#gsl-arg-transformer* x rename)
     (define (complex-type? type)
       (and (pair? type)
            (eq? (car type) 'struct)
-           (irregex-search "^gsl_complex" (cadr type))
-           ;; (equal? type '(struct "gsl_complex"))
-           ))
+           (irregex-search "^gsl_complex" (cadr type))))
     (match x
       ;; return-type is a gsl-complex, need to convert
       ((foreign-lambda* rtype (? (lambda (x) (any complex-type? (map car x))) args) body)
@@ -138,10 +151,7 @@ gsl_complex f64_to_complex(double *arg) {
       (else
        (gsl-ret-transformer*
         x
-        rename)
-       )
-      ))
-  )
+        rename)))))
 
 ;; convert any arguments of type (struct "gsl-complex") to f64vectors,
 ;; and cast & dereference from C.
