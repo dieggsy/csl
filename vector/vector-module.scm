@@ -1,7 +1,5 @@
 (import-for-syntax (only chicken.format format)
-                   (only chicken.base warning)
-                   (only chicken.irregex irregex-replace/all)
-                   (only matchable match))
+                   (only chicken.irregex irregex-replace/all))
 
 (define-syntax make-vector-module
   (er-macro-transformer
@@ -20,6 +18,8 @@
                               vector-set-basis!
                               vector-fwrite
                               vector-fread
+                              vector-fprintf
+                              vector-fscanf
                               vector-subvector
                               vector-subvector-with-stride
                               vector-imag
@@ -36,8 +36,8 @@
                               vector-add-constant!
                               vector-max
                               vector-min
-                              ;; vector-max-index
-                              ;; vector-min-index
+                              vector-max-index
+                              vector-min-index
                               vector-isnull?
                               vector-ispos?
                               vector-isneg?
@@ -48,11 +48,13 @@
                   chicken.foreign
                   ;; (only chicken.locative make-locative)
                   (only chicken.syntax begin-for-syntax)
-                  (only chicken.base include-relative add1)
+                  (only chicken.base include-relative add1 warning)
                   (only chicken.gc set-finalizer!)
                   (only chicken.file file-exists?)
                   (only chicken.file.posix file-size)
-                  (only miscmacros ensure))
+                  (only chicken.io read-list)
+                  (only miscmacros ensure)
+                  (only matchable match))
 
           (include-relative "../csl-error.scm")
 
@@ -124,30 +126,60 @@
           ;;; Reading and writing vectors
           (bind-opaque-type cfile (c-pointer "FILE"))
           (bind "cfile fopen(char *, char *)")
+          (bind "cfile stdout")
           (bind "int fclose(cfile)")
           (bind-rename ,(string-append file-prefix "_fwrite") "%vector-fwrite")
           (bind ,(format "int ~a_fwrite(cfile, csl_vector)" file-prefix))
           (bind-rename ,(string-append file-prefix "_fread") "%vector-fread")
           (bind ,(format "int ~a_fread(cfile, csl_vector)" file-prefix))
+          (bind-rename ,(string-append file-prefix "_fprintf") "%vector-fprintf")
+          (bind ,(format "int ~a_fprintf(cfile, csl_vector, char *)" file-prefix))
+          (bind-rename ,(string-append file-prefix "_fscanf") "%vector-fscanf")
+          (bind ,(format "int ~a_fscanf(cfile, csl_vector)" file-prefix))
 
           (define (vector-fwrite filename vector)
+            (ensure string? filename "not a valid string filename" filename)
             (let ((f (fopen filename "w")))
               (%vector-fwrite f vector)
               (fclose f)))
 
           (define (vector-fread filename)
             (ensure file-exists? filename "file does not exist" filename)
-            (define size
-              ,(match base-type
-                 ("float" 4)
-                 ("double" 8)
-                 ("struct gsl_complex" 16)
-                 (else
-                  (warning "Unmatched base type - may not read vector correctly.")
-                  8)))
-            (let* ((vector (vector-alloc (/ (file-size filename) size)))
-                   (f (fopen filename "r")))
+            (define type-size
+              (let ((double-size (foreign-value "sizeof(double)" size_t))
+                    (float-size (foreign-value "sizeof(float)" size_t)))
+                (match ,base-type
+                  ("struct gsl_complex" (* 2 double-size))
+                  ("struct gsl_complex_float" (* 2 float-size))
+                  ("double" double-size)
+                  ("float" float-size)
+                  ("int" (foreign-value "sizeof(int)" size_t))
+                  ("long" (foreign-value "sizeof(long)" size_t))
+                  (else
+                   (warning "Unmatched base type - may not read vector correctly.")
+                   8))))
+            (let ((vector (vector-alloc (/ (file-size filename) type-size)))
+                  (f (fopen filename "r")))
               (%vector-fread f vector)
+              (fclose f)
+              vector))
+
+          (define (vector-fprintf filename vector format)
+            (if (and (boolean? filename)
+                     filename)
+                (%vector-fprintf (stdout) vector format)
+                (begin
+                  (ensure string? filename "not a valid filename" filename)
+                  (let ((f (fopen filename "w")))
+                    (%vector-fprintf f vector format)
+                    (fclose f)))))
+
+          (define (vector-fscanf filename vector)
+            (ensure file-exists? filename "file does not exist" filename)
+            (define size (length (call-with-input-file filename read-list)))
+            (let* ((vector (vector-alloc size))
+                   (f (fopen filename "r")))
+              (%vector-fscanf f vector)
               (fclose f)
               vector))
 
@@ -217,6 +249,32 @@
                 (if (= i size)
                     res
                     (loop (add1 i) (min res (vector-get vector i)))))))
+
+          (define (vector-max-index v)
+            (let ((size (vector-size v)))
+              (let loop ((i 0)
+                         (maxind 0)
+                         (maxval 0))
+                (if (= i size)
+                    maxind
+                    (let* ((currval (vector-get v i))
+                           (bigger (> currval maxval)))
+                      (loop (add1 i)
+                            (if bigger i maxind)
+                            (if bigger currval maxval)))))))
+
+          (define (vector-min-index v)
+            (let ((size (vector-size v)))
+              (let loop ((i 0)
+                         (minind 0)
+                         (minval 0))
+                (if (= i size)
+                    minind
+                    (let* ((currval (vector-get v i))
+                           (smaller (< currval minval)))
+                      (loop (add1 i)
+                            (if smaller i minind)
+                            (if smaller currval minval)))))))
 
           ;;; Vector properties
           (bind-rename ,(string-append file-prefix "_isnull") "vector-isnull?")
