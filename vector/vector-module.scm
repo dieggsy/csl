@@ -43,12 +43,12 @@
                               vector-isneg?
                               vector-isnonneg?
                               vector-equal?)
-          (import (except scheme vector-set!)
+          (import (except scheme vector-set! vector)
                   bind
                   chicken.foreign
                   ;; (only chicken.locative make-locative)
                   (only chicken.syntax begin-for-syntax)
-                  (only chicken.base include-relative add1 warning)
+                  (only chicken.base include-relative add1 warning define-record-type)
                   (only chicken.gc set-finalizer!)
                   (only chicken.file file-exists?)
                   (only chicken.file.posix file-size)
@@ -76,19 +76,16 @@
           (bind-rename/pattern ,(irregex-replace/all "_" (format "^~a" file-prefix) "-")
                                "vector")
 
-          (bind-opaque-type
+          (define-record-type vector
+            (csl_vector_wrap ptr)
+            csl_vector?
+            (ptr csl_vector_unwrap))
+
+          (bind-type
            csl_vector
-           ;; ,(symbol-append
-           ;;   csl_vector_
-           ;;   (if (irregex-match "^struct.*" base-type)
-           ;;       'complex_
-           ;;       '||)
-           ;;   (cond ((irregex-match "^struct .*_float" base-type)
-           ;;          'float)
-           ;;         ((irregex-match "^struct .*" base-type)
-           ;;          'double)
-           ;;         (else (string->symbol base-type))))
-           (c-pointer ,file-prefix))
+           (c-pointer ,file-prefix)
+           csl_vector_unwrap
+           csl_vector_wrap)
 
           (bind* ,(format "size_t ~a_size (csl_vector v) {" file-prefix)
                  "return v->size;"
