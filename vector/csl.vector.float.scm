@@ -1,5 +1,5 @@
 (include-relative "vector-functor.scm")
-(include-relative "gsl.vector.float.scm")
+(import gsl.vector.float)
 
 (module csl.vector.float = (generic-vector gsl.vector.float))
 

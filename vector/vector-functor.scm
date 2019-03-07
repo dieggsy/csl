@@ -1,34 +1,41 @@
-(functor (generic-vector (M (vector-alloc
-                             vector-set!
+(functor (generic-vector (M (vector?
                              vector-size
+                             vector-alloc
+                             vector-calloc
+                             vector-free!
                              vector-get
+                             vector-set!
                              vector-set-all!
+                             vector-set-zero!
+                             vector-set-basis!
+                             vector-fwrite
+                             vector-fread
+                             vector-fprintf
+                             vector-fscanf
+                             vector-subvector
+                             vector-subvector-with-stride
+                             vector-imag
+                             vector-real
                              vector-memcpy!
+                             vector-swap!
                              vector-swap-elements!
                              vector-reverse!
-                             vector-isnull?
-                             vector-ispositive?
-                             vector-isnegative?
-                             vector-isnonneg?
-                             vector-equal?
-                             vector-real
-                             vector-imag
                              vector-add!
-                             vector-add-constant!
                              vector-sub!
                              vector-mul!
-                             vector-scale!
                              vector-div!
+                             vector-scale!
+                             vector-add-constant!
                              vector-max
                              vector-min
                              vector-max-index
                              vector-min-index
-                             vector-set-basis!
-                             vector-subvector-with-stride)))
-    (vector?
-     ptr->vector
-     vector->ptr
-     list->vector
+                             vector-isnull?
+                             vector-ispos?
+                             vector-isneg?
+                             vector-isnonneg?
+                             vector-equal?)))
+    (list->vector
      vector->list
      vector
      make-vector
@@ -36,40 +43,28 @@
      vector-map
      vector-map!
      vector-ref
-     vector-set!
+     subvector
      vector-fill!
      vector-copy
      vector-copy!
-     vector-swap!
      vector-reverse
      vector-reverse!
      vector-append
      vector-real-part
      vector-imag-part
      vector+
-     vector+!
      vector-
-     vector-!
      vector~*
-     vector~*!
      vector~/
-     vector~/!
      vector-scale
-     vector-scale!
      vector-add-constant
-     vector-add-constant!
      vector-zero?
      vector-positive?
      vector-negative?
      vector-nonnegative?
      vector=
-     vector-max
-     vector-min
-     vector-argmax
-     vector-argmin
-     make-basis-vector
-     vector-basis!
-     subvector)
+     make-basis-vector)
+
     (import (except scheme
                     vector
                     vector?
@@ -80,27 +75,23 @@
                     vector-ref
                     vector-fill!
                     vector-set!)
-            (except (chicken base) subvector vector-copy!)
+            (only chicken.module reexport)
+            (only chicken.base add1 sub1 when cut foldl foldr)
             (prefix M gsl:))
 
-  (define-record-type vector
-    (ptr->vector ptr)
-    vector?
-    (ptr vector->ptr))
-
+  (reexport M)
   (define (list->vector lst #!optional complex)
     (let* ((len (length lst))
-           (v (gsl:vector-alloc (length lst))))
-      (do ((i 0 (+ i 1))
+           (v (gsl:vector-alloc len)))
+      (do ((i 0 (add1 i))
            (lst lst (cdr lst)))
-          ((= i len) (ptr->vector v))
+          ((= i len) v)
         (gsl:vector-set! v i (car lst)))))
 
   (define (vector->list v)
-    (let* ((ptr (vector->ptr v))
-           (len (gsl:vector-size ptr)))
-      (do ((i (- len 1) (- i 1))
-           (res '() (cons (gsl:vector-get ptr i) res)))
+    (let* ((len (gsl:vector-size v)))
+      (do ((i (sub1 len) (sub1 i))
+           (res '() (cons (gsl:vector-get v i) res)))
           ((= i -1) res))))
 
   (define (vector . args)
@@ -110,64 +101,47 @@
     (let ((v (gsl:vector-alloc n)))
       (when fill
         (gsl:vector-set-all! v fill))
-      (ptr->vector v)))
+      v))
 
-  (define (vector-length v)
-    (gsl:vector-size (vector->ptr v)))
+  (define vector-length gsl:vector-size)
 
   (define (vector-map fn . vectors)
-    (let* ((ptrs (map vector->ptr vectors))
-           (len (apply min (map gsl:vector-size ptrs)))
+    (let* ((len (apply min (map gsl:vector-size vectors)))
            (new (gsl:vector-alloc len)))
       (do ((i 0 (+ i 1)))
-          ((= i len) (ptr->vector new))
-        (gsl:vector-set! new i (apply fn (map (cut gsl:vector-get <> i) ptrs))))
-      (ptr->vector new)))
+          ((= i len) new)
+        (gsl:vector-set! new i (apply fn (map (cut gsl:vector-get <> i) vectors))))
+      new))
 
   (define (vector-map! fn . vectors)
-    (let* ((ptrs (map vector->ptr vectors))
-           (len (apply min (map gsl:vector-size ptrs))))
+    (let* ((len (apply min (map gsl:vector-size vectors))))
       (do ((i 0 (+ i 1)))
           ((= i len))
-        (gsl:vector-set! (car ptrs) i (apply fn (map (cut gsl:vector-get <> i) ptrs))))))
+        (gsl:vector-set! (car vectors) i (apply fn (map (cut gsl:vector-get <> i) vectors))))))
 
-  (define (vector-ref v i)
-    (gsl:vector-get (vector->ptr v) i))
+  (define vector-ref gsl:vector-get)
 
   (define (subvector v a b #!optional (stride 1))
-    (ptr->vector (gsl:vector-subvector-with-stride (vector->ptr v)
-                                                   a
-                                                   stride
-                                                   (inexact->exact
-                                                    (ceiling (/ (- b a) stride))))))
+    (gsl:vector-subvector-with-stride v
+                                      a
+                                      stride
+                                      (inexact->exact
+                                       (ceiling (/ (- b a) stride)))))
 
-  (define (vector-set! v i n)
-    (gsl:vector-set! (vector->ptr v) i n))
-
-  (define (vector-fill! v n)
-    (gsl:vector-set-all! (vector->ptr v) n))
+  (define vector-fill! gsl:vector-set-all!)
 
   (define (vector-copy v)
-    (let* ((ptr (vector->ptr v))
-           (new (gsl:vector-alloc (gsl:vector-size ptr))))
-      (gsl:vector-memcpy! new ptr)
-      (ptr->vector new)))
+    (let* ((new (gsl:vector-alloc (gsl:vector-size vector))))
+      (gsl:vector-memcpy! new vector)
+      new))
 
-  (define (vector-copy! v1 v2)
-    (gsl:vector-memcpy! (vector->ptr v1) (vector->ptr v2)))
-
-  (define (vector-swap! v n1 n2)
-    (gsl:vector-swap-elements! (vector->ptr v) n1 n2))
+  (define vector-copy! gsl:vector-memcpy!)
 
   (define (vector-reverse v)
-    (let* ((ptr (vector->ptr v))
-           (new (gsl:vector-alloc (gsl:vector-size ptr))))
-      (gsl:vector-memcpy! new ptr)
+    (let* ((new (gsl:vector-alloc (gsl:vector-size v))))
+      (gsl:vector-memcpy! new v)
       (gsl:vector-reverse! new)
-      (ptr->vector new)))
-
-  (define (vector-reverse! v)
-    (gsl:vector-reverse! (vector->ptr v)))
+      new))
 
   (define (vector-append . vectors)
     (define (append* ptr1 ptr2)
@@ -182,119 +156,69 @@
             ((= i newlen))
           (gsl:vector-set! new i (gsl:vector-get ptr2 (- i len1))))
         new))
-    (let ((ptrs (map vector->ptr vectors)))
-      (ptr->vector
-       (foldl append* (car ptrs) (cdr ptrs)))))
+    (foldl append* (car vectors) (cdr vectors)))
 
-  (define (vector-real-part v)
-    (ptr->vector (gsl:vector-real (vector->ptr v))))
+  (define vector-real-part gsl:vector-real)
 
-  (define (vector-imag-part v)
-    (ptr->vector (gsl:vector-imag (vector->ptr v))))
+  (define vector-imag-part gsl:vector-imag)
 
   (define (vector+ . vectors)
-    (let* ((ptr1 (vector->ptr (car vectors)))
-           (new (gsl:vector-alloc (gsl:vector-size ptr1))))
-      (gsl:vector-memcpy! new ptr1)
-      (for-each (cut gsl:vector-add! new <>) (map vector->ptr (cdr vectors)))
-      (ptr->vector new)))
-
-  (define (vector+! . vectors)
-    (let* ((ptr1 (vector->ptr (car vectors))))
-      (for-each (cut gsl:vector-add! ptr1 <>) (map vector->ptr (cdr vectors)))))
+    (let* ((v1 (car vectors))
+           (new (gsl:vector-alloc (gsl:vector-size v1))))
+      (gsl:vector-memcpy! new v1)
+      (for-each (cut gsl:vector-add! new <>) (cdr vectors))
+      new))
 
   (define (vector- . vectors)
-    (let* ((ptr1 (vector->ptr (car vectors)))
-           (new (gsl:vector-alloc (gsl:vector-size ptr1))))
-      (gsl:vector-memcpy! new ptr1)
-      (for-each (cut gsl:vector-sub! new <>) (map vector->ptr (cdr vectors)))
-      (ptr->vector new)))
-
-  (define (vector-! . vectors)
-    (let* ((ptr1 (vector->ptr (car vectors))))
-      (for-each (cut gsl:vector-sub! ptr1 <>) (map vector->ptr (cdr vectors)))))
+    (let* ((v1 (car vectors))
+           (new (gsl:vector-alloc (gsl:vector-size v1))))
+      (gsl:vector-memcpy! new v1)
+      (for-each (cut gsl:vector-sub! new <>) (cdr vectors))
+      new))
 
   (define (vector~* . vectors)
-    (let* ((ptr1 (vector->ptr (car vectors)))
-           (new (gsl:vector-alloc (gsl:vector-size ptr1))))
-      (gsl:vector-memcpy! new ptr1)
-      (for-each (cut gsl:vector-mul! new <>) (map vector->ptr (cdr vectors)))
-      (ptr->vector new)))
-
-  (define (vector~*! . vectors)
-    (let* ((ptr1 (vector->ptr (car vectors))))
-      (for-each (cut gsl:vector-mul! ptr1 <>) (map vector->ptr (cdr vectors)))))
+    (let* ((v1 (car vectors))
+           (new (gsl:vector-alloc (gsl:vector-size v1))))
+      (gsl:vector-memcpy! new v1)
+      (for-each (cut gsl:vector-mul! new <>) (cdr vectors))
+      new))
 
   (define (vector~/ . vectors)
-    (let* ((ptr1 (vector->ptr (car vectors)))
-           (new (gsl:vector-alloc (gsl:vector-size ptr1))))
-      (gsl:vector-memcpy! new ptr1)
-      (for-each (cut gsl:vector-div! new <>) (map vector->ptr (cdr vectors)))
-      (ptr->vector new)))
-
-  (define (vector~/! . vectors)
-    (let* ((ptr1 (vector->ptr (car vectors))))
-      (for-each (cut gsl:vector-div! ptr1 <>) (map vector->ptr (cdr vectors)))))
+    (let* ((v1 (car vectors))
+           (new (gsl:vector-alloc (gsl:vector-size v1))))
+      (gsl:vector-memcpy! new v1)
+      (for-each (cut gsl:vector-div! new <>) (cdr vectors))
+      new))
 
   (define (vector-scale v n)
-    (let* ((ptr (vector->ptr v))
-           (new (gsl:vector-alloc (gsl:vector-size ptr))))
-      (gsl:vector-memcpy! new ptr)
+    (let* ((new (gsl:vector-alloc (gsl:vector-size v))))
+      (gsl:vector-memcpy! new v)
       (gsl:vector-scale! new n)
-      (ptr->vector new)))
-
-  (define (vector-scale! v n)
-    (gsl:vector-scale! (vector->ptr v) n)
-    (void))
+      new))
 
   (define (vector-add-constant v n)
-    (let* ((ptr (vector->ptr v))
-           (new (gsl:vector-alloc (gsl:vector-size ptr))))
-      (gsl:vector-memcpy! new ptr)
+    (let* ((new (gsl:vector-alloc (gsl:vector-size v))))
+      (gsl:vector-memcpy! new v)
       (gsl:vector-add-constant! new n)
-      (ptr->vector new)))
+      new))
 
-  (define (vector-add-constant! v n)
-    (gsl:vector-add-constant! (vector->ptr v) n)
-    (void))
+  (define vector-zero? gsl:vector-isnull?)
 
-  (define (vector-max v)
-    (gsl:vector-max (vector->ptr v)))
+  (define vector-positive? gsl:vector-ispos?)
 
-  (define (vector-min v)
-    (gsl:vector-min (vector->ptr v)))
+  (define vector-negative? gsl:vector-isneg?)
 
-  (define (vector-argmax v)
-    (gsl:vector-max-index (vector->ptr v)))
-
-  (define (vector-argmin v)
-    (gsl:vector-min-index (vector->ptr v)))
-
-  (define (vector-zero? v)
-    (gsl:vector-isnull? (vector->ptr v)))
-
-  (define (vector-positive? v)
-    (gsl:vector-ispositive? (vector->ptr v)))
-
-  (define (vector-negative? v)
-    (gsl:vector-isnegative? (vector->ptr v)))
-
-  (define (vector-nonnegative? v)
-    (gsl:vector-isnonneg? (vector->ptr v)))
+  (define vector-nonnegative? gsl:vector-isnonneg?)
 
   (define (vector= . vectors)
     (foldr (lambda (x y)
              (and
-              (gsl:vector-equal? (vector->ptr (car vectors)) x)
+              (gsl:vector-equal? (car vectors) x)
               y))
            #t
-           (map vector->ptr (cdr vectors))))
+           (cdr vectors)))
 
   (define (make-basis-vector len n)
-    (let ((ptr (gsl:vector-alloc len)))
-      (gsl:vector-set-basis! ptr n)
-      (ptr->vector ptr)))
-
-  (define (vector-basis! v n)
-    (gsl:vector-set-basis! (vector->ptr v) n)
-    (void)))
+    (let ((v (gsl:vector-alloc len)))
+      (gsl:vector-set-basis! v n)
+      v)))

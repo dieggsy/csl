@@ -8,7 +8,8 @@
      (let* ((module-name (cadr e))
             (file-prefix (caddr e))
             (base-type (cadddr e)))
-       `(module ,module-name (vector-size
+       `(module ,module-name (vector?
+                              vector-size
                               vector-alloc
                               vector-calloc
                               vector-free!
@@ -67,11 +68,6 @@
 
           (include "bind-transformers.scm")
 
-          ;; (begin-for-syntax
-          ;;   (define ,(symbol-append module-name '|#| 'gsl-arg-transformer*)
-          ;;     gsl-arg-transformer*))
-          ;; (bind-options default-renaming: ""
-          ;;               foreign-transformer: ,(symbol-append module-name '|#| 'gsl-arg-transformer*))
           (bind-options default-renaming: ""
                         foreign-transformer: foo#gsl-arg-transformer*)
 

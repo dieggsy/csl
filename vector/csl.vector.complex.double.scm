@@ -1,5 +1,5 @@
 (include-relative "vector-functor.scm")
-(include-relative "gsl.vector.complex.double.scm")
+(import gsl.vector.complex.double)
 
 (module csl.vector.complex.double = (generic-vector gsl.vector.complex.double))
 
