@@ -1,4 +1,3 @@
-;; Compile with -L -lgsl -L -lgslcblas
 (module csl.math.double (e
                          log2e
                          log10e
@@ -19,9 +18,9 @@
                          +inf
                          -inf
                          nan
-                         !nan?
-                         !infinite?
-                         !finite?
+                         nan?
+                         infinite?
+                         finite?
                          log1+
                          exp-1
                          hypot
@@ -43,16 +42,14 @@
                          expt8
                          expt9
                          sign
-                         !odd?
-                         !even?
-                         !max
-                         !min
-                         !max-dbl
-                         !min-dbl
-                         !max-int
-                         !min-int
-                         !max-ldbl
-                         !min-ldbl
+                         odd?
+                         even?
+                         max
+                         min
+                         max-dbl
+                         min-dbl
+                         max-int
+                         min-int
                          fcmp)
 
   (import (except scheme
@@ -60,7 +57,10 @@
                   even?
                   max
                   min)
+          (only chicken.base foldr include)
           (chicken foreign))
+
+  (include "csl-error.scm")
 
   (foreign-declare "#include <gsl/gsl_math.h>")
   (foreign-declare "#include <math.h>")
@@ -90,9 +90,9 @@
   (define nan (foreign-value "GSL_NAN" double))
 
 
-  (define !nan? (foreign-lambda bool "gsl_isnan" (const double)))
-  (define !infinite? (foreign-lambda bool "gsl_isinf" (const double)))
-  (define !finite? (foreign-lambda bool "gsl_finite" (const double)))
+  (define nan? (foreign-lambda bool "gsl_isnan" (const double)))
+  (define infinite? (foreign-lambda bool "gsl_isinf" (const double)))
+  (define finite? (foreign-lambda bool "gsl_finite" (const double)))
 
   ;; Elementary functions
   (define log1+ (foreign-lambda double "gsl_log1p" (const double)))
@@ -134,50 +134,22 @@
   (define sign (foreign-lambda* int ((double x)) "C_return(GSL_SIGN(x));"))
 
   ;; Testing for odd and even numbers
-  (define !odd? (foreign-lambda* bool ((int x)) "C_return(GSL_IS_ODD(x));"))
-  (define !even? (foreign-lambda* bool ((int x)) "C_return(GSL_IS_EVEN(x));"))
+  (define odd? (foreign-lambda* bool ((int x)) "C_return(GSL_IS_ODD(x));"))
+  (define even? (foreign-lambda* bool ((int x)) "C_return(GSL_IS_EVEN(x));"))
 
   ;; Maximum and minimum functions
   (define %max (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX(a,b));"))
-  (define (!max . args)
-    (do ((r args (cdr r))
-         (m 0 (%max (car r) m)))
-        ((null? r) m)))
+  (define (max . args) (foldr %max 0 args))
   (define %min (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN(a,b));"))
-  (define (!min . args)
-    (do ((r args (cdr r))
-         (m 0 (%min (car r) m)))
-        ((null? r) m)))
+  (define (min . args) (foldr %min 0 args))
   (define %max-dbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX_DBL(a,b));"))
-  (define (!max-dbl . args)
-    (do ((r args (cdr r))
-         (m 0 (%max-dbl (car r) m)))
-        ((null? r) m)))
+  (define (max-dbl . args) (foldr %max-dbl 0 args))
   (define %min-dbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN_DBL(a,b));"))
-  (define (!min-dbl . args)
-    (do ((r args (cdr r))
-         (m 0 (%min-dbl (car r) m)))
-        ((null? r) m)))
+  (define (min-dbl . args) (foldr %min-dbl 0 args))
   (define %max-int (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX_INT(a,b));"))
-  (define (!max-int . args)
-    (do ((r args (cdr r))
-         (m 0 (%max-int (car r) m)))
-        ((null? r) m)))
+  (define (max-int . args) (foldr %max-int 0 args))
   (define %min-int (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN_INT(a,b));"))
-  (define (!min-int . args)
-    (do ((r args (cdr r))
-         (m 0 (%min-int (car r) m)))
-        ((null? r) m)))
-  (define %max-ldbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX_LDBL(a,b));"))
-  (define (!max-ldbl . args)
-    (do ((r args (cdr r))
-         (m 0 (%max-ldbl (car r) m)))
-        ((null? r) m)))
-  (define %min-ldbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN_LDBL(a,b));"))
-  (define (!min-ldbl . args)
-    (do ((r args (cdr r))
-         (m 0 (%min-ldbl (car r) m)))
-        ((null? r) m)))
+  (define (min-int . args) (foldr %min-int 0 args))
 
   ;; Approximate comparison of floating point numbers
   (define fcmp (foreign-lambda int "gsl_fcmp" double double double)))

@@ -1,168 +1,167 @@
-(module csl.math.complex (!make-rectangular
-                          !make-polar
-                          !angle
-                          !magnitude
-                          magnitude-squared
-                          log-magnitude
-                          conjugate
-                          inverse
-                          !negative
-                          !+
-                          !-
-                          !*
-                          !/
-                          !sqrt
-                          !expt
-                          !exp
-                          !log10
-                          !log
-                          !sin
-                          !asin
-                          !cos
-                          !acos
-                          !tan
-                          !atan
-                          sec
-                          asec
-                          csc
-                          acsc
-                          cot
-                          acot
-                          sinh
-                          asinh
-                          cosh
-                          acosh
-                          tanh
-                          atanh
-                          sech
-                          asech
-                          csch
-                          acsch
-                          coth
-                          acoth)
+(module csl.math.complex (complex-rect
+                          complex-polar
+                          complex-arg
+                          complex-abs
+                          complex-logabs
+                          complex-conjugate
+                          complex-inverse
+                          complex-negative
+                          complex-add
+                          complex-sub
+                          complex-mul
+                          complex-div
+                          ;; complex-add-real
+                          ;; complex-sub-real
+                          ;; complex-mul-real
+                          ;; complex-div-real
+                          ;; complex-add-imag
+                          ;; complex-sub-imag
+                          ;; complex-mul-imag
+                          ;; complex-div-imag
+                          complex-sqrt
+                          complex-sqrt-real
+                          complex-pow
+                          complex-pow-real
+                          complex-exp
+                          complex-log10
+                          complex-log
+                          complex-sin
+                          complex-arcsin
+                          complex-cos
+                          complex-arccos
+                          complex-tan
+                          complex-arctan
+                          complex-sec
+                          complex-arcsec
+                          complex-csc
+                          complex-arccsc
+                          complex-cot
+                          complex-arccot
+                          complex-sinh
+                          complex-arcsinh
+                          complex-cosh
+                          complex-arccosh
+                          complex-tanh
+                          complex-arctanh
+                          complex-sech
+                          complex-arcsech
+                          complex-csch
+                          complex-arccsch
+                          complex-coth
+                          complex-arccoth
+                          )
 
-  (import (except (rename scheme (make-rectangular %make-rectangular))
-                  magnitude
-                  make-polar
-                  angle
-                  +
-                  -
-                  *
-                  /
-                  sqrt
-                  expt
-                  exp
-                  log
-                  sin
-                  asin
-                  cos
-                  acos
-                  tan
-                  atan)
-          (chicken base)
-          (chicken module)
+  (import scheme
+          (only chicken.base include foldl)
+          bind
           (chicken foreign))
+
+  (include "csl-error.scm")
+  (include "bind-transformers.scm")
 
   (foreign-declare "#include <gsl/gsl_complex.h>")
   (foreign-declare "#include <gsl/gsl_complex_math.h>")
 
-  (include-relative "../complex-foreign-lambda.scm")
+  (bind-rename/pattern "^gsl-" "")
 
-  (define-external (scheme_make_rect (double r) (double i)) scheme-object
-    (%make-rectangular r i))
+  ;;; Representation/conversion
+  (bind "struct gsl_complex gsl_complex_rect(double, double)")
+  (bind "struct gsl_complex gsl_complex_polar(double, double)")
 
-  ;; Representation/conversion
-  (define !make-rectangular (complex-foreign-lambda (complex double) "gsl_complex_rect" double double))
-  (define !make-polar (complex-foreign-lambda (complex double) "gsl_complex_polar" double double))
+  ;;; Properties
+  (bind "double gsl_complex_arg(struct gsl_complex)")
+  (bind "double gsl_complex_abs(struct gsl_complex)")
+  (bind "double gsl_complex_abs2(struct gsl_complex)")
+  (bind "double gsl_complex_logabs(struct gsl_complex)")
 
-  ;; Properties
-  (define !angle (complex-foreign-lambda double "gsl_complex_arg" (complex double)))
-  (define !magnitude (complex-foreign-lambda double "gsl_complex_abs" (complex double)))
 
-  (define magnitude-squared (complex-foreign-lambda double "gsl_complex_abs2" (complex double)))
-  (define log-magnitude (complex-foreign-lambda double "gsl_complex_logabs" (complex double)))
+  ;;; Arithmetic operators
+  (bind "struct gsl_complex gsl_complex_conjugate(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_inverse(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_negative(struct gsl_complex)")
 
-  ;; Arithmetic operators
-  (define conjugate (complex-foreign-lambda (complex double) "gsl_complex_conjugate" (complex double)))
-  (define inverse (complex-foreign-lambda (complex double) "gsl_complex_inverse" (complex double)))
-  (define !negative (complex-foreign-lambda (complex double) "gsl_complex_negative" (complex double)))
-  (define %+ (complex-foreign-lambda (complex double) "gsl_complex_add" (complex double) (complex double)))
-  (define (!+ . args)
-    (do ((r args (cdr r))
-         (sum 0 (%+ (car r) sum)))
-        ((null? r) sum)))
+  (bind-rename "gsl_complex_add" "%complex-add")
+  (bind "struct gsl_complex gsl_complex_add(struct gsl_complex, struct gsl_complex)")
+  (define (complex-add . args) (foldl %complex-add 0 args))
 
-  (define %- (complex-foreign-lambda (complex double) "gsl_complex_sub" (complex double) (complex double)))
-  (define (!- . args)
-    (if (= (length args) 1)
-        (!negative (car args))
-        (do ((r args (cdr r))
-             (sum 0 (%- (car r) sum)))
-            ((null? r) sum))))
+  (bind-rename "gsl_complex_sub" "%complex-sub")
+  (bind "struct gsl_complex gsl_complex_sub(struct gsl_complex, struct gsl_complex)")
+  (define (complex-sub . args)
+    (cond ((null? args)
+           (error 'complex-sub "too few arguments - received 0 but expected at least 1"))
+          ((null? (cdr args))
+           (complex-negative (car args)))
+          (else (foldl %complex-sub (car args) (cdr args)))))
+  (bind-rename "gsl_complex_mul" "%complex-mul")
+  (bind "struct gsl_complex gsl_complex_mul(struct gsl_complex, struct gsl_complex)")
+  (define (complex-mul . args) (foldl %complex-mul 1 args))
 
-  (define %* (complex-foreign-lambda (complex double) "gsl_complex_mul" (complex double) (complex double)))
-  (define (!* . args)
-    (do ((r args (cdr r))
-         (prod 1 (%* (car r) prod)))
-        ((null? r) prod)))
+  (bind-rename "gsl_complex_div" "%complex-div")
+  (bind "struct gsl_complex gsl_complex_div(struct gsl_complex, struct gsl_complex)")
+  (define (complex-div . args)
+    (cond ((null? args)
+           (error 'comple-div "too few arguments - received 0 but expected at least 1"))
+          ((null? (cdr args))
+           (complex-inverse (car args)))
+          (else (foldl %complex-div (car args) (cdr args)))))
 
-  (define %/ (complex-foreign-lambda (complex double) "gsl_complex_div" (complex double) (complex double)))
-  (define (!/ . args)
-    (if (= (length args) 1)
-        (inverse (car args))
-        (do ((r (cdr args) (cdr r))
-             (div (car args) (%/ div (car r))))
-            ((null? r) div))))
-  ;; (defcomplex (complex "add_real" (complex double) double))
-  ;; (defcomplex (complex "sub_real" (complex double) double))
-  ;; (defcomplex (complex "mul_real" (complex double) double))
-  ;; (defcomplex (complex "div_real" (complex double) double))
-  ;; (defcomplex (complex "add_imag" (complex double) double))
-  ;; (defcomplex (complex "sub_imag" (complex double) double))
-  ;; (defcomplex (complex "mul_imag" (complex double) double))
-  ;; (defcomplex (complex "div_imag" (complex double) double))
+  ;; (bind "struct gsl_complex gsl_complex_add_real(struct gsl_complex, double)")
+  ;; (bind "struct gsl_complex gsl_complex_sub_real(struct gsl_complex, double)")
+  ;; (bind "struct gsl_complex gsl_complex_mul_real(struct gsl_complex, double)")
+  ;; (bind "struct gsl_complex gsl_complex_div_real(struct gsl_complex, double)")
 
-  ;; Elementary functions
-  (define !sqrt (complex-foreign-lambda (complex double) "gsl_complex_sqrt" (complex double)))
-  ;; (defcomplex (complex "sqrt_real" double))
-  (define !expt (complex-foreign-lambda (complex double) "gsl_complex_pow" (complex double) (complex double)))
-  ;; (defcomplex (complex "pow_real" (complex double) double) expt-real)
-  (define !exp (complex-foreign-lambda (complex double) "gsl_complex_exp" (complex double)))
-  (define !log10 (complex-foreign-lambda (complex double) "gsl_complex_log10" (complex double)))
-  (define !log (complex-foreign-lambda (complex double) "gsl_complex_log" (complex double)))
+  ;; (bind "struct gsl_complex gsl_complex_add_imag(struct gsl_complex, double)")
+  ;; (bind "struct gsl_complex gsl_complex_sub_imag(struct gsl_complex, double)")
+  ;; (bind "struct gsl_complex gsl_complex_mul_imag(struct gsl_complex, double)")
+  ;; (bind "struct gsl_complex gsl_complex_div_imag(struct gsl_complex, double)")
 
-  ;; Trigonometric functions
-  (define !sin (complex-foreign-lambda (complex double) "gsl_complex_sin" (complex double)))
-  (define !cos (complex-foreign-lambda (complex double) "gsl_complex_cos" (complex double)))
-  (define !tan (complex-foreign-lambda (complex double) "gsl_complex_tan" (complex double)))
-  (define sec (complex-foreign-lambda (complex double) "gsl_complex_sec" (complex double)))
-  (define csc (complex-foreign-lambda (complex double) "gsl_complex_csc" (complex double)))
-  (define cot (complex-foreign-lambda (complex double) "gsl_complex_cot" (complex double)))
+  ;;; Elementary functions
+  (bind "struct gsl_complex gsl_complex_sqrt(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_sqrt_real(double)")
+  (bind "struct gsl_complex gsl_complex_pow(struct gsl_complex, struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_pow_real(struct gsl_complex,double)")
+  (bind "struct gsl_complex gsl_complex_exp(struct gsl_complex)")
 
-  (define !asin (complex-foreign-lambda (complex double) "gsl_complex_arcsin" (complex double)))
-  ;; (defcomplex (complex "arcsin_real" double) asin-real)
-  (define !acos (complex-foreign-lambda (complex double) "gsl_complex_arccos" (complex double)))
-  ;; (defcomplex (complex "arccos_real" double) acos-real)
-  (define !atan (complex-foreign-lambda (complex double) "gsl_complex_arctan" (complex double)))
+  (bind-rename "gsl_complex_log" "%complex-log")
+  (bind "struct gsl_complex gsl_complex_log(struct gsl_complex)")
 
-  (define asec (complex-foreign-lambda (complex double) "gsl_complex_arcsec" (complex double)))
-  ;; (defcomplex (complex "arcsec_real" double) asec-real)
-  (define acsc (complex-foreign-lambda (complex double) "gsl_complex_arccsc" (complex double)))
-  ;; (defcomplex (complex "arccsc_real" double) acsc-real)
-  (define acot (complex-foreign-lambda (complex double) "gsl_complex_arccot" (complex double)))
+  (bind "struct gsl_complex gsl_complex_log10(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_log_b(struct gsl_complex, struct gsl_complex)")
 
-  (define sinh (complex-foreign-lambda (complex double) "gsl_complex_sinh" (complex double)))
-  (define cosh (complex-foreign-lambda (complex double) "gsl_complex_cosh" (complex double)))
-  (define tanh (complex-foreign-lambda (complex double) "gsl_complex_tanh" (complex double)))
-  (define sech (complex-foreign-lambda (complex double) "gsl_complex_sech" (complex double)))
-  (define csch (complex-foreign-lambda (complex double) "gsl_complex_csch" (complex double)))
-  (define coth (complex-foreign-lambda (complex double) "gsl_complex_coth" (complex double)))
+  (define (complex-log a #!optional b)
+    (if b
+        (complex-log-b a b)
+        (%complex-log a)))
 
-  (define asinh (complex-foreign-lambda (complex double) "gsl_complex_arcsinh" (complex double)))
-  (define acosh (complex-foreign-lambda (complex double) "gsl_complex_arccosh" (complex double)))
-  ;; (defcomplex (complex "arccosh_real" double) acosh-real)
-  (define atanh (complex-foreign-lambda (complex double) "gsl_complex_arctanh" (complex double)))
-  ;; (defcomplex (complex "arctanh_real" double) atanh-real)
-  (define asech (complex-foreign-lambda (complex double) "gsl_complex_arcsech" (complex double)))
-  (define acsch (complex-foreign-lambda (complex double) "gsl_complex_arccsch" (complex double)))
-  (define acoth (complex-foreign-lambda (complex double) "gsl_complex_arccoth" (complex double))))
+  ;;; Trigonometric functions
+  (bind "struct gsl_complex gsl_complex_sin(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_cos(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_tan(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_sec(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_csc(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_cot(struct gsl_complex)")
+
+
+  ;;; Inverse trig
+  (bind "struct gsl_complex gsl_complex_arcsin(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_arccos(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_arctan(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_arcsec(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_arccsc(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_arccot(struct gsl_complex)")
+
+  ;;; Hyperbolic functions
+  (bind "struct gsl_complex gsl_complex_sinh(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_cosh(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_tanh(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_sech(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_csch(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_coth(struct gsl_complex)")
+
+  ;;; Inverse hyperbolic functions
+  (bind "struct gsl_complex gsl_complex_arcsinh(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_arccosh(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_arctanh(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_arcsech(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_arccsch(struct gsl_complex)")
+  (bind "struct gsl_complex gsl_complex_arccoth(struct gsl_complex)"))
