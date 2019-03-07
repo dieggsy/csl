@@ -1,5 +1,6 @@
 (import-for-syntax (only chicken.format format)
-                   (only chicken.irregex irregex-replace/all))
+                   (only chicken.irregex irregex-replace/all)
+                   (only matchable match))
 
 (define-syntax make-vector-module
   (er-macro-transformer
@@ -43,12 +44,12 @@
                               vector-isneg?
                               vector-isnonneg?
                               vector-equal?)
-          (import (except scheme vector-set! vector)
+          (import (except scheme vector-set! vector vector?)
                   bind
                   chicken.foreign
                   ;; (only chicken.locative make-locative)
                   (only chicken.syntax begin-for-syntax)
-                  (only chicken.base include-relative add1 warning define-record-type)
+                  (only chicken.base include add1 warning define-record-type)
                   (only chicken.gc set-finalizer!)
                   (only chicken.file file-exists?)
                   (only chicken.file.posix file-size)
@@ -56,14 +57,15 @@
                   (only miscmacros ensure)
                   (only matchable match))
 
-          (include-relative "../csl-error.scm")
+          (include "csl-error.scm")
 
           (foreign-declare ,(format "#include <gsl/~a.h>"
-                                    (if (string=? file-prefix "gsl_vector_complex")
-                                        "gsl_vector_complex_double"
-                                        file-prefix)))
+                                    (match file-prefix
+                                      ("gsl_vector_complex" "gsl_vector_complex_double")
+                                      ("gsl_vector" "gsl_vector_double")
+                                      (else file-prefix))))
 
-          (include-relative "../bind-transformers.scm")
+          (include "bind-transformers.scm")
 
           ;; (begin-for-syntax
           ;;   (define ,(symbol-append module-name '|#| 'gsl-arg-transformer*)
@@ -77,15 +79,15 @@
                                "vector")
 
           (define-record-type vector
-            (csl_vector_wrap ptr)
-            csl_vector?
-            (ptr csl_vector_unwrap))
+            (ptr->vector ptr)
+            vector?
+            (ptr vector->ptr))
 
           (bind-type
            csl_vector
            (c-pointer ,file-prefix)
-           csl_vector_unwrap
-           csl_vector_wrap)
+           vector->ptr
+           ptr->vector)
 
           (bind* ,(format "size_t ~a_size (csl_vector v) {" file-prefix)
                  "return v->size;"

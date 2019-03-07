@@ -3,56 +3,77 @@
  (category math)
  (license "GPL-3.0")
  (component-options
-  (csc-options "-O3" "-C" "-O3")
-  (link-options "-L" "-lgsl" "-L" "-lgslcblas" "-L" "-lm"))
- (dependencies foreigners srfi-1 srfi-13 srfi-4)
+  (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
+  (link-options "-L" "`pkg-config --libs gsl`"))
+ (dependencies srfi-1 srfi-13 bind miscmacros matchable)
  (test-dependencies test)
  (components
 
   ;; Mathematical Functions (real)
-  (extension csl.math.double (source "math/csl.math.double.scm"))
+  ;; (extension csl.math.double (source "math/csl.math.double.scm"))
 
   ;; Complex Numbers (+ math)
-  (extension csl.math.complex (source "math/csl.math.complex.scm"))
+  ;; (extension csl.math.complex (source "math/csl.math.complex.scm"))
 
   ;; Polynomials
-  (extension csl.poly (source "csl.poly.scm"))
+  ;; (extension csl.poly (source "csl.poly.scm"))
 
   ;; Vectors (low level)
-  (extension gsl.vector.complex.double (source "vector/gsl.vector.complex.double.scm"))
-  (extension gsl.vector.complex.float (source "vector/gsl.vector.complex.float.scm"))
-  (extension gsl.vector.double (source "vector/gsl.vector.double.scm"))
-  (extension gsl.vector.float (source "vector/gsl.vector.float.scm"))
-  (extension gsl.vector.int (source "vector/gsl.vector.int.scm"))
-  (extension gsl.vector.long (source "vector/gsl.vector.long.scm"))
+  (extension gsl.vector.complex.double
+             (source "vector/gsl/gsl.vector.complex.double.scm"))
+  (extension gsl.vector.complex.float
+             (source "vector/gsl/gsl.vector.complex.float.scm"))
+  (extension gsl.vector.double
+             (source "vector/gsl/gsl.vector.double.scm"))
+  (extension gsl.vector.float
+             (source "vector/gsl/gsl.vector.float.scm"))
+  (extension gsl.vector.long
+             (source "vector/gsl/gsl.vector.long.scm"))
+  (extension gsl.vector.int
+             (source "vector/gsl/gsl.vector.int.scm"))
+  (extension gsl.vector.short
+             (source "vector/gsl/gsl.vector.short.scm"))
+  (extension gsl.vector.char
+             (source "vector/gsl/gsl.vector.char.scm"))
+  (extension gsl.vector.ulong
+             (source "vector/gsl/gsl.vector.ulong.scm"))
+  (extension gsl.vector.uint
+             (source "vector/gsl/gsl.vector.uint.scm"))
+  (extension gsl.vector.ushort
+             (source "vector/gsl/gsl.vector.ushort.scm"))
+  (extension gsl.vector.uchar
+             (source "vector/gsl/gsl.vector.uchar.scm"))
+
+
   ;; Vectors (high level)
-  (extension csl.vector.complex.double (source "vector/csl.vector.complex.double.scm"))
-  (extension csl.vector.complex.float (source "vector/csl.vector.complex.float.scm"))
-  (extension csl.vector.double (source "vector/csl.vector.double.scm"))
-  (extension csl.vector.float (source "vector/csl.vector.float.scm"))
-  (extension csl.vector.int (source "vector/csl.vector.int.scm"))
-  (extension csl.vector.long (source "vector/csl.vector.long.scm"))
-  (extension csl.vector (source "vector/csl.vector.scm"))
+  ;; (extension csl.vector.complex.double (source "vector/csl.vector.complex.double.scm"))
+  ;; (extension csl.vector.complex.float (source "vector/csl.vector.complex.float.scm"))
+  ;; (extension csl.vector.double (source "vector/csl.vector.double.scm"))
+  ;; (extension csl.vector.float (source "vector/csl.vector.float.scm"))
+  ;; (extension csl.vector.int (source "vector/csl.vector.int.scm"))
+  ;; (extension csl.vector.long (source "vector/csl.vector.long.scm"))
+  ;; (extension csl.vector (source "vector/csl.vector.scm"))
 
   ;; Matrices (low level)
-  (extension gsl.matrix.complex.double (source "matrix/gsl.matrix.complex.double.scm"))
-  (extension gsl.matrix.complex.float (source "matrix/gsl.matrix.complex.float.scm"))
-  (extension gsl.matrix.double (source "matrix/gsl.matrix.double.scm"))
-  (extension gsl.matrix.float (source "matrix/gsl.matrix.float.scm"))
-  (extension gsl.matrix.int (source "matrix/gsl.matrix.int.scm"))
-  (extension gsl.matrix.long (source "matrix/gsl.matrix.long.scm"))
+  ;; (extension gsl.matrix.complex.double (source "matrix/gsl.matrix.complex.double.scm"))
+  ;; (extension gsl.matrix.complex.float (source "matrix/gsl.matrix.complex.float.scm"))
+  ;; (extension gsl.matrix.double (source "matrix/gsl.matrix.double.scm"))
+  ;; (extension gsl.matrix.float (source "matrix/gsl.matrix.float.scm"))
+  ;; (extension gsl.matrix.int (source "matrix/gsl.matrix.int.scm"))
+  ;; (extension gsl.matrix.long (source "matrix/gsl.matrix.long.scm"))
   ;; Matrices (high level)
-  (extension csl.matrix.complex.double (source "matrix/csl.matrix.complex.double.scm"))
-  (extension csl.matrix.complex.float (source "matrix/csl.matrix.complex.float.scm"))
-  (extension csl.matrix.double (source "matrix/csl.matrix.double.scm"))
-  (extension csl.matrix.float (source "matrix/csl.matrix.float.scm"))
-  (extension csl.matrix.int (source "matrix/csl.matrix.int.scm"))
-  (extension csl.matrix.long (source "matrix/csl.matrix.long.scm"))
+  ;; (extension csl.matrix.complex.double (source "matrix/csl.matrix.complex.double.scm"))
+  ;; (extension csl.matrix.complex.float (source "matrix/csl.matrix.complex.float.scm"))
+  ;; (extension csl.matrix.double (source "matrix/csl.matrix.double.scm"))
+  ;; (extension csl.matrix.float (source "matrix/csl.matrix.float.scm"))
+  ;; (extension csl.matrix.int (source "matrix/csl.matrix.int.scm"))
+  ;; (extension csl.matrix.long (source "matrix/csl.matrix.long.scm"))
 
   ;; Random number generation
-  (extension csl.rng (source "csl.rng.scm"))
+  ;; (extension csl.rng (source "csl.rng.scm"))
 
   ;; Physical constants
-  (extension csl.mksa (source "const/csl.mksa.scm"))
-  (extension csl.cgsm (source "const/csl.cgsm.scm"))
-  (extension csl.num (source "const/csl.num.scm"))))
+  ;; (extension csl.mksa (source "const/csl.mksa.scm"))
+  ;; (extension csl.cgsm (source "const/csl.cgsm.scm"))
+  ;; (extension csl.num (source "const/csl.num.scm"))
+  ))
