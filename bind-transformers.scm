@@ -1,7 +1,5 @@
 (import (only chicken.foreign foreign-declare)
-        (only srfi-4
-              f64vector make-f64vector f64vector->list
-              f32vector make-f32vector f32vector->list)
+        srfi-4
         (only chicken.syntax begin-for-syntax)
         bind)
 
