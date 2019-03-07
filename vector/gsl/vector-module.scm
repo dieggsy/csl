@@ -68,9 +68,6 @@
 
           (include "bind-transformers.scm")
 
-          (bind-options default-renaming: ""
-                        foreign-transformer: foo#gsl-arg-transformer*)
-
           (bind-rename/pattern ,(irregex-replace/all "_" (format "^~a" file-prefix) "-")
                                "vector")
 

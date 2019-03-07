@@ -99,9 +99,9 @@ gsl_complex_float f32_to_complex(float *arg) {
       ((foreign-lambda* ('c-pointer 'double) args body)
        (bind-foreign-lambda*
         `(,foreign-lambda*
-          f64vector
-          ,args
-          ,body)
+             f64vector
+             ,args
+           ,body)
         ename)
        ;; (write x)
        ;; (newline)
@@ -112,49 +112,49 @@ gsl_complex_float f32_to_complex(float *arg) {
   (define (foo#gsl-arg-transformer* x rename)
     (define (complex-type? str)
       (lambda (type)
-       (and (pair? type)
-            (eq? (car type) 'struct)
-            (string=? (cadr type) str))))
+        (and (pair? type)
+             (eq? (car type) 'struct)
+             (string=? (cadr type) str))))
     (define (make-complex-arg-lambda fl rtype args body typestr convertstr vec)
       (when (debug)
-         (print "----LAMBDA:")
-         (pp x)
-         (print "=>"))
-       (let ((argnames (map cadr args)))
-         (define (type varname)
-           (any (lambda (spec)
-                  (and (eq? (cadr spec) varname)
-                       (car spec))) args))
-         (define (gsl-complex? type)
-           (and (equal? type `(struct ,typestr))))
-         (define (gsl-complex->f64vector as)
-           (if (gsl-complex? (car as))
-               (list vec (cadr as))
-               as))
-         ;; recursively look for variables which reference arguments of
-         ;; type struct and cast from f64vector to struct gsl-complex*.
-         (define (dereference body)
-           (if (list? body)
-               (map dereference body)
-               (if (and (symbol? body) (gsl-complex? (type body)))
-                   (conc convertstr "(" body ")")
-                   body)))
-         (let ((final-lambda
-                `(lambda ,argnames
-                   (,(gsl-ret-transformer*
-                      `(,fl ,rtype
+        (print "----LAMBDA:")
+        (pp x)
+        (print "=>"))
+      (let ((argnames (map cadr args)))
+        (define (type varname)
+          (any (lambda (spec)
+                 (and (eq? (cadr spec) varname)
+                      (car spec))) args))
+        (define (gsl-complex? type)
+          (and (equal? type `(struct ,typestr))))
+        (define (gsl-complex->f64vector as)
+          (if (gsl-complex? (car as))
+              (list vec (cadr as))
+              as))
+        ;; recursively look for variables which reference arguments of
+        ;; type struct and cast from f64vector to struct gsl-complex*.
+        (define (dereference body)
+          (if (list? body)
+              (map dereference body)
+              (if (and (symbol? body) (gsl-complex? (type body)))
+                  (conc convertstr "(" body ")")
+                  body)))
+        (let ((final-lambda
+               `(lambda ,argnames
+                  (,(gsl-ret-transformer*
+                     `(,fl ,rtype
                            ,(map gsl-complex->f64vector args)
-                         ,(dereference body))
-                      rename)
-                    ,@(map (lambda (x)
-                             (if (gsl-complex? (type x))
-                                 `(,vec (exact->inexact (real-part ,x))
-                                             (exact->inexact (imag-part ,x)))
-                                 x))
-                           argnames)))))
-           (when (debug)
-             (pp final-lambda))
-           final-lambda)))
+                           ,(dereference body))
+                     rename)
+                   ,@(map (lambda (x)
+                            (if (gsl-complex? (type x))
+                                `(,vec (exact->inexact (real-part ,x))
+                                       (exact->inexact (imag-part ,x)))
+                                x))
+                          argnames)))))
+          (when (debug)
+            (pp final-lambda))
+          final-lambda)))
     (match x
       ;; return-type is a gsl-complex, need to convert
       ((foreign-lambda* rtype (? (lambda (x) (any (complex-type? "gsl_complex") (map car x))) args) body)
@@ -166,5 +166,5 @@ gsl_complex_float f32_to_complex(float *arg) {
         x
         rename)))))
 
-;; convert any arguments of type (struct "gsl-complex") to f64vectors,
-;; and cast & dereference from C.
+(bind-options default-renaming: ""
+              foreign-transformer: foo#gsl-arg-transformer*)
