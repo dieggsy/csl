@@ -38,25 +38,24 @@ gsl_complex_float f32_to_complex(float *arg) {
                    (only matchable match))
 
 (begin-for-syntax
-  (define debug (make-parameter #f))
-  (debug #f)
-  (when (debug)
-    (print "===== compile-time"))
-  ;; convert any foreign-lambda with a gsl-complex struct return-type,
-  ;; and make it return a 2-element f64vector instead.
+  ;; convert any foreign-lambda with a gsl-complex struct return-type, and make
+  ;; it return a 2-element f64vector/f32vector instead (depending on complex
+  ;; base type), which is then converted into a complex number
   (define (gsl-ret-transformer* x rename)
 
-    (define (make-complex-ret-lambda fl args body typestr vec make-vec vec->list )
+    (define (make-complex-ret-lambda fl args body typestr vec make-vec vec->list)
       (let* ((argnames (map cadr args))
-             ;; return-type -> void, add f64vector destination
+             ;; return-type -> void, add f64vector/f32vector destination
              ;; argument, and cast to gsl-complex.
              (lambda-with-destination
               (bind-foreign-lambda*
                `(,fl
-                 void                           ;; new return type
+                 void ;; new return type
                  ,(cons `(,vec dest) args) ;; add destination arg
                  (stmt
-                  (= ,(format "~a _z" typestr) ,body) ;; allocate, cast & assign
+                  ;; Allocate & assign
+                  ;;,body here is essentially the 'original' function call in C
+                  (= ,(format "~a _z" typestr) ,body)
                   (= "dest[0]" "GSL_REAL(_z)")
                   (= "dest[1]" "GSL_IMAG(_z)")
                   ))
@@ -69,8 +68,6 @@ gsl_complex_float f32_to_complex(float *arg) {
                   (apply make-rectangular (,vec->list destination))))))
         destination-wrapper))
 
-    ;; (write x)
-    ;; (newline)
     (match x
       ;; return-type is a gsl-complex, need to convert
       ((foreign-lambda*
@@ -86,13 +83,14 @@ gsl_complex_float f32_to_complex(float *arg) {
               (make-complex-ret-lambda foreign-lambda* args body type
                                        'f32vector 'make-f32vector 'f32vector->list))
              (else (error "Unknown complex type" type))))
+      ;; Handle gsl_vector_view by copying into gsl_vector and returning that
+      ;; instead
       ((foreign-lambda*
            ('struct (?
                      (cut irregex-match "gsl_vector(_\\w+)?_view" <>)
                      type))
            args
          body)
-       ;; (print "VECTOR VIEW")
        (let* ((argnames (map cadr args))
               (pref (irregex-match-substring
                      (irregex-match "(gsl_vector(_\\w+)?)_view" type)
@@ -103,7 +101,8 @@ gsl_complex_float f32_to_complex(float *arg) {
                      csl_vector ;; new return type
                      ,args
                    (stmt
-                    (= ,(format "~a view" type) ,body) ;; allocate, cast & assign
+                    ;; allocate, copy, return
+                    (= ,(format "~a view" type) ,body)
                     ,(format "~a *vec = ~a_alloc(view.vector.size);" pref pref)
                     ,(format "memcpy(vec,&view.vector,sizeof(~a));" pref)
                     (return vec)))
@@ -116,11 +115,7 @@ gsl_complex_float f32_to_complex(float *arg) {
              f64vector
              ,args
            ,body)
-        ename)
-       ;; (write x)
-       ;; (newline)
-       ;; (bind-foreign-lambda* x rename)
-       )
+        rename))
       (else (bind-foreign-lambda* x rename))))
 
   (define (foo#gsl-arg-transformer* x rename)
@@ -130,10 +125,6 @@ gsl_complex_float f32_to_complex(float *arg) {
              (eq? (car type) 'struct)
              (string=? (cadr type) str))))
     (define (make-complex-arg-lambda fl rtype args body typestr convertstr vec)
-      (when (debug)
-        (print "----LAMBDA:")
-        (pp x)
-        (print "=>"))
       (let ((argnames (map cadr args)))
         (define (type varname)
           (any (lambda (spec)
@@ -166,11 +157,9 @@ gsl_complex_float f32_to_complex(float *arg) {
                                        (exact->inexact (imag-part ,x)))
                                 x))
                           argnames)))))
-          (when (debug)
-            (pp final-lambda))
           final-lambda)))
     (match x
-      ;; return-type is a gsl-complex, need to convert
+      ;; arg type is a gsl-complex, need to convert
       ((foreign-lambda* rtype
            (? (lambda (x)
                 (any (complex-type? "gsl_complex") (map car x)))
