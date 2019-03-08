@@ -48,8 +48,6 @@
           (import (except scheme vector-set! vector vector?)
                   bind
                   chicken.foreign
-                  ;; (only chicken.locative make-locative)
-                  (only chicken.syntax begin-for-syntax)
                   (only chicken.base include add1 warning define-record-type)
                   (only chicken.gc set-finalizer!)
                   (only chicken.file file-exists?)
@@ -166,7 +164,7 @@
                     (%vector-fprintf f vector format)
                     (fclose f)))))
 
-          (define (vector-fscanf filename vector)
+          (define (vector-fscanf filename)
             (ensure file-exists? filename "file does not exist" filename)
             (define size (length (call-with-input-file filename read-list)))
             (let* ((vector (vector-alloc size))
