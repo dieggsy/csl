@@ -161,16 +161,7 @@ gsl_complex_float f32_to_complex(float *arg) {
                                        (exact->inexact (imag-part ,x)))
                                 x))
                           argnames)))))
-          ;; (write final-lambda)
-          ;; (newline)
           final-lambda)))
-    ;; (write x)
-    ;; (newline)
-    ;; (write (caddr x))
-    ;; (write
-    ;;  (any (cut equal? '(struct "gsl_sf_result") <>)
-    ;;       (map car (caddr x))))
-    ;; (newline)
     (match x
       ;; arg type is a gsl-complex, need to convert
       ((foreign-lambda* rtype
@@ -220,14 +211,6 @@ gsl_complex_float f32_to_complex(float *arg) {
                            (,(gsl-ret-transformer*
                               `(,foreign-lambda* ,rtype
                                    ,(map (lambda (as)
-                                           ;; (display "AS: ")
-                                           ;; (write as)
-                                           ;; (newline)
-                                           ;; (match (car as)
-                                           ;;   ("gsl_mode_t" (list 'unsigned-int (cadr as)))
-                                           ;;   ("gsl_sf_result" '(c-pointer "gsl_sf_result"))
-                                           ;;   (else as))
-
                                            (if (equal? "gsl_mode_t" (car as))
                                                (list 'unsigned-int (cadr as))
                                                as)
@@ -249,34 +232,7 @@ gsl_complex_float f32_to_complex(float *arg) {
                      ,(if (any sf-result? (map type argnames))
                           '(f64vector->values fvec)
                           'fnres)))))
-           ;; (write final-lambda)
-           (newline)
            final-lambda)))
-      ;; ((foreign-lambda* rtype
-      ;;      (? (lambda (x)
-      ;;           (any (cut equal? '(c-pointer "gsl_sf_result") <>)
-      ;;                (map car x)))
-      ;;         args)
-      ;;    body)
-      ;;  (let ((argnames (map cadr args)))
-      ;;    (define (type varname)
-      ;;      (any (lambda (spec)
-      ;;             (and (eq? (cadr spec) varname)
-      ;;                  (car spec))) args))
-      ;;    (define (sf-result? type)
-      ;;      (and (equal? type '(struct "gsl_sf_result"))))
-      ;;    (let ((final-lambda
-      ;;           (lambda ()
-      ;;             (gsl-ret-transformer*
-      ;;              `(,foreign-lambda* ,rtype
-      ;;                   ,(map sf-result->f64vector args)
-      ;;                 ,body
-      ;;                 ;; ,(dereference body)
-      ;;                 )
-      ;;              rename))
-      ;;           ))
-      ;;      final-lambda))
-      ;;  )
       (else
        (gsl-ret-transformer*
         x
