@@ -3,7 +3,10 @@
         (only chicken.syntax begin-for-syntax)
         bind)
 
-(foreign-declare "#include <gsl/gsl_complex.h>")
+(foreign-declare "
+#include <gsl/gsl_complex.h>
+#include <gsl/gsl_mode.h>
+")
 
 (foreign-declare "
 gsl_complex f64_to_complex(double *arg) {
@@ -19,8 +22,6 @@ gsl_complex_float f32_to_complex(float *arg) {
 }
 " )
 
-(foreign-declare "#include <gsl/gsl_mode.h>")
-
 (define prec-double (foreign-value "GSL_PREC_DOUBLE" int))
 (define prec-single (foreign-value "GSL_PREC_SINGLE" int))
 (define prec-approx (foreign-value "GSL_PREC_APPROX" int))
@@ -33,9 +34,12 @@ gsl_complex_float f32_to_complex(float *arg) {
                          irregex-match
                          irregex-match-substring)
                    (only chicken.format format)
-                   (only srfi-1 any)
+                   (only srfi-1 any filter)
                    (only srfi-13 string-prefix?)
                    (only matchable match))
+
+(define (f64vector->values v)
+  (apply values (f64vector->list v)))
 
 (begin-for-syntax
   ;; convert any foreign-lambda with a gsl-complex struct return-type, and make
@@ -137,7 +141,7 @@ gsl_complex_float f32_to_complex(float *arg) {
               (list vec (cadr as))
               as))
         ;; recursively look for variables which reference arguments of
-        ;; type struct and cast from f64vector to struct gsl-complex*.
+        ;; type struct and cast from f64vector to struct gsl-complex.
         (define (dereference body)
           (if (list? body)
               (map dereference body)
@@ -157,7 +161,16 @@ gsl_complex_float f32_to_complex(float *arg) {
                                        (exact->inexact (imag-part ,x)))
                                 x))
                           argnames)))))
+          ;; (write final-lambda)
+          ;; (newline)
           final-lambda)))
+    ;; (write x)
+    ;; (newline)
+    ;; (write (caddr x))
+    ;; (write
+    ;;  (any (cut equal? '(struct "gsl_sf_result") <>)
+    ;;       (map car (caddr x))))
+    ;; (newline)
     (match x
       ;; arg type is a gsl-complex, need to convert
       ((foreign-lambda* rtype
@@ -174,10 +187,18 @@ gsl_complex_float f32_to_complex(float *arg) {
          body)
        (make-complex-arg-lambda foreign-lambda* rtype args body
                                 "gsl_complex_float" "f32_to_complex" 'f32vector))
+      ;; Boy is the below a kludge:
+
+      ;;I wasn't sure how to decouple gsl_sf_result args from gsl_mode_t args
+      ;;in the transformer, so I process them with the same pattern and
+      ;;conditionally do things based on the arg type
       ((foreign-lambda* rtype
            (? (lambda (x)
-                (any (cut equal? "gsl_mode_t" <>)
-                     (map car x)))
+                (any
+                 (lambda (x)
+                   (or (equal? "gsl_mode_t" x)
+                       (equal? '(c-pointer "gsl_sf_result") x)))
+                 (map car x)))
               args)
          body)
        (let ((argnames (map cadr args)))
@@ -185,25 +206,77 @@ gsl_complex_float f32_to_complex(float *arg) {
            (any (lambda (spec)
                   (and (eq? (cadr spec) varname)
                        (car spec))) args))
-         `(lambda  ,argnames
-            (,(gsl-ret-transformer*
-               `(,foreign-lambda* ,rtype
-                    ,(map (lambda (as)
-                            (if (equal? "gsl_mode_t" (car as))
-                                (list 'unsigned-int (cadr as))
-                                as))
-                          args)
-                  ,body)
-               rename)
-             ,@(map (lambda (x)
-                      (if (equal? "gsl_mode_t" (type x))
-                          `(case ,x
-                             ((double) prec-double)
-                             ((single) prec-single)
-                             ((approx) prec-approx)
-                             (else (error "Invalid precision specifier" ,x)))
-                          x))
-                    argnames)))))
+
+         (define (sf-result? type)
+           (and (equal? type '(c-pointer "gsl_sf_result"))))
+
+         (let ((final-lambda
+                `(lambda  ,(filter (lambda (x) (not (sf-result? (type x))))
+                                   argnames)
+                   (let* (,@(if (any sf-result? (map type argnames))
+                                '((fvec (make-f64vector 2)))
+                                '())
+                          (fnres
+                           (,(gsl-ret-transformer*
+                              `(,foreign-lambda* ,rtype
+                                   ,(map (lambda (as)
+                                           ;; (display "AS: ")
+                                           ;; (write as)
+                                           ;; (newline)
+                                           ;; (match (car as)
+                                           ;;   ("gsl_mode_t" (list 'unsigned-int (cadr as)))
+                                           ;;   ("gsl_sf_result" '(c-pointer "gsl_sf_result"))
+                                           ;;   (else as))
+
+                                           (if (equal? "gsl_mode_t" (car as))
+                                               (list 'unsigned-int (cadr as))
+                                               as)
+                                           )
+                                         args)
+                                 ,body)
+                              rename)
+                            ,@(map (lambda (x)
+                                     (cond ((equal? "gsl_mode_t" (type x))
+                                            `(case ,x
+                                               ((double) prec-double)
+                                               ((single) prec-single)
+                                               ((approx) prec-approx)
+                                               (else (error "Invalid precision specifier" ,x))))
+                                           ((sf-result? (type x))
+                                            '(location fvec))
+                                           (else x)))
+                                   argnames))))
+                     ,(if (any sf-result? (map type argnames))
+                          '(f64vector->values fvec)
+                          'fnres)))))
+           ;; (write final-lambda)
+           (newline)
+           final-lambda)))
+      ;; ((foreign-lambda* rtype
+      ;;      (? (lambda (x)
+      ;;           (any (cut equal? '(c-pointer "gsl_sf_result") <>)
+      ;;                (map car x)))
+      ;;         args)
+      ;;    body)
+      ;;  (let ((argnames (map cadr args)))
+      ;;    (define (type varname)
+      ;;      (any (lambda (spec)
+      ;;             (and (eq? (cadr spec) varname)
+      ;;                  (car spec))) args))
+      ;;    (define (sf-result? type)
+      ;;      (and (equal? type '(struct "gsl_sf_result"))))
+      ;;    (let ((final-lambda
+      ;;           (lambda ()
+      ;;             (gsl-ret-transformer*
+      ;;              `(,foreign-lambda* ,rtype
+      ;;                   ,(map sf-result->f64vector args)
+      ;;                 ,body
+      ;;                 ;; ,(dereference body)
+      ;;                 )
+      ;;              rename))
+      ;;           ))
+      ;;      final-lambda))
+      ;;  )
       (else
        (gsl-ret-transformer*
         x
