@@ -52,7 +52,7 @@
                           )
 
   (import scheme
-          (only chicken.base include foldl)
+          (only chicken.base include foldl error)
           bind
           (chicken foreign))
 
@@ -62,6 +62,7 @@
   (foreign-declare "#include <gsl/gsl_complex.h>")
   (foreign-declare "#include <gsl/gsl_complex_math.h>")
 
+  (bind-options default-renaming: "")
   (bind-rename/pattern "^gsl-" "")
 
   ;;; Representation/conversion

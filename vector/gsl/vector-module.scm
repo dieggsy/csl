@@ -66,6 +66,8 @@
 
           (include "bind-transformers.scm")
 
+          (bind-options default-renaming: "")
+
           (bind-rename/pattern ,(irregex-replace/all "_" (format "^~a" file-prefix) "-")
                                "vector")
 
@@ -100,9 +102,10 @@
             (set-finalizer! (%vector-calloc n) vector-free!))
 
           ;;; Accessing vector elements
-          (bind ,(format "~a ~a_get(csl_vector, const size_t)" base-type file-prefix))
+          (bind ,(format "___safe ~a ~a_get(csl_vector, const size_t)" base-type file-prefix))
+
           (bind-rename ,(string-append file-prefix "_set") "vector-set!")
-          (bind ,(format "void ~a_set(csl_vector, const size_t, ~a)" file-prefix base-type))
+          (bind ,(format "___safe void ~a_set(csl_vector, const size_t, ~a)" file-prefix base-type))
           ;; gsl_vector_ptr omitted
 
           ;;; Initializing vector elements

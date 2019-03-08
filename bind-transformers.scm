@@ -282,5 +282,4 @@ gsl_complex_float f32_to_complex(float *arg) {
         x
         rename)))))
 
-(bind-options default-renaming: ""
-              foreign-transformer: foo#gsl-arg-transformer*)
+(bind-options foreign-transformer: foo#gsl-arg-transformer*)
