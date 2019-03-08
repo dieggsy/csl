@@ -19,6 +19,12 @@ gsl_complex_float f32_to_complex(float *arg) {
 }
 " )
 
+(foreign-declare "#include <gsl/gsl_mode.h>")
+
+(define prec-double (foreign-value "GSL_PREC_DOUBLE" int))
+(define prec-single (foreign-value "GSL_PREC_SINGLE" int))
+(define prec-approx (foreign-value "GSL_PREC_APPROX" int))
+
 (import-for-syntax bind-translator
                    (only chicken.pretty-print pp)
                    (only chicken.string conc)
@@ -67,7 +73,12 @@ gsl_complex_float f32_to_complex(float *arg) {
     ;; (newline)
     (match x
       ;; return-type is a gsl-complex, need to convert
-      ((foreign-lambda* ('struct (? (cut irregex-search "^gsl_complex" <>) type)) args body)
+      ((foreign-lambda*
+           ('struct (?
+                     (cut irregex-search "^gsl_complex" <>)
+                     type))
+           args
+         body)
        (cond ((string=? type "gsl_complex")
               (make-complex-ret-lambda foreign-lambda* args body type
                                        'f64vector 'make-f64vector 'f64vector->list))
@@ -75,7 +86,12 @@ gsl_complex_float f32_to_complex(float *arg) {
               (make-complex-ret-lambda foreign-lambda* args body type
                                        'f32vector 'make-f32vector 'f32vector->list))
              (else (error "Unknown complex type" type))))
-      ((foreign-lambda* ('struct (? (cut irregex-match "gsl_vector(_\\w+)?_view" <>) type)) args body)
+      ((foreign-lambda*
+           ('struct (?
+                     (cut irregex-match "gsl_vector(_\\w+)?_view" <>)
+                     type))
+           args
+         body)
        ;; (print "VECTOR VIEW")
        (let* ((argnames (map cadr args))
               (pref (irregex-match-substring
@@ -155,10 +171,50 @@ gsl_complex_float f32_to_complex(float *arg) {
           final-lambda)))
     (match x
       ;; return-type is a gsl-complex, need to convert
-      ((foreign-lambda* rtype (? (lambda (x) (any (complex-type? "gsl_complex") (map car x))) args) body)
-       (make-complex-arg-lambda foreign-lambda* rtype args body "gsl_complex" "f64_to_complex" 'f64vector))
-      ((foreign-lambda* rtype (? (lambda (x) (any (complex-type? "gsl_complex_float") (map car x))) args) body)
-       (make-complex-arg-lambda foreign-lambda* rtype args body "gsl_complex_float" "f32_to_complex" 'f32vector))
+      ((foreign-lambda* rtype
+           (? (lambda (x)
+                (any (complex-type? "gsl_complex") (map car x)))
+              args)
+         body)
+       (make-complex-arg-lambda foreign-lambda* rtype args body
+                                "gsl_complex" "f64_to_complex" 'f64vector))
+      ((foreign-lambda* rtype
+           (? (lambda (x)
+                (any (complex-type? "gsl_complex_float") (map car x)))
+              args)
+         body)
+       (make-complex-arg-lambda foreign-lambda* rtype args body
+                                "gsl_complex_float" "f32_to_complex" 'f32vector))
+      ((foreign-lambda* rtype
+           (? (lambda (x)
+                (any (cut equal? "gsl_mode_t" <>)
+                     (map car x)))
+              args)
+         body)
+       (let ((argnames (map cadr args)))
+         (define (type varname)
+           (any (lambda (spec)
+                  (and (eq? (cadr spec) varname)
+                       (car spec))) args))
+         `(lambda  ,argnames
+            (,(gsl-ret-transformer*
+               `(,foreign-lambda* ,rtype
+                    ,(map (lambda (as)
+                            (if (equal? "gsl_mode_t" (car as))
+                                (list 'unsigned-int (cadr as))
+                                as))
+                          args)
+                  ,body)
+               rename)
+             ,@(map (lambda (x)
+                      (if (equal? "gsl_mode_t" (type x))
+                          `(case ,x
+                             ((double) prec-double)
+                             ((single) prec-single)
+                             ((approx) prec-approx)
+                             (else (error "Invalid precision specifier" ,x)))
+                          x))
+                    argnames)))))
       (else
        (gsl-ret-transformer*
         x
