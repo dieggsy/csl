@@ -9,6 +9,8 @@
             (file-prefix (caddr e))
             (base-type (cadddr e)))
        `(module ,module-name (vector?
+                              vector->ptr
+                              ptr->vector
                               vector-size
                               vector-alloc
                               vector-calloc
@@ -38,6 +40,7 @@
                               vector-add-constant!
                               vector-max
                               vector-min
+                              vector-minmax
                               vector-max-index
                               vector-min-index
                               vector-isnull?
@@ -237,27 +240,41 @@
           (bind ,(format "int ~a_add_constant(csl_vector, ~a)" file-prefix base-type))
 
           ;;; Maximum and minimum
-          (define (vector-max vector)
-            (let ((size (vector-size vector)))
+          (define (vector-max v)
+            (let ((size (vector-size v))
+                  (first (vector-get v 0)))
               (let loop ((i 0)
-                         (res 0))
+                         (res first))
                 (if (= i size)
                     res
-                    (loop (add1 i) (max res (vector-get vector i)))))))
+                    (loop (add1 i) (max res (vector-get v i)))))))
 
-          (define (vector-min vector)
-            (let ((size (vector-size vector)))
+          (define (vector-min v)
+            (let ((size (vector-size v))
+                  (first (vector-get v 0)))
               (let loop ((i 0)
-                         (res 0))
+                         (res first))
                 (if (= i size)
                     res
-                    (loop (add1 i) (min res (vector-get vector i)))))))
+                    (loop (add1 i) (min res (vector-get v i)))))))
+
+          (define (vector-minmax v)
+            (let ((size (vector-size v))
+                  (first (vector-get v 0)))
+              (let loop ((i 0)
+                         (maxres first)
+                         (minres first))
+                (if (= i size)
+                    (values minres maxres)
+                    (let ((cur (vector-get v i)))
+                      (loop (add1 i) (max maxres cur) (min minres cur)))))))
 
           (define (vector-max-index v)
-            (let ((size (vector-size v)))
+            (let ((size (vector-size v))
+                  (first (vector-get v 0)))
               (let loop ((i 0)
                          (maxind 0)
-                         (maxval 0))
+                         (maxval first))
                 (if (= i size)
                     maxind
                     (let* ((currval (vector-get v i))
@@ -267,10 +284,11 @@
                             (if bigger currval maxval)))))))
 
           (define (vector-min-index v)
-            (let ((size (vector-size v)))
+            (let ((size (vector-size v))
+                  (first (vector-get v 0)))
               (let loop ((i 0)
                          (minind 0)
-                         (minval 0))
+                         (minval first))
                 (if (= i size)
                     minind
                     (let* ((currval (vector-get v i))
