@@ -108,18 +108,34 @@ gsl_complex_float f32_to_complex(float *arg) {
                     ;; allocate, copy, return
                     (= ,(format "~a view" type) ,body)
                     ,(format "~a *vec = ~a_alloc(view.vector.size);" pref pref)
-                    ,(format "memcpy(vec,&view.vector,sizeof(~a));" pref)
+                    ,(format "~a_memcpy(vec,&view.vector);" pref pref)
+                    (return vec)))
+                rename)))
+         lambda-with-destination))
+      ((foreign-lambda*
+           ('struct (?
+                     (cut irregex-match "gsl_matrix(_\\w+)?_view" <>)
+                     type))
+           args
+         body)
+       (let* ((argnames (map cadr args))
+              (pref (irregex-match-substring
+                     (irregex-match "(gsl_matrix(_\\w+)?)_view" type)
+                     1))
+              (lambda-with-destination
+               (bind-foreign-lambda*
+                `(,foreign-lambda*
+                     csl_matrix ;; new return type
+                     ,args
+                   (stmt
+                    ;; allocate, copy, return
+                    (= ,(format "~a view" type) ,body)
+                    ,(format "~a *vec = ~a_alloc(view.matrix.size1, view.matrix.size2);" pref pref)
+                    ,(format "~a_memcpy(vec,&view.matrix);" pref pref)
                     (return vec)))
                 rename)))
          lambda-with-destination))
       ;; ignore other return-types
-      ((foreign-lambda* ('c-pointer 'double) args body)
-       (bind-foreign-lambda*
-        `(,foreign-lambda*
-             f64vector
-             ,args
-           ,body)
-        rename))
       (else (bind-foreign-lambda* x rename))))
 
   (define (foo#gsl-arg-transformer* x rename)
