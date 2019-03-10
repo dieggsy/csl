@@ -43,6 +43,7 @@
                               vector-minmax
                               vector-max-index
                               vector-min-index
+                              vector-minmax-index
                               vector-isnull?
                               vector-ispos?
                               vector-isneg?
@@ -296,6 +297,25 @@
                       (loop (add1 i)
                             (if smaller i minind)
                             (if smaller currval minval)))))))
+
+          (define (vector-minmax-index v)
+            (let ((size (vector-size v))
+                  (first (vector-get v 0)))
+              (let loop ((i 0)
+                         (minind 0)
+                         (minval first)
+                         (maxind 0)
+                         (maxval first))
+                (if (= i size)
+                    (values minind maxind)
+                    (let* ((currval (vector-get v i))
+                           (smaller (< currval minval))
+                           (bigger (> currval maxval)))
+                      (loop (add1 i)
+                            (if smaller i minind)
+                            (if smaller currval minval)
+                            (if bigger i maxind)
+                            (if bigger currval maxval)))))))
 
           ;;; Vector properties
           (bind-rename ,(string-append file-prefix "_isnull") "vector-isnull?")
