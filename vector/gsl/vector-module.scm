@@ -118,7 +118,7 @@
           (bind-rename ,(string-append file-prefix "_set_zero") "vector-set-zero!")
           (bind ,(format "void ~a_set_zero(csl_vector)" file-prefix))
           (bind-rename ,(string-append file-prefix "_set_basis") "vector-set-basis!")
-          (bind ,(format "void ~a_set_basis(csl_vector, size_t)" file-prefix))
+          (bind ,(format "___safe void ~a_set_basis(csl_vector, size_t)" file-prefix))
 
           ;;; Reading and writing vectors
           (bind-opaque-type cfile (c-pointer "FILE"))
@@ -191,8 +191,8 @@
               vector))
 
           ;;; Vector views
-          (bind ,(format "struct ~a_view ~a_subvector(csl_vector, size_t, size_t)" file-prefix file-prefix))
-          (bind ,(format "struct ~a_view ~a_subvector_with_stride(csl_vector, size_t, size_t, size_t)" file-prefix file-prefix))
+          (bind ,(format "___safe struct ~a_view ~a_subvector(csl_vector, size_t, size_t)" file-prefix file-prefix))
+          (bind ,(format "___safe struct ~a_view ~a_subvector_with_stride(csl_vector, size_t, size_t, size_t)" file-prefix file-prefix))
 
           (define (vector-real v)
             (let* ((size (vector-size v))
@@ -211,28 +211,28 @@
 
           ;;; Copying vectors
           (bind-rename ,(string-append file-prefix "_memcpy") "vector-memcpy!")
-          (bind ,(format "int ~a_memcpy(csl_vector, csl_vector)" file-prefix))
+          (bind ,(format "___safe int ~a_memcpy(csl_vector, csl_vector)" file-prefix))
           (bind-rename ,(string-append file-prefix "_swap") "vector-swap!")
-          (bind ,(format "int ~a_swap(csl_vector, csl_vector)" file-prefix))
+          (bind ,(format "___safe int ~a_swap(csl_vector, csl_vector)" file-prefix))
 
           ;;; Exchanging elements
           (bind-rename ,(string-append file-prefix "_swap_elements") "vector-swap-elements!")
-          (bind ,(format "int ~a_swap_elements(csl_vector, size_t, size_t)" file-prefix))
+          (bind ,(format "___safe int ~a_swap_elements(csl_vector, size_t, size_t)" file-prefix))
           (bind-rename ,(string-append file-prefix "_reverse") "vector-reverse!")
           (bind ,(format "int ~a_reverse(csl_vector)" file-prefix))
 
           ;;; Vector operations
           (bind-rename ,(string-append file-prefix "_add") "vector-add!")
-          (bind ,(format "int ~a_add(csl_vector, csl_vector)" file-prefix))
+          (bind ,(format "___safe int ~a_add(csl_vector, csl_vector)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_sub") "vector-sub!")
-          (bind ,(format "int ~a_sub(csl_vector, csl_vector)" file-prefix))
+          (bind ,(format "___safe int ~a_sub(csl_vector, csl_vector)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_mul") "vector-mul!")
-          (bind ,(format "int ~a_mul(csl_vector, csl_vector)" file-prefix))
+          (bind ,(format "___safe int ~a_mul(csl_vector, csl_vector)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_div") "vector-div!")
-          (bind ,(format "int ~a_div(csl_vector, csl_vector)" file-prefix))
+          (bind ,(format "___safe int ~a_div(csl_vector, csl_vector)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_scale") "vector-scale!")
           (bind ,(format "int ~a_scale(csl_vector, ~a)" file-prefix base-type))
