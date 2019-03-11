@@ -1,502 +1,363 @@
-(import-for-syntax (chicken string)
-                   (except (srfi 13)
-                           string->list
-                           string-copy
-                           string-fill!))
-(define-syntax csl-matrix-module
-  (er-macro-transformer
-   (lambda (e i c)
-     (let* ((matrix-module (cadr e))
-            (vector-module (string->symbol
-                            (apply string-append
-                                   `("csl.vector."
-                                     ,@(intersperse
-                                        (cddr
-                                         (string-split (symbol->string matrix-module) "."))
-                                        "."))))))
-       `(begin
-          (functor (generic-matrix (M (matrix-alloc
-                                       matrix-set!
-                                       matrix-rows
-                                       matrix-cols
-                                       matrix-get
-                                       matrix-set-all!
-                                       matrix-set-identity!
-                                       matrix-memcpy!
-                                       matrix-get-row
-                                       matrix-set-row!
-                                       matrix-swap-rows!
-                                       matrix-get-col
-                                       matrix-set-col!
-                                       matrix-swap-columns!
-                                       matrix-transpose-memcpy!
-                                       matrix-transpose!
-                                       matrix-swap-rowcol!
-                                       matrix-submatrix-with-stride
-                                       matrix-add!
-                                       matrix-sub!
-                                       matrix-mul-elements!
-                                       matrix-div-elements!
-                                       matrix-scale!
-                                       matrix-add-constant!
-                                       matrix-isnull?
-                                       matrix-ispositive?
-                                       matrix-isnegative?
-                                       matrix-isnonneg?
-                                       matrix-equal?
-                                       matrix-max
-                                       matrix-min
-                                       matrix-max-index
-                                       matrix-min-index
-                                       matrix-diagonal
-                                       matrix-subdiagonal
-                                       matrix-superdiagonal)))
-              (matrix?
-               matrix->ptr
-               ptr->matrix
-               list->matrix
-               matrix->list
-               make-matrix
-               matrix-rows
-               matrix-columns
-               matrix-map
-               matrix-map!
-               matrix-ref
-               matrix-set!
-               matrix-fill!
-               matrix-row-ref
-               matrix-row-set!
-               matrix-flipud
-               matrix-flipud!
-               matrix-row-append
-               matrix-column-ref
-               matrix-column-set!
-               matrix-fliplr
-               matrix-fliplr!
-               matrix-column-append
-               matrix-copy
-               matrix-copy!
-               matrix-swap!
-               matrix-real-part
-               matrix-imag-part
-               matrix+
-               matrix+!
-               matrix-
-               matrix-!
-               matrix~*
-               matrix~*!
-               matrix~/
-               matrix~/!
-               matrix-scale
-               matrix-scale!
-               matrix-add-constant
-               matrix-add-constant!
-               matrix-zero?
-               matrix-positive?
-               matrix-negative?
-               matrix-nonnegative?
-               matrix=
-               matrix-max
-               matrix-min
-               matrix-argmax
-               matrix-argmin
-               make-identity-matrix
-               matrix-identity!
-               submatrix
-               matrix-row-swap!
-               matrix-column-swap!
-               matrix-row-column-swap!
-               matrix-diagonal
-               matrix-transpose!
-               matrix-transpose)
-              (import (except scheme
-                              vector?
-                              list->vector
-                              vector->list
-                              vector
-                              make-vector
-                              vector-length
-                              vector-ref
-                              vector-set!
-                              vector-fill!)
-                      (except (chicken base) subvector vector-copy!)
-                      (chicken foreign)
-                      foreigners
-                      (prefix M gsl:)
-                      ,vector-module)
+(functor (generic-matrix (M (matrix?
+                             matrix-size1
+                             matrix-size2
+                             matrix-alloc
+                             matrix-calloc
+                             matrix-free!
+                             matrix-get
+                             matrix-set!
+                             matrix-set-all!
+                             matrix-set-zero!
+                             matrix-set-identity!
+                             matrix-fwrite
+                             matrix-fread
+                             matrix-fprintf
+                             matrix-fscanf
+                             matrix-submatrix
+                             matrix-view-vector
+                             matrix-row
+                             matrix-column
+                             matrix-subrow
+                             matrix-subcolumn
+                             matrix-diagonal
+                             matrix-subdiagonal
+                             matrix-superdiagonal
+                             matrix-memcpy!
+                             matrix-swap!
+                             matrix-get-row!
+                             matrix-get-col!
+                             matrix-set-row!
+                             matrix-set-col!
+                             matrix-swap-rows!
+                             matrix-swap-columns!
+                             matrix-swap-rowcol!
+                             matrix-transpose-memcpy!
+                             matrix-transpose!
+                             matrix-add!
+                             matrix-sub!
+                             matrix-mul-elements!
+                             matrix-div-elements!
+                             matrix-scale!
+                             matrix-add-constant!
+                             matrix-max
+                             matrix-min
+                             matrix-minmax
+                             matrix-max-index
+                             matrix-min-index
+                             matrix-minmax-index
+                             matrix-isnull?
+                             matrix-ispos?
+                             matrix-isneg?
+                             matrix-isnonneg?
+                             matrix-equal?)))
+    (list->matrix
+     matrix->list
+     matrix
+     make-matrix
+     matrix-rows
+     matrix-columns
+     matrix-map
+     matrix-map!
+     matrix-ref
+     ;; submatrix
+     matrix-fill!
+     matrix-copy
+     matrix-copy!
+     matrix-swap-elements!
+     matrix-row-ref
+     matrix-row-set!
+     matrix-flipud
+     matrix-flipud!
+     matrix-appendv
+     matrix-column-ref
+     matrix-column-set!
+     matrix-fliplr
+     matrix-fliplr!
+     matrix-appendh
+     matrix-real-part
+     matrix-imag-part
+     matrix+
+     matrix-
+     matrix~*
+     matrix~/
+     matrix-scale
+     matrix-add-constant
+     matrix-zero?
+     matrix-positive?
+     matrix-negative?
+     matrix-nonnegative?
+     matrix=
+     make-identity-matrix
+     matrix-diagonal*
+     matrix-transpose
+     )
+    (import scheme
+            (only chicken.module reexport)
+            (only chicken.base add1 sub1 when cut foldl foldr identity)
+            (only miscmacros ensure)
+            (only srfi-1 every)
+            (prefix M gsl:))
 
-            (define-record-type matrix
-              (ptr->matrix data)
-              matrix?
-              (data matrix->ptr))
+  (reexport M)
+  (define (list->matrix lst)
+    ;; (ensure (lambda (l)
+    ;;           (and ((list-of? list?) l)
+    ;;                (let ((len (length (car l))))
+    ;;                  (every (lambda (x)
+    ;;                           (= (length len)
+    ;;                              (length x)))  (cdr l)))))
+    ;;         "not a list of lists of the same length" l)
+    (let* ((rows (length lst))
+           (cols (length (car lst)))
+           (m (gsl:matrix-alloc rows cols)))
+      (do ((i 0 (add1 i))
+           (l1 lst (cdr l1)))
+          ((= i rows) m)
+        (do ((j 0 (add1 j))
+             (l2 (car l1) (cdr l2)))
+            ((= j cols))
+          (gsl:matrix-set! m i j (car l2))))))
 
-            (define (list->matrix lst)
-              (let* ((rows (length lst))
-                     (cols (length (car lst)))
-                     (m (gsl:matrix-alloc rows cols)))
-                (do ((i 0 (+ i 1))
-                     (l1 lst (cdr l1)))
-                    ((= i rows) (ptr->matrix m))
-                  (do ((j 0 (+ j 1))
-                       (l2 (car l1) (cdr l2)))
-                      ((= j cols))
-                    (gsl:matrix-set! m i j (car l2))))))
+  (define (matrix->list m)
+    (let* ((rows (gsl:matrix-size1 m))
+           (columns (gsl:matrix-size2 m)))
+      (define (row->list n)
+        (do ((j (sub1 columns) (sub1 j))
+             (res '() (cons (gsl:matrix-get m n j) res)))
+            ((= j -1) res)))
+      (do ((i (sub1 rows) (sub1 i))
+           (res '() (cons (row->list i) res)))
+          ((= i -1) res))))
 
-            (define (matrix->list m)
-              (let* ((data (matrix->ptr m))
-                     (rows (gsl:matrix-rows data))
-                     (columns (gsl:matrix-cols data)))
-                (define (row->list n)
-                  (do ((j (- columns 1) (- j 1))
-                       (res '() (cons (gsl:matrix-get data n j) res)))
-                      ((= j -1) res)))
-                (do ((i (- rows 1) (- i 1))
-                     (res '() (cons (row->list i) res)))
-                    ((= i -1) res))))
+  (define-syntax matrix
+    (syntax-rules ()
+      ((_ arg)
+       (list->matrix 'arg))))
 
-            ;; (define (matrix . args)
-            ;;   (list->matrix args))
+  (define (make-matrix rows cols #!optional fill)
+    (let ((m (gsl:matrix-alloc rows cols)))
+      (when fill
+        (gsl:matrix-set-all! m fill))
+      m))
 
-            (define (make-matrix rows cols #!optional fill)
-              (let ((m (gsl:matrix-alloc rows cols)))
-                (when fill
-                  (gsl:matrix-set-all! m fill))
-                (ptr->matrix m)))
+  (define matrix-rows matrix-size1)
 
-            (define (matrix-rows m)
-              (let ((ptr (matrix->ptr m)))
-                (gsl:matrix-rows ptr)))
+  (define matrix-columns matrix-size2)
 
-            (define (matrix-columns m)
-              (let ((ptr (matrix->ptr m)))
-                (gsl:matrix-cols ptr)))
+  (define (matrix-map fn . matrices)
+    (let* ((rows (apply min (map gsl:matrix-size1 matrices)))
+           (cols (apply min (map gsl:matrix-size2 matrices)))
+           (new (gsl:matrix-alloc rows cols)))
+      (do ((i 0 (+ i 1)))
+          ((= i rows) new)
+        (do ((j 0 (+ j 1)))
+            ((= j cols))
+          (gsl:matrix-set!
+           new i j
+           (apply fn (map (cut gsl:matrix-get <> i j) matrices)))))))
 
-            (define (matrix-map fn . matrices)
-              (let* ((ptrs (map matrix->ptr matrices))
-                     (rows (apply min (map gsl:matrix-rows ptrs)))
-                     (cols (apply min (map gsl:matrix-cols ptrs)))
-                     (new (gsl:matrix-alloc rows cols)))
-                (do ((i 0 (+ i 1)))
-                    ((= i rows) (ptr->matrix new))
-                  (do ((j 0 (+ j 1)))
-                      ((= j cols))
-                    (gsl:matrix-set! new i j (apply fn (map (cut gsl:matrix-get <> i j) ptrs)))))))
+  (define (matrix-map! fn . matrices)
+    (let* ((rows (apply min (map gsl:matrix-size1 matrices)))
+           (cols (apply min (map gsl:matrix-size2 matrices))))
+      (do ((i 0 (+ i 1)))
+          ((= i rows))
+        (do ((j 0 (+ j 1)))
+            ((= j cols))
+          (gsl:matrix-set!
+           (car matrices) i j
+           (apply fn (map (cut gsl:matrix-get <> i j) matrices)))))))
 
-            (define (matrix-map! fn . matrices)
-              (let* ((ptrs (map matrix->ptr matrices))
-                     (rows (apply min (map gsl:matrix-rows ptrs)))
-                     (cols (apply min (map gsl:matrix-cols ptrs))))
-                (do ((i 0 (+ i 1)))
-                    ((= i rows))
-                  (do ((j 0 (+ j 1)))
-                      ((= j cols))
-                    (gsl:matrix-set! (car ptrs) i j (apply fn (map (cut gsl:matrix-get <> i j) ptrs)))))))
+  (define matrix-ref matrix-get)
 
-            (define (matrix-ref m i j)
-              (gsl:matrix-get (matrix->ptr m) i j))
+  ;; (define (submatrix (m )))
 
-            (define (matrix-set! m i j val)
-              (gsl:matrix-set! (matrix->ptr m) i j val))
+  (define matrix-fill! matrix-set-all!)
 
-            (define (matrix-fill! m n)
-              (gsl:matrix-set-all! (matrix->ptr m) n)
-              (void))
 
-            (define (make-identity-matrix n)
-              (let ((ptr (gsl:matrix-alloc n n)))
-                (gsl:matrix-set-identity! ptr)
-                (ptr->matrix ptr)))
+  (define (matrix-copy m)
+    (let* ((new (gsl:matrix-alloc (gsl:matrix-size1 m) (gsl:matrix-size2 m))))
+      (gsl:matrix-memcpy! new m)
+      new))
 
-            (define (matrix-identity! m)
-              (gsl:matrix-set-identity! (matrix->ptr m)))
+  (define matrix-copy! matrix-memcpy!)
 
-            (define (matrix-copy m)
-              (let* ((ptr (matrix->ptr m))
-                     (new (gsl:matrix-alloc (gsl:matrix-rows ptr) (gsl:matrix-cols ptr))))
-                (gsl:matrix-memcpy! new ptr)
-                (ptr->matrix new)))
+  (define (matrix-swap-elements! m i0 j0 i1 j1)
+    (let* ((tmp (gsl:matrix-get m i1 j1)))
+      (gsl:matrix-set! m i1 j1 (gsl:matrix-get m i0 j0))
+      (gsl:matrix-set! m i0 j0 tmp)))
 
-            (define (matrix-copy! m1 m2)
-              (gsl:matrix-memcpy! (matrix->ptr m1) (matrix->ptr m2)))
+  (define matrix-row-ref gsl:matrix-row)
 
-            (define (matrix-swap! m i0 j0 i1 j1)
-              (let* ((ptr (matrix->ptr m))
-                     (tmp (gsl:matrix-get ptr i1 j1)))
-                (gsl:matrix-set! ptr i1 j1 (gsl:matrix-get m i0 j0))
-                (gsl:matrix-set! ptr i0 j0 tmp)))
+  (define matrix-row-set! gsl:matrix-set-row!)
 
-            (define (matrix-row-ref m n)
-              (ptr->vector (gsl:matrix-get-row (matrix->ptr m) n)))
+  (define (matrix-flipud! m)
+    (do ((gr (sub1 (gsl:matrix-size1 m)) (sub1 gr))
+         (sr 0 (add1 sr)))
+        ((= gr -1))
+      (let ((tmp (gsl:matrix-row m sr)))
+        (gsl:matrix-set-row! m sr (gsl:matrix-row m gr))
+        (gsl:matrix-set-row! m gr tmp))))
 
-            (define (matrix-row-set! m n v)
-              (gsl:matrix-set-row! (matrix->ptr m) n (vector->ptr v))
-              (void))
+  (define (matrix-flipud m)
+    (let ((new (gsl:matrix-alloc (gsl:matrix-size1 m)
+                                 (gsl:matrix-size2 m))))
+      (gsl:matrix-memcpy! new m)
+      (matrix-flipud! new)
+      new))
 
-            (define (matrix-flipud m)
-              (let* ((ptr (matrix->ptr m))
-                     (new (gsl:matrix-alloc (gsl:matrix-rows ptr)
-                                            (gsl:matrix-cols ptr))))
-                (gsl:matrix-memcpy! new ptr)
-                (do ((gr (- (gsl:matrix-rows ptr) 1) (- gr 1))
-                     (sr 0 (+ sr 1)))
-                    ((= gr -1) (ptr->matrix new))
-                  (let ((tmp (gsl:matrix-get-row new sr)))
-                    (gsl:matrix-set-row! new sr (gsl:matrix-get-row new gr))
-                    (gsl:matrix-set-row! new gr tmp)))))
+  (define (matrix-appendh . matrices)
+    (define (row-append ptr1 ptr2)
+      (let* ((len1 (gsl:matrix-size1 ptr1))
+             (len2 (gsl:matrix-size1 ptr2))
+             (newlen (+ len1 len2))
+             (new (gsl:matrix-alloc newlen
+                                    (gsl:matrix-size2 ptr1))))
+        (do ((i 0 (add1 i)))
+            ((= i len1))
+          (gsl:matrix-set-row! new i (gsl:matrix-row ptr1 i)))
+        (do ((i len1 (add1 i)))
+            ((= i newlen))
+          (gsl:matrix-set-row! new i (gsl:matrix-row ptr2 (- i len1))))
+        new))
+    (foldl row-append (car matrices) (cdr matrices)))
 
-            (define (matrix-flipud! m)
-              (let ((ptr (matrix->ptr m)))
-                (do ((gr (- (gsl:matrix-rows ptr) 1) (- gr 1))
-                     (sr 0 (+ sr 1)))
-                    ((= gr -1))
-                  (let ((tmp (gsl:matrix-get-row ptr sr)))
-                    (gsl:matrix-set-row! ptr sr (gsl:matrix-get-row ptr gr))
-                    (gsl:matrix-set-row! ptr gr tmp)))
-                (void)))
+  (define matrix-column-ref matrix-column)
 
-            (define (matrix-row-append . matrices)
-              (define (row-append ptr1 ptr2)
-                (let* ((len1 (gsl:matrix-rows ptr1))
-                       (len2 (gsl:matrix-rows ptr2))
-                       (newlen (+ len1 len2))
-                       (new (gsl:matrix-alloc newlen
-                                              (gsl:matrix-cols ptr1))))
-                  (do ((i 0 (+ i 1)))
-                      ((= i len1))
-                    (gsl:matrix-set-row! new i (gsl:matrix-get-row ptr1 i)))
-                  (do ((i len1 (+ i 1)))
-                      ((= i newlen))
-                    (gsl:matrix-set-row! new i (gsl:matrix-get-row ptr2 (- i len1))))
-                  new))
-              (let ((ptrs (map matrix->ptr matrices)))
-                (ptr->matrix
-                 (foldl row-append (car ptrs) (cdr ptrs)))))
+  (define matrix-column-set! gsl:matrix-set-col!)
 
-            (define (matrix-row-swap! m i j)
-              (gsl:matrix-swap-rows! (matrix->ptr m) i j))
+  (define (matrix-fliplr! m)
+    (do ((gr (sub1 (gsl:matrix-size2 m)) (sub1 gr))
+         (sr 0 (add1 sr)))
+        ((= gr -1))
+      (let ((tmp (gsl:matrix-column m sr)))
+        (gsl:matrix-set-col! m sr (gsl:matrix-column m gr))
+        (gsl:matrix-set-col! m gr tmp))))
 
-            (define (matrix-column-ref m n)
-              (ptr->vector (gsl:matrix-get-col (matrix->ptr m) n)))
+  (define (matrix-fliplr m)
+    (let ((new (gsl:matrix-alloc (gsl:matrix-size1 m)
+                                 (gsl:matrix-size2 m))))
+      (gsl:matrix-memcpy! new m)
+      (matrix-fliplr! new)
+      new))
 
-            (define (matrix-column-set! m n v)
-              (gsl:matrix-set-col! (matrix->ptr m) n (vector->ptr v))
-              (void))
+  (define (matrix-appendv . matrices)
+    (define (column-append ptr1 ptr2)
+      (let* ((len1 (gsl:matrix-size2 ptr1))
+             (len2 (gsl:matrix-size2 ptr2))
+             (newlen (+ len1 len2))
+             (new (gsl:matrix-alloc (gsl:matrix-size1 ptr1)
+                                    newlen)))
+        (do ((i 0 (+ i 1)))
+            ((= i len1))
+          (gsl:matrix-set-col! new i (gsl:matrix-column ptr1 i)))
+        (do ((i len1 (+ i 1)))
+            ((= i newlen))
+          (gsl:matrix-set-col! new i (gsl:matrix-column ptr2 (- i len1))))
+        new))
+    (foldl column-append (car matrices) (cdr matrices)))
 
-            (define (matrix-fliplr m)
-              (let* ((ptr (matrix->ptr m))
-                     (new (gsl:matrix-alloc (gsl:matrix-rows ptr)
-                                            (gsl:matrix-cols ptr))))
-                (gsl:matrix-memcpy! new ptr)
-                (do ((gr (- (gsl:matrix-cols ptr) 1) (- gr 1))
-                     (sr 0 (+ sr 1)))
-                    ((= gr -1) (ptr->matrix new))
-                  (let ((tmp (gsl:matrix-get-col new sr)))
-                    (gsl:matrix-set-col! new sr (gsl:matrix-get-col new gr))
-                    (gsl:matrix-set-col! new gr tmp)))))
+  (define (matrix-real-part m)
+    (let* ((rows (matrix-size1 m))
+           (cols (matrix-size2 m))
+           (new (matrix-alloc rows cols)))
+      (do ((i 0 (add1 i)))
+          ((= i rows) new)
+        (do ((j 0 (add1 j)))
+            ((= j cols))
+          (matrix-set! new i j (real-part (matrix-ref m i j)))))))
 
-            (define (matrix-fliplr! m)
-              (let ((ptr (matrix->ptr m)))
-                (do ((gr (- (gsl:matrix-cols ptr) 1) (- gr 1))
-                     (sr 0 (+ sr 1)))
-                    ((= gr -1))
-                  (let ((tmp (gsl:matrix-get-col ptr sr)))
-                    (gsl:matrix-set-col! ptr sr (gsl:matrix-get-col ptr gr))
-                    (gsl:matrix-set-col! ptr gr tmp)))
-                (void)))
+  (define (matrix-imag-part m)
+    (let* ((rows (matrix-size1 m))
+           (cols (matrix-size2 m))
+           (new (matrix-alloc rows cols)))
+      (do ((i 0 (add1 i)))
+          ((= i rows) new)
+        (do ((j 0 (add1 j)))
+            ((= j cols))
+          (matrix-set! new i j (imag-part (matrix-ref m i j)))))))
 
-            (define (matrix-column-append . matrices)
-              (define (column-append ptr1 ptr2)
-                (let* ((len1 (gsl:matrix-cols ptr1))
-                       (len2 (gsl:matrix-cols ptr2))
-                       (newlen (+ len1 len2))
-                       (new (gsl:matrix-alloc (gsl:matrix-rows ptr1)
-                                              newlen)))
-                  (do ((i 0 (+ i 1)))
-                      ((= i len1))
-                    (gsl:matrix-set-col! new i (gsl:matrix-get-col ptr1 i)))
-                  (do ((i len1 (+ i 1)))
-                      ((= i newlen))
-                    (gsl:matrix-set-col! new i (gsl:matrix-get-col ptr2 (- i len1))))
-                  new))
-              (let ((ptrs (map matrix->ptr matrices)))
-                (ptr->matrix
-                 (foldl column-append (car ptrs) (cdr ptrs)))))
+  (define (matrix+ . matrices)
+    (let* ((m1 (car matrices))
+           (new (gsl:matrix-alloc (gsl:matrix-size1 m1)
+                                  (gsl:matrix-size2 m1))))
+      (gsl:matrix-memcpy! new m1)
+      (for-each (cut gsl:matrix-add! new <>) (cdr matrices))
+      new))
 
-            (define (matrix-column-swap! m i j)
-              (gsl:matrix-swap-columns! (matrix->ptr m) i j))
+  (define (matrix- . matrices)
+    (let* ((single? (null? (cdr matrices)))
+           (m1 (car matrices))
+           (new (gsl:matrix-calloc (gsl:matrix-size1 m1)
+                                   (gsl:matrix-size2 m1))))
+      (when (not single?)
+        (gsl:matrix-memcpy! new m1))
+      (for-each (cut gsl:matrix-sub! new <>) ((if single? identity cdr) matrices))
+      new))
 
-            (define (matrix-transpose m)
-              (let* ((ptr (matrix->ptr m))
-                     (rows (gsl:matrix-rows ptr))
-                     (cols (gsl:matrix-cols ptr))
-                     (new (gsl:matrix-alloc cols rows)))
-                (gsl:matrix-transpose-memcpy! new ptr)
-                (ptr->matrix new)))
+  (define (matrix~* . matrices)
+    (let* ((m1 (car matrices))
+           (new (gsl:matrix-alloc (gsl:matrix-size1 m1)
+                                  (gsl:matrix-size2 m1))))
+      (gsl:matrix-memcpy! new m1)
+      (for-each (cut gsl:matrix-mul-elements! new <>) (map matrix->ptr (cdr matrices)))
+      new))
 
-            (define (matrix-transpose! m)
-              (let ((ptr (matrix->ptr m)))
-                (gsl:matrix-transpose! ptr)))
+  (define (matrix~/ . matrices)
+    (let* ((single? (null? (cdr matrices)))
+           (m1 (car matrices))
+           (new (gsl:matrix-alloc (gsl:matrix-size1 m1)
+                                  (gsl:matrix-size2 m1))))
+      (if single?
+          (matrix-fill! new 1)
+          (gsl:matrix-memcpy! new m1))
+      (for-each (cut gsl:matrix-div-elements! new <>) ((if single? identity cdr) matrices))
+      new))
 
-            (define (matrix-row-column-swap! m i j)
-              (gsl:matrix-swap-rowcol! (matrix->ptr m) i j))
+  (define (matrix-scale m n)
+    (let* ((new (gsl:matrix-alloc (gsl:matrix-size1 m)
+                                  (gsl:matrix-size2 m))))
+      (gsl:matrix-memcpy! new m)
+      (gsl:matrix-scale! new n)
+      new))
 
-            (define (submatrix m i1 #!optional i2)
-              (define (fix-index lst max)
-                (let ((empty (null? lst)))
-                  (list (or (and lst
-                                 (not empty)
-                                 (not (null? (cdr lst)))
-                                 (car lst))
-                            0)
-                        (or (and lst
-                                 (not empty)
-                                 (not (null? (cdr lst)))
-                                 (cadr lst))
-                            (and lst
-                                 (not (null? lst))
-                                 (car lst))
-                            max)
-                        (or (and lst
-                                 (not empty)
-                                 (not (null? (cdr lst)))
-                                 (not (null? (cddr lst)))
-                                 (caddr lst))
-                            1))))
-              (let* ((ptr (matrix->ptr m))
-                     (rows (gsl:matrix-rows ptr))
-                     (cols (gsl:matrix-cols ptr))
-                     (i1 (fix-index i1 rows))
-                     (i2 (fix-index i2 cols))
-                     (i1b (car i1))
-                     (i1s (caddr i1))
-                     (i1e (cadr i1))
-                     (i2b (car i2))
-                     (i2s (caddr i2))
-                     (i2e (cadr i2)))
-                (ptr->matrix
-                 (gsl:matrix-submatrix-with-stride ptr
-                                                   i1b
-                                                   i2b
-                                                   i1s
-                                                   i2s
-                                                   (inexact->exact
-                                                    (ceiling (/ (- i1e i1b) i1s)))
-                                                   (inexact->exact
-                                                    (ceiling (/ (- i2e i2b) i2s)))))))
+  (define (matrix-add-constant m n)
+    (let* ((new (gsl:matrix-alloc (gsl:matrix-size1 m)
+                                  (gsl:matrix-size2 m))))
+      (gsl:matrix-memcpy! new m)
+      (gsl:matrix-add-constant! new n)
+      new))
 
-            (define (matrix+ . matrices)
-              (let* ((ptr1 (matrix->ptr (car matrices)))
-                     (new (gsl:matrix-alloc (gsl:matrix-rows ptr1)
-                                            (gsl:matrix-cols ptr1))))
-                (gsl:matrix-memcpy! new ptr1)
-                (for-each (cut gsl:matrix-add! new <>) (map matrix->ptr (cdr matrices)))
-                (ptr->matrix new)))
+  (define matrix-zero? gsl:matrix-isnull?)
 
-            (define (matrix+! . matrices)
-              (let* ((ptr1 (matrix->ptr (car matrices))))
-                (for-each (cut gsl:matrix-add! ptr1 <>) (map matrix->ptr (cdr matrices)))))
+  (define matrix-positive? gsl:matrix-ispos?)
 
-            (define (matrix- . matrices)
-              (let* ((ptr1 (matrix->ptr (car matrices)))
-                     (new (gsl:matrix-alloc (gsl:matrix-rows ptr1)
-                                            (gsl:matrix-cols ptr1))))
-                (gsl:matrix-memcpy! new ptr1)
-                (for-each (cut gsl:matrix-sub! new <>) (map matrix->ptr (cdr matrices)))
-                (ptr->matrix new)))
+  (define matrix-negative? gsl:matrix-isneg?)
 
-            (define (matrix-! . matrices)
-              (let* ((ptr1 (matrix->ptr (car matrices))))
-                (for-each (cut gsl:matrix-sub! ptr1 <>) (map matrix->ptr (cdr matrices)))))
+  (define matrix-nonnegative? gsl:matrix-isnonneg?)
 
-            (define (matrix~* . matrices)
-              (let* ((ptr1 (matrix->ptr (car matrices)))
-                     (new (gsl:matrix-alloc (gsl:matrix-rows ptr1)
-                                            (gsl:matrix-cols ptr1))))
-                (gsl:matrix-memcpy! new ptr1)
-                (for-each (cut gsl:matrix-mul-elements! new <>) (map matrix->ptr (cdr matrices)))
-                (ptr->matrix new)))
+  (define (matrix= . matrices)
+    (foldr (lambda (x y)
+             (and
+              (gsl:matrix-equal? (car matrices) x)
+              y))
+           #t
+           (cdr matrices)))
 
-            (define (matrix~*! . matrices)
-              (let* ((ptr1 (matrix->ptr (car matrices))))
-                (for-each (cut gsl:matrix-mul-elements! ptr1 <>) (map matrix->ptr (cdr matrices)))))
+  (define (make-identity-matrix n)
+    (let ((ptr (gsl:matrix-alloc n n)))
+      (gsl:matrix-set-identity! ptr)
+      ptr))
 
-            (define (matrix~/ . matrices)
-              (let* ((ptr1 (matrix->ptr (car matrices)))
-                     (new (gsl:matrix-alloc (gsl:matrix-rows ptr1)
-                                            (gsl:matrix-cols ptr1))))
-                (gsl:matrix-memcpy! new ptr1)
-                (for-each (cut gsl:matrix-div-elements! new <>) (map matrix->ptr (cdr matrices)))
-                (ptr->matrix new)))
+  (define (matrix-diagonal* m #!optional (k 0))
+    (if (negative? k)
+        (gsl:matrix-subdiagonal m (- k))
+        (gsl:matrix-superdiagonal m k)))
 
-            (define (matrix~/! . matrices)
-              (let* ((ptr1 (matrix->ptr (car matrices))))
-                (for-each (cut gsl:matrix-div-elements! ptr1 <>) (map matrix->ptr (cdr matrices)))))
+  (define (matrix-transpose m)
+    (let* ((rows (gsl:matrix-size1 m))
+           (cols (gsl:matrix-size2 m))
+           (new (gsl:matrix-alloc cols rows)))
+      (gsl:matrix-transpose-memcpy! new m)
+      new)))
 
-            (define (matrix-scale v n)
-              (let* ((ptr (matrix->ptr v))
-                     (new (gsl:matrix-alloc (gsl:matrix-rows ptr)
-                                            (gsl:matrix-cols ptr))))
-                (gsl:matrix-memcpy! new ptr)
-                (gsl:matrix-scale! new n)
-                (ptr->matrix new)))
-
-            (define (matrix-scale! v n)
-              (gsl:matrix-scale! (matrix->ptr v) n)
-              (void))
-
-            (define (matrix-add-constant v n)
-              (let* ((ptr (matrix->ptr v))
-                     (new (gsl:matrix-alloc (gsl:matrix-rows ptr)
-                                            (gsl:matrix-cols ptr))))
-                (gsl:matrix-memcpy! new ptr)
-                (gsl:matrix-add-constant! new n)
-                (ptr->matrix new)))
-
-            (define (matrix-add-constant! v n)
-              (gsl:matrix-add-constant! (matrix->ptr v) n)
-              (void))
-
-            (define (matrix-real-part m)
-              (matrix-map real-part m))
-
-            (define (matrix-imag-part m)
-              (matrix-map imag-part m))
-
-            (define (matrix-zero? v)
-              (gsl:matrix-isnull? (matrix->ptr v)))
-
-            (define (matrix-positive? v)
-              (gsl:matrix-ispositive? (matrix->ptr v)))
-
-            (define (matrix-negative? v)
-              (gsl:matrix-isnegative? (matrix->ptr v)))
-
-            (define (matrix-nonnegative? v)
-              (gsl:matrix-isnonneg? (matrix->ptr v)))
-
-            (define (matrix= . matrices)
-              (foldr (lambda (x y)
-                       (and
-                        (gsl:matrix-equal? (matrix->ptr (car matrices)) x)
-                        y))
-                     #t
-                     (map matrix->ptr (cdr matrices))))
-
-            (define (matrix-max v)
-              (gsl:matrix-max (matrix->ptr v)))
-
-            (define (matrix-min v)
-              (gsl:matrix-min (matrix->ptr v)))
-
-            (define (matrix-argmax v)
-              (gsl:matrix-max-index (matrix->ptr v)))
-
-            (define (matrix-argmin v)
-              (gsl:matrix-min-index (matrix->ptr v)))
-
-            (define (matrix-diagonal m #!optional (k 0))
-              (if (negative? k)
-                  (ptr->vector (gsl:matrix-subdiagonal (matrix->ptr m) (- k)))
-                  (ptr->vector (gsl:matrix-superdiagonal (matrix->ptr m) k)))))
-          (module ,@(cdr e)))))))
 

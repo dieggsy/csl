@@ -169,12 +169,42 @@
              (link-options "-L" "`pkg-config --libs gsl`"))
 
   ;; Matrices (high level)
-  ;; (extension csl.matrix.complex.double (source "matrix/csl.matrix.complex.double.scm"))
-  ;; (extension csl.matrix.complex.float (source "matrix/csl.matrix.complex.float.scm"))
-  ;; (extension csl.matrix.double (source "matrix/csl.matrix.double.scm"))
-  ;; (extension csl.matrix.float (source "matrix/csl.matrix.float.scm"))
-  ;; (extension csl.matrix.int (source "matrix/csl.matrix.int.scm"))
-  ;; (extension csl.matrix.long (source "matrix/csl.matrix.long.scm"))
+  (extension csl.matrix.complex.double
+             (source "matrix/csl.matrix.complex.double.scm")
+             (component-dependencies gsl.matrix.complex.double))
+  (extension csl.matrix.complex.float
+             (source "matrix/csl.matrix.complex.float.scm")
+             (component-dependencies gsl.matrix.complex.float))
+  (extension csl.matrix.double
+             (source "matrix/csl.matrix.double.scm")
+             (component-dependencies gsl.matrix.double))
+  (extension csl.matrix.float
+             (source "matrix/csl.matrix.float.scm")
+             (component-dependencies gsl.matrix.float))
+  (extension csl.matrix.long
+             (source "matrix/csl.matrix.long.scm")
+             (component-dependencies gsl.matrix.long))
+  (extension csl.matrix.int
+             (source "matrix/csl.matrix.int.scm")
+             (component-dependencies gsl.matrix.int))
+  (extension csl.matrix.short
+             (source "matrix/csl.matrix.short.scm")
+             (component-dependencies gsl.matrix.short))
+  (extension csl.matrix.char
+             (source "matrix/csl.matrix.char.scm")
+             (component-dependencies gsl.matrix.char))
+  (extension csl.matrix.ulong
+             (source "matrix/csl.matrix.ulong.scm")
+             (component-dependencies gsl.matrix.ulong))
+  (extension csl.matrix.uint
+             (source "matrix/csl.matrix.uint.scm")
+             (component-dependencies gsl.matrix.uint))
+  (extension csl.matrix.ushort
+             (source "matrix/csl.matrix.ushort.scm")
+             (component-dependencies gsl.matrix.ushort))
+  (extension csl.matrix.uchar
+             (source "matrix/csl.matrix.uchar.scm")
+             (component-dependencies gsl.matrix.uchar))
 
   ;; Random number generation
   ;; (extension csl.rng (source "csl.rng.scm"))
