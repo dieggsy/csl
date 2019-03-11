@@ -144,9 +144,9 @@
             (set-finalizer! (%matrix-calloc n1 n2) matrix-free!))
 
           ;;; Accessing matrix elements
-          (bind ,(format "~a ~a_get(csl_matrix, const size_t, const size_t)" base-type file-prefix))
+          (bind ,(format "___safe ~a ~a_get(csl_matrix, const size_t, const size_t)" base-type file-prefix))
           (bind-rename ,(string-append file-prefix "_set") "matrix-set!")
-          (bind ,(format "void ~a_set(csl_matrix, const size_t, const size_t, ~a)" file-prefix base-type))
+          (bind ,(format "___safe void ~a_set(csl_matrix, const size_t, const size_t, ~a)" file-prefix base-type))
           ;; gsl_matrix_ptr omitted
 
           ;;; Initializing matrix elements
@@ -239,7 +239,7 @@
               matrix))
 
           ;;; Matrix views
-          (bind ,(format "struct ~a_view ~a_submatrix(csl_matrix, size_t, size_t, size_t, size_t)" file-prefix file-prefix))
+          (bind ,(format "___safe struct ~a_view ~a_submatrix(csl_matrix, size_t, size_t, size_t, size_t)" file-prefix file-prefix))
 
           ;; ;; matrix-view-array omitted
           ;; ;; matrix-const-view-array omitted
@@ -247,7 +247,7 @@
           ;; ;; matrix-const-view-array-with-tda omitted
           ;; ;; matrix-const-submatrix omitted
 
-          (bind ,(format "struct ~a_view ~a_view_vector(csl_vector, size_t, size_t)" file-prefix file-prefix))
+          (bind ,(format "___safe struct ~a_view ~a_view_vector(csl_vector, size_t, size_t)" file-prefix file-prefix))
 
           ;; ;; added for convenience
           ;; (define (matrix-submatrix-with-stride m k1 k2 s1 s2 n1 n2)
@@ -279,59 +279,59 @@
           ;; ;; matrix-const-view-vector-with-tda ommitted
 
           ;;; Creating row and column views
-          (bind ,(format "struct ~a_view ~a_row(csl_matrix, size_t)" vector-file-prefix file-prefix))
-          (bind ,(format "struct ~a_view ~a_column(csl_matrix, size_t)" vector-file-prefix file-prefix))
+          (bind ,(format "___safe struct ~a_view ~a_row(csl_matrix, size_t)" vector-file-prefix file-prefix))
+          (bind ,(format "___safe struct ~a_view ~a_column(csl_matrix, size_t)" vector-file-prefix file-prefix))
           (bind ,(format "struct ~a_view ~a_diagonal(csl_matrix)" vector-file-prefix file-prefix))
-          (bind ,(format "struct ~a_view ~a_subrow(csl_matrix, size_t, size_t, size_t)" vector-file-prefix file-prefix))
-          (bind ,(format "struct ~a_view ~a_subcolumn(csl_matrix, size_t, size_t, size_t)" vector-file-prefix file-prefix))
-          (bind ,(format "struct ~a_view ~a_subdiagonal(csl_matrix, size_t)" vector-file-prefix file-prefix))
-          (bind ,(format "struct ~a_view ~a_superdiagonal(csl_matrix, size_t)" vector-file-prefix file-prefix))
+          (bind ,(format "___safe struct ~a_view ~a_subrow(csl_matrix, size_t, size_t, size_t)" vector-file-prefix file-prefix))
+          (bind ,(format "___safe struct ~a_view ~a_subcolumn(csl_matrix, size_t, size_t, size_t)" vector-file-prefix file-prefix))
+          (bind ,(format "___safe struct ~a_view ~a_subdiagonal(csl_matrix, size_t)" vector-file-prefix file-prefix))
+          (bind ,(format "___safe struct ~a_view ~a_superdiagonal(csl_matrix, size_t)" vector-file-prefix file-prefix))
 
           ;;; Copying matrices
           (bind-rename ,(string-append file-prefix "_memcpy") "matrix-memcpy!")
-          (bind ,(format "int ~a_memcpy(csl_matrix, csl_matrix)" file-prefix))
+          (bind ,(format "___safe int ~a_memcpy(csl_matrix, csl_matrix)" file-prefix))
           (bind-rename ,(string-append file-prefix "_swap") "matrix-swap!")
-          (bind ,(format "int ~a_swap(csl_matrix, csl_matrix)" file-prefix))
+          (bind ,(format "___safe int ~a_swap(csl_matrix, csl_matrix)" file-prefix))
 
           ;;; Copying rows and columns
           (bind-rename ,(string-append file-prefix "_get_row") "matrix-get-row!")
-          (bind ,(format "int ~a_get_row(csl_vector, csl_matrix, size_t)" file-prefix))
+          (bind ,(format "___safe int ~a_get_row(csl_vector, csl_matrix, size_t)" file-prefix))
           (bind-rename ,(string-append file-prefix "_get_col") "matrix-get-col!")
-          (bind ,(format "int ~a_get_col(csl_vector, csl_matrix, size_t)" file-prefix))
+          (bind ,(format "___safe int ~a_get_col(csl_vector, csl_matrix, size_t)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_set_row") "matrix-set-row!")
-          (bind ,(format "int ~a_set_row(csl_matrix, size_t, csl_vector)" file-prefix))
+          (bind ,(format "___safe int ~a_set_row(csl_matrix, size_t, csl_vector)" file-prefix))
           (bind-rename ,(string-append file-prefix "_set_col") "matrix-set-col!")
-          (bind ,(format "int ~a_set_col(csl_matrix, size_t, csl_vector)" file-prefix))
+          (bind ,(format "___safe int ~a_set_col(csl_matrix, size_t, csl_vector)" file-prefix))
 
           ;;; Exchanging rows an dcolumns
           (bind-rename ,(string-append file-prefix "_swap_rows") "matrix-swap-rows!")
-          (bind ,(format "int ~a_swap_rows(csl_matrix, size_t, size_t)" file-prefix))
+          (bind ,(format "___safe int ~a_swap_rows(csl_matrix, size_t, size_t)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_swap_columns") "matrix-swap-columns!")
-          (bind ,(format "int ~a_swap_columns(csl_matrix, size_t, size_t)" file-prefix))
+          (bind ,(format "___safe int ~a_swap_columns(csl_matrix, size_t, size_t)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_swap_rowcol") "matrix-swap-rowcol!")
-          (bind ,(format "int ~a_swap_rowcol(csl_matrix, size_t, size_t)" file-prefix))
+          (bind ,(format "___safe int ~a_swap_rowcol(csl_matrix, size_t, size_t)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_transpose_memcpy") "matrix-transpose-memcpy!")
-          (bind ,(format "int ~a_transpose_memcpy(csl_matrix, csl_matrix)" file-prefix))
+          (bind ,(format "___safe int ~a_transpose_memcpy(csl_matrix, csl_matrix)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_transpose") "matrix-transpose!")
-          (bind ,(format "int ~a_transpose(csl_matrix)" file-prefix))
+          (bind ,(format "___safe int ~a_transpose(csl_matrix)" file-prefix))
 
           ;;; Matrix-operations
           (bind-rename ,(string-append file-prefix "_add") "matrix-add!")
-          (bind ,(format "int ~a_add(csl_matrix, csl_matrix)" file-prefix))
+          (bind ,(format "___safe int ~a_add(csl_matrix, csl_matrix)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_sub") "matrix-sub!")
-          (bind ,(format "int ~a_sub(csl_matrix, csl_matrix)" file-prefix))
+          (bind ,(format "___safe int ~a_sub(csl_matrix, csl_matrix)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_mul_elements") "matrix-mul-elements!")
-          (bind ,(format "int ~a_mul_elements(csl_matrix, csl_matrix)" file-prefix))
+          (bind ,(format "___safe int ~a_mul_elements(csl_matrix, csl_matrix)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_div_elements") "matrix-div-elements!")
-          (bind ,(format "int ~a_div_elements(csl_matrix, csl_matrix)" file-prefix))
+          (bind ,(format "___safe int ~a_div_elements(csl_matrix, csl_matrix)" file-prefix))
 
           (bind-rename ,(string-append file-prefix "_scale") "matrix-scale!")
           (bind ,(format "int ~a_scale(csl_matrix, ~a)" file-prefix base-type))
@@ -469,4 +469,4 @@
           (bind-rename ,(string-append file-prefix "_isnonneg") "matrix-isnonneg?")
           (bind ,(format "bool ~a_isnonneg(csl_matrix)" file-prefix))
           (bind-rename ,(string-append file-prefix "_equal") "matrix-equal?")
-          (bind ,(format "bool ~a_equal(csl_matrix, csl_matrix)" file-prefix)))))))
+          (bind ,(format "___safe bool ~a_equal(csl_matrix, csl_matrix)" file-prefix)))))))

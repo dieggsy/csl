@@ -328,7 +328,7 @@
           (bind-rename ,(string-append file-prefix "_isnonneg") "vector-isnonneg?")
           (bind ,(format "bool ~a_isnonneg(csl_vector)" file-prefix))
           (bind-rename ,(string-append file-prefix "_equal") "vector-equal?")
-          (bind ,(format "bool ~a_equal(csl_vector, csl_vector)" file-prefix))
+          (bind ,(format "___safe bool ~a_equal(csl_vector, csl_vector)" file-prefix))
 
 
           )))))
