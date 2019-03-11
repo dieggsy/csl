@@ -16,6 +16,8 @@
              (irregex-replace "matrix" file-prefix "vector"))
             (base-type (cadddr e)))
        `(module ,module-name (matrix?
+                              matrix->ptr
+                              ptr->matrix
                               matrix-size1
                               matrix-size2
                               matrix-alloc
