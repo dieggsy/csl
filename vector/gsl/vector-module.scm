@@ -199,13 +199,14 @@
                    (newv (vector-alloc size)))
               (do ((i 0 (add1 i)))
                   ((= i size) newv)
-                (vector-set! newv i (real-part (vector-ref v i))))))
+                (vector-set! newv i (real-part (vector-get v i))))))
+
           (define (vector-imag v)
             (let* ((size (vector-size v))
                    (newv (vector-alloc size)))
               (do ((i 0 (add1 i)))
                   ((= i size) newv)
-                (vector-set! newv i (imag-part (vector-ref v i))))))
+                (vector-set! newv i (imag-part (vector-get v i))))))
 
           ;; gsl_vector_view_array and view_array_with_stride omitted
 
