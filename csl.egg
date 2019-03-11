@@ -26,6 +26,17 @@
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
 
+  ;; Special functions
+  (extension gsl.special.airy
+             (source "special/gsl.special.airy.scm")
+             (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
+             (link-options "-L" "`pkg-config --libs gsl`"))
+  (extension gsl.special.bessel
+             (source "special/gsl.special.bessel.scm")
+             (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
+             (link-options "-L" "`pkg-config --libs gsl`"))
+
+
   ;; Vectors (low level)
   (extension gsl.vector.complex.double
              (source "vector/gsl/gsl.vector.complex.double.scm")
@@ -120,10 +131,12 @@
   ;; Matrices (low level)
   (extension gsl.matrix.complex.double
              (source "matrix/gsl/gsl.matrix.complex.double.scm")
+             (component-dependencies gsl.vector.complex.double)
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension gsl.matrix.complex.float
              (source "matrix/gsl/gsl.matrix.complex.float.scm")
+             (component-dependencies gsl.vector.complex.float)
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension gsl.matrix.double
@@ -133,38 +146,47 @@
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension gsl.matrix.float
              (source "matrix/gsl/gsl.matrix.float.scm")
+             (component-dependencies gsl.vector.float)
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension gsl.matrix.long
              (source "matrix/gsl/gsl.matrix.long.scm")
+             (component-dependencies gsl.vector.long)
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension gsl.matrix.int
              (source "matrix/gsl/gsl.matrix.int.scm")
+             (component-dependencies gsl.vector.int)
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension gsl.matrix.short
              (source "matrix/gsl/gsl.matrix.short.scm")
+             (component-dependencies gsl.vector.short)
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension gsl.matrix.char
              (source "matrix/gsl/gsl.matrix.char.scm")
+             (component-dependencies gsl.vector.char)
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension gsl.matrix.ulong
              (source "matrix/gsl/gsl.matrix.ulong.scm")
+             (component-dependencies gsl.vector.ulong)
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension gsl.matrix.uint
              (source "matrix/gsl/gsl.matrix.uint.scm")
+             (component-dependencies gsl.vector.uint)
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension gsl.matrix.ushort
              (source "matrix/gsl/gsl.matrix.ushort.scm")
+             (component-dependencies gsl.vector.ushort)
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension gsl.matrix.uchar
              (source "matrix/gsl/gsl.matrix.uchar.scm")
+             (component-dependencies gsl.vector.uchar)
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
 
