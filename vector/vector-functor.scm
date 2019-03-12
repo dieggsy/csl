@@ -44,6 +44,11 @@
      vector-map!
      vector-ref
      subvector
+     subvector*
+     subvector-set!
+     subvector-set!*
+     subvector-call!
+     subvector-call!*
      vector-fill!
      vector-copy
      vector-copy!
@@ -76,7 +81,7 @@
                     vector-fill!
                     vector-set!)
             (only chicken.module reexport)
-            (only chicken.base add1 sub1 when cut foldl foldr)
+            (only chicken.base add1 sub1 when cut foldl foldr case-lambda)
             (prefix M gsl:))
 
   (reexport M)
@@ -121,12 +126,32 @@
 
   (define vector-ref gsl:vector-get)
 
-  (define (subvector v a b #!optional (stride 1))
+  (define (subvector v a #!optional (b (vector-length v)) (stride 1))
     (gsl:vector-subvector-with-stride v
                                       a
                                       stride
-                                      (inexact->exact
-                                       (ceiling (/ (- b a) stride)))))
+                                      (add1 (quotient (- b 1 a ) stride))))
+
+  (define (subvector* v #!key (start 0) (end (vector-length v)) (step 1))
+    (subvector v start end step))
+
+  (define subvector-set!
+    (case-lambda
+      [(v a b stride sub)
+       (gsl:vector-subvector-with-stride-set! v a stride (add1 (quotient (- b 1 a) stride)) sub)]
+      [(v a b sub)
+       (subvector-set! v a b 1 sub)]
+      [(v a sub)
+       (subvector-set! v a (vector-length v) 1 sub)]))
+
+  (define (subvector-set!* v sub #!key (start 0) (end (vector-length v)) (step 1))
+    (subvector-set! v start end step sub))
+
+  (define (subvector-call! f v a #!optional (b (vector-length v)) (stride 1))
+    (subvector-set! v a b stride (f (subvector v a b stride))))
+
+  (define (subvector-call!* f v #!key (start 0) (end (vector-length v)) (step 1))
+    (subvector-set! v start end step (f (subvector v start end step))))
 
   (define vector-fill! gsl:vector-set-all!)
 

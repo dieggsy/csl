@@ -26,6 +26,7 @@
                               vector-fscanf
                               vector-subvector
                               vector-subvector-with-stride
+                              vector-subvector-with-stride-set!
                               vector-imag
                               vector-real
                               vector-memcpy!
@@ -193,6 +194,20 @@
           ;;; Vector views
           (bind ,(format "___safe struct ~a_view ~a_subvector(csl_vector, size_t, size_t)" file-prefix file-prefix))
           (bind ,(format "___safe struct ~a_view ~a_subvector_with_stride(csl_vector, size_t, size_t, size_t)" file-prefix file-prefix))
+
+          (bind-rename ,(string-append file-prefix "_subvector_with_stride_set") "vector-subvector-with-stride-set!")
+          (bind*
+           ,(format
+             "
+___safe void ~a_subvector_with_stride_set(csl_vector dest, size_t offset, size_t stride, size_t n, csl_vector sub) {
+    ~a_view view = ~a_subvector_with_stride(dest, offset, stride, n);
+    ~a_memcpy(&view.vector, sub);
+}
+"
+             file-prefix
+             file-prefix
+             file-prefix
+             file-prefix))
 
           (define (vector-real v)
             (let* ((size (vector-size v))
