@@ -229,7 +229,10 @@
              (component-dependencies gsl.matrix.uchar))
 
   ;; Random number generation
-  ;; (extension csl.rng (source "csl.rng.scm"))
+  (extension gsl.rng
+             (source "gsl.rng.scm")
+             (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
+             (link-options "-L" "`pkg-config --libs gsl`"))
 
   ;; Physical constants
   ;; (extension csl.mksa (source "const/csl.mksa.scm"))
