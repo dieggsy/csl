@@ -1,4 +1,4 @@
-((author "Diego Mundo")
+((author "Diego A. Mundo")
  (synopsis "An opinionated wrapper around gsl.")
  (category math)
  (license "GPL-3.0")
