@@ -30,10 +30,10 @@
              (source "special/gsl.special.airy.scm")
              (csc-options "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
-  (extension gsl.special.bessel
-             (source "special/gsl.special.bessel.scm")
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+  ;; (extension gsl.special.bessel
+  ;;            (source "special/gsl.special.bessel.scm")
+  ;;            (csc-options "-C" "`pkg-config --cflags gsl`")
+  ;;            (link-options "-L" "`pkg-config --libs gsl`"))
 
 
   ;; Vectors (low level)
