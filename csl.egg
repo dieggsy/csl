@@ -235,7 +235,16 @@
              (link-options "-L" "`pkg-config --libs gsl`"))
 
   ;; Physical constants
-  ;; (extension csl.mksa (source "const/csl.mksa.scm"))
-  ;; (extension csl.cgsm (source "const/csl.cgsm.scm"))
-  ;; (extension csl.num (source "const/csl.num.scm"))
+  (extension gsl.mksa
+             (source "const/gsl.mksa.scm")
+             (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
+             (link-options "-L" "`pkg-config --libs gsl`"))
+  (extension gsl.cgsm
+             (source "const/gsl.cgsm.scm")
+             (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
+             (link-options "-L" "`pkg-config --libs gsl`"))
+  (extension gsl.num
+             (source "const/gsl.num.scm")
+             (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
+             (link-options "-L" "`pkg-config --libs gsl`"))
   ))
