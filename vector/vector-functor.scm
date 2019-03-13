@@ -36,6 +36,7 @@
                              vector-isnonneg?
                              vector-equal?)))
     (list->vector
+     vector-enable-sharp-syntax
      vector->list
      vector
      make-vector
@@ -82,6 +83,8 @@
                     vector-set!)
             (only chicken.module reexport)
             (only chicken.base add1 sub1 when cut foldl foldr case-lambda)
+            (only chicken.read-syntax set-sharp-read-syntax!)
+            (only chicken.port make-concatenated-port call-with-input-string)
             (prefix M gsl:))
 
   (reexport M)
@@ -92,6 +95,16 @@
            (lst lst (cdr lst)))
           ((= i len) v)
         (gsl:vector-set! v i (car lst)))))
+
+  (define (vector-enable-sharp-syntax #!optional (on #t))
+    (if on
+        (set-sharp-read-syntax! #\[
+          (lambda (rest-port)
+            (call-with-input-string "["
+              (lambda (head-port)
+                (let* ((port (make-concatenated-port head-port rest-port)))
+                  `(list->vector ',(read port)))))))
+        (set-sharp-read-syntax! #\[ #f)))
 
   (define (vector->list v)
     (let* ((len (gsl:vector-size v)))
