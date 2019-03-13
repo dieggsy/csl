@@ -148,10 +148,12 @@
     (subvector-set! v start end step sub))
 
   (define (subvector-call! f v a #!optional (b (vector-length v)) (stride 1))
-    (subvector-set! v a b stride (f (subvector v a b stride))))
+    (let* ((sub (subvector v a b stride))
+           (rep (f sub)))
+      (subvector-set! v a b stride (if (vector? rep) rep sub))))
 
   (define (subvector-call!* f v #!key (start 0) (end (vector-length v)) (step 1))
-    (subvector-set! v start end step (f (subvector v start end step))))
+    (subvector-call! f v start end step))
 
   (define vector-fill! gsl:vector-set-all!)
 
