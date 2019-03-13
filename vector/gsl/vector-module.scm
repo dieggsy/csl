@@ -124,7 +124,7 @@
           ;;; Reading and writing vectors
           (bind-opaque-type cfile (c-pointer "FILE"))
           (bind "cfile fopen(char *, char *)")
-          (bind "cfile stdout")
+          (bind "const cfile stdout")
           (bind "int fclose(cfile)")
           (bind-rename ,(string-append file-prefix "_fwrite") "%vector-fwrite")
           (bind ,(format "int ~a_fwrite(cfile, csl_vector)" file-prefix))
@@ -175,7 +175,7 @@
           (define (vector-fprintf filename vector format)
             (if (and (boolean? filename)
                      filename)
-                (%vector-fprintf (stdout) vector format)
+                (%vector-fprintf stdout vector format)
                 (begin
                   (ensure string? filename "not a valid filename" filename)
                   (let ((f (fopen filename "w")))

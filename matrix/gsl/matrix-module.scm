@@ -160,7 +160,7 @@
           ;;; Reading and writing matrices
           (bind-opaque-type cfile (c-pointer "FILE"))
           (bind "cfile fopen(char *, char *)")
-          (bind "cfile stdout")
+          (bind "const cfile stdout")
           (bind "int fclose(cfile)")
           (bind-rename ,(string-append file-prefix "_fwrite") "%matrix-fwrite")
           (bind ,(format "int ~a_fwrite(cfile, csl_matrix)" file-prefix))
@@ -217,7 +217,7 @@
           (define (matrix-fprintf filename matrix format)
             (if (and (boolean? filename)
                      filename)
-                (%matrix-fprintf (stdout) matrix format)
+                (%matrix-fprintf stdout matrix format)
                 (begin
                   (ensure string? filename "not a valid filename" filename)
                   (let ((f (fopen filename "w")))
