@@ -1,4 +1,4 @@
-(module csl.math.double (e
+(module gsl.math.double (e
                          log2e
                          log10e
                          sqrt2

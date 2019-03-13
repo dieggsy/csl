@@ -9,14 +9,14 @@
  (components
 
   ;; Mathematical Functions (real)
-  (extension csl.math.double
-             (source "math/csl.math.double.scm")
+  (extension gsl.math.double
+             (source "math/gsl.math.double.scm")
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
 
   ;; Complex Numbers (+ math)
-  (extension csl.math.complex
-             (source "math/csl.math.complex.scm")
+  (extension gsl.math.complex
+             (source "math/gsl.math.complex.scm")
              (csc-options "-O3" "-C" "-O3" "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
 
