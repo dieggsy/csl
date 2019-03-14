@@ -139,31 +139,31 @@
 
   (define vector-ref gsl:vector-get)
 
-  (define (subvector v a #!optional (b (vector-length v)) (stride 1))
+  (define (subvector v start #!optional (end (vector-length v)) (step 1))
     (gsl:vector-subvector-with-stride v
-                                      a
-                                      stride
-                                      (add1 (quotient (- b 1 a ) stride))))
+                                      start
+                                      step
+                                      (add1 (quotient (- end 1 start ) step))))
 
   (define (subvector* v #!key (start 0) (end (vector-length v)) (step 1))
     (subvector v start end step))
 
   (define subvector-set!
     (case-lambda
-      [(v a b stride sub)
-       (gsl:vector-subvector-with-stride-set! v a stride (add1 (quotient (- b 1 a) stride)) sub)]
-      [(v a b sub)
-       (subvector-set! v a b 1 sub)]
-      [(v a sub)
-       (subvector-set! v a (vector-length v) 1 sub)]))
+      [(v start end step sub)
+       (gsl:vector-subvector-with-stride-set! v start step (add1 (quotient (- end 1 start) step)) sub)]
+      [(v start end sub)
+       (subvector-set! v start end 1 sub)]
+      [(v start sub)
+       (subvector-set! v start (vector-length v) 1 sub)]))
 
   (define (subvector-set!* v sub #!key (start 0) (end (vector-length v)) (step 1))
     (subvector-set! v start end step sub))
 
-  (define (subvector-call! f v a #!optional (b (vector-length v)) (stride 1))
-    (let* ((sub (subvector v a b stride))
+  (define (subvector-call! f v start #!optional (end (vector-length v)) (step 1))
+    (let* ((sub (subvector v start end step))
            (rep (f sub)))
-      (subvector-set! v a b stride (if (vector? rep) rep sub))))
+      (subvector-set! v start end step (if (vector? rep) rep sub))))
 
   (define (subvector-call!* f v #!key (start 0) (end (vector-length v)) (step 1))
     (subvector-call! f v start end step))
