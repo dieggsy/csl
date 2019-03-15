@@ -233,9 +233,12 @@
 
   ;; Random number generation
   (extension gsl.rng
-             (source "gsl.rng.scm")
+             (source "rng/gsl.rng.scm")
              (csc-options "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
+  (extension csl.rng
+             (source "rng/csl.rng.scm")
+             (component-dependencies gsl.rng))
 
   ;; Physical constants
   (extension gsl.mksa
