@@ -33,7 +33,9 @@
                               matrix-fprintf
                               matrix-fscanf
                               matrix-submatrix
-                              ;; matrix-submatrix-with-stride
+                              matrix-submatrix-set!
+                              matrix-submatrix-with-stride
+                              matrix-submatrix-with-stride-set!
                               matrix-view-vector
                               matrix-row
                               matrix-column
@@ -240,6 +242,63 @@
           ;;; Matrix views
           (bind ,(format "___safe struct ~a_view ~a_submatrix(csl_matrix, size_t, size_t, size_t, size_t)" file-prefix file-prefix))
 
+          (bind-rename ,(string-append file-prefix "_submatrix_set") "matrix-submatrix-set!")
+          (bind*
+           ,(format "
+___safe void ~a_submatrix_set(csl_matrix dest, size_t k1, size_t k2, size_t n1, size_t n2, csl_matrix sub) {
+    ~a_view view = ~a_submatrix(dest, k1, k2, n1, n2);
+    ~a_memcpy(&view.matrix, sub);
+}
+"
+                    file-prefix
+                    file-prefix
+                    file-prefix
+                    file-prefix))
+          (bind*
+           ,(format "
+___safe csl_matrix ~a_submatrix_with_stride(csl_matrix m, size_t k1, size_t k2, size_t s1, size_t s2, size_t n1, size_t n2) {
+    ~a *sub = ~a_alloc(n1,n2);
+    int row_matrix, row_sub;
+    for (row_matrix = k1, row_sub = 0; row_sub < n1; ++row_sub, row_matrix +=s1) {
+        ~a_view row = ~a_row(m, row_matrix);
+        ~a_view row_with_stride = ~a_subvector_with_stride(&row.vector, k2, s2, n2);
+        ~a_set_row(sub, row_sub, &row_with_stride.vector);
+    }
+    return sub;
+}
+"
+                    file-prefix
+                    file-prefix
+                    file-prefix
+                    vector-file-prefix
+                    file-prefix
+                    vector-file-prefix
+                    vector-file-prefix
+                    file-prefix
+                    vector-file-prefix))
+
+          (bind-rename ,(format "~a_submatrix_with_stride_set" file-prefix) "matrix-submatrix-with-stride-set!")
+          (bind*
+           ,(format "
+___safe void ~a_submatrix_with_stride_set(csl_matrix dest,  size_t k1, size_t k2, size_t s1, size_t s2, size_t n1, size_t n2, csl_matrix sub) {
+    int row_matrix, row_sub;
+    for (row_matrix = k1, row_sub = 0; row_sub < n1; ++row_sub, row_matrix +=s1) {
+        ~a_view row = ~a_row(dest, row_matrix);
+        ~a_view subrow=~a_row(sub, row_sub);
+        ~a_view row_with_stride = ~a_subvector_with_stride(&row.vector, k2, s2, n2);
+        ~a_memcpy(&row_with_stride.vector,&subrow.vector);
+    }
+}
+
+"
+                    file-prefix
+                    vector-file-prefix
+                    file-prefix
+                    vector-file-prefix
+                    file-prefix
+                    vector-file-prefix
+                    vector-file-prefix
+                    vector-file-prefix))
           ;; ;; matrix-view-array omitted
           ;; ;; matrix-const-view-array omitted
           ;; ;; matrix-view-array-with-tda omitted
@@ -247,31 +306,6 @@
           ;; ;; matrix-const-submatrix omitted
 
           (bind ,(format "___safe struct ~a_view ~a_view_vector(csl_vector, size_t, size_t)" file-prefix file-prefix))
-
-          ;; ;; added for convenience
-          ;; (define (matrix-submatrix-with-stride m k1 k2 s1 s2 n1 n2)
-          ;;   (tag-pointer
-          ;;    (set-finalizer!
-          ;;     ((foreign-safe-lambda* gsl_matrix ((gsl_matrix m)
-          ;;                                        (unsigned-int k1)
-          ;;                                        (unsigned-int k2)
-          ;;                                        (unsigned-int s1)
-          ;;                                        (unsigned-int s2)
-          ;;                                        (unsigned-int n1)
-          ;;                                        (unsigned-int n2))
-          ;;        ,(format "~a *r = ~a_alloc(n1,n2);" file-prefix file-prefix)
-          ;;        "int rm, rr;"
-          ;;        "for (rm = k1, rr = 0; rr < n1; rr++, rm += s1){"
-          ;;        ,(format "gsl_vector~a *row = gsl_vector~a_alloc(m->size2);" type-suffix type-suffix)
-          ;;        ,(format "~a_get_row(row,m,rm);" file-prefix)
-          ;;        ,(format "gsl_vector~a_view row_with_stride = gsl_vector~a_subvector_with_stride(row,k2,s2,n2);" type-suffix type-suffix)
-          ;;        ,(format "gsl_matrix~a_set_row(r,rr,&row_with_stride.vector);" type-suffix)
-          ;;        ,(format "gsl_vector~a_free(row);" type-suffix)
-          ;;        "}"
-          ;;        "C_return(r);")
-          ;;      m k1 k2 s1 s2 n1 n2)
-          ;;     matrix-free!)
-          ;;    ',module-name))
 
           ;; ;; matrix-const-view-vector omitted
           ;; ;; matrix-view-vector-with-tda omitted

@@ -1,4 +1,6 @@
 (functor (generic-matrix (M (matrix?
+                             matrix->ptr
+                             ptr->matrix
                              matrix-size1
                              matrix-size2
                              matrix-alloc
@@ -14,6 +16,9 @@
                              matrix-fprintf
                              matrix-fscanf
                              matrix-submatrix
+                             matrix-submatrix-set!
+                             matrix-submatrix-with-stride
+                             matrix-submatrix-with-stride-set!
                              matrix-view-vector
                              matrix-row
                              matrix-column
@@ -59,7 +64,12 @@
      matrix-map
      matrix-map!
      matrix-ref
-     ;; submatrix
+     submatrix
+     submatrix*
+     submatrix-set!
+     submatrix-set!*
+     submatrix-call!
+     submatrix-call!*
      matrix-fill!
      matrix-copy
      matrix-copy!
@@ -89,8 +99,7 @@
      matrix=
      make-identity-matrix
      matrix-diagonal*
-     matrix-transpose
-     )
+     matrix-transpose)
     (import scheme
             (only chicken.module reexport)
             (only chicken.base add1 sub1 when cut foldl foldr identity)
@@ -169,7 +178,85 @@
 
   (define matrix-ref matrix-get)
 
-  ;; (define (submatrix (m )))
+  (define (submatrix m
+                     #!optional
+                     (row-start 0)
+                     (row-end (matrix-rows m))
+                     (row-step 1)
+                     (col-start 0)
+                     (col-end (matrix-columns m))
+                     (col-step 1))
+    (if (= 1 row-step col-step)
+        (gsl:matrix-submatrix m row-start col-start (- row-end row-start) (- col-end col-start))
+        (gsl:matrix-submatrix-with-stride m
+                                          row-start col-start
+                                          row-step col-step
+                                          (add1 (quotient (- row-end 1 row-start) row-step))
+                                          (add1 (quotient (- col-end 1 col-start) col-step)))))
+
+  (define (submatrix* m
+                      #!key
+                      (row-start 0)
+                      (row-end (matrix-rows m))
+                      (row-step 1)
+                      (col-start 0)
+                      (col-end (matrix-columns m))
+                      (col-step 1))
+    (submatrix m row-start row-end row-step col-start col-end col-step))
+
+  (define (submatrix-set! m sub
+                          #!optional
+                          (row-start 0)
+                          (row-end (matrix-rows m))
+                          (row-step 1)
+                          (col-start 0)
+                          (col-end (matrix-columns m))
+                          (col-step 1))
+    (if (= 1 row-step col-step)
+        (gsl:matrix-submatrix-set! m
+                                   row-start col-start
+                                   (- row-end row-start)
+                                   (- col-end col-start)
+                                   sub)
+        (gsl:matrix-submatrix-with-stride-set! m
+                                               row-start col-start
+                                               row-step col-step
+                                               (add1 (quotient (- row-end 1 row-start) row-step))
+                                               (add1 (quotient (- col-end 1 col-start) col-step))
+                                               sub)))
+
+  (define (submatrix-set!* m sub
+                           #!key
+                           (row-start 0)
+                           (row-end (matrix-rows m))
+                           (row-step 1)
+                           (col-start 0)
+                           (col-end (matrix-columns m))
+                           (col-step 1))
+    (submatrix-set! m sub row-start row-end row-step col-start col-end col-step))
+
+  (define (submatrix-call! f m
+                           #!optional
+                           (row-start 0)
+                           (row-end (matrix-rows m))
+                           (row-step 1)
+                           (col-start 0)
+                           (col-end (matrix-columns m))
+                           (col-step 1))
+    (let* ((sub (submatrix m row-start row-end row-step col-start col-end col-step))
+           (rep (f sub)))
+      (submatrix-set! m (if (matrix? rep) rep sub)
+                      row-start row-end row-step col-start col-end col-step)))
+
+  (define (submatrix-call!* f m
+                            #!key
+                            (row-start 0)
+                            (row-end (matrix-rows m))
+                            (row-step 1)
+                            (col-start 0)
+                            (col-end (matrix-columns m))
+                            (col-step 1))
+    (submatrix-call! f m row-start row-end row-step col-start col-end col-step))
 
   (define matrix-fill! matrix-set-all!)
 

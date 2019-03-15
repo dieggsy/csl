@@ -1,4 +1,6 @@
 (functor (generic-vector (M (vector?
+                             vector->ptr
+                             ptr->vector
                              vector-size
                              vector-alloc
                              vector-calloc
@@ -14,6 +16,7 @@
                              vector-fscanf
                              vector-subvector
                              vector-subvector-with-stride
+                             vector-subvector-with-stride-set!
                              vector-imag
                              vector-real
                              vector-memcpy!
@@ -28,8 +31,10 @@
                              vector-add-constant!
                              vector-max
                              vector-min
+                             vector-minmax
                              vector-max-index
                              vector-min-index
+                             vector-minmax-index
                              vector-isnull?
                              vector-ispos?
                              vector-isneg?
