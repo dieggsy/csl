@@ -47,7 +47,7 @@ gsl_complex_float f32_to_complex(float *arg) {
   ;; base type), which is then converted into a complex number
   (define (gsl-ret-transformer* x rename)
 
-    (define (make-complex-ret-lambda fl args body typestr vec make-vec vec->list)
+    (define (make-complex-ret-lambda fl args body typestr vec make-vec vec-ref)
       (let* ((argnames (map cadr args))
              ;; return-type -> void, add f64vector/f32vector destination
              ;; argument, and cast to gsl-complex.
@@ -69,7 +69,8 @@ gsl_complex_float f32_to_complex(float *arg) {
               `(lambda ,argnames
                  (,(rename 'let) ((destination (,make-vec 2)))
                   (,lambda-with-destination destination ,@argnames)
-                  (apply make-rectangular (,vec->list destination))))))
+                  (make-rectangular (,vec-ref destination 0)
+                                    (,vec-ref destination 1))))))
         destination-wrapper))
 
     (match x
@@ -82,10 +83,10 @@ gsl_complex_float f32_to_complex(float *arg) {
          body)
        (cond ((string=? type "gsl_complex")
               (make-complex-ret-lambda foreign-lambda* args body type
-                                       'f64vector 'make-f64vector 'f64vector->list))
+                                       'f64vector 'make-f64vector 'f64vector-ref))
              ((string=? type "gsl_complex_float")
               (make-complex-ret-lambda foreign-lambda* args body type
-                                       'f32vector 'make-f32vector 'f32vector->list))
+                                       'f32vector 'make-f32vector 'f32vector-ref))
              (else (error "Unknown complex type" type))))
       ;; Handle gsl_vector_view by copying into gsl_vector and returning that
       ;; instead
