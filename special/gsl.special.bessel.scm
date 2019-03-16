@@ -62,7 +62,7 @@
                             bessel-zero-Jnu-e bessel-zero-Jnu)
   (import scheme
           (only chicken.base include)
-          (only srfi-4 f64vector->list)
+          (only srfi-4 make-f64vector f64vector-length subf64vector)
           chicken.foreign
           bind)
 
@@ -91,7 +91,7 @@
     (let* ((len (+ 1 (- nmax nmin)))
            (fvec (make-f64vector len)))
       (%bessel-Jn-array nmin nmax x fvec)
-      (f64vector->list fvec)))
+      fvec))
 
   ;;; Irregular cylindrical bessel functions
   (bind "___safe int gsl_sf_bessel_Y0_e(const double x, gsl_sf_result * result);")
@@ -109,7 +109,7 @@
     (let* ((len (+ 1 (- nmax nmin)))
            (fvec (make-f64vector len)))
       (%bessel-Yn-array nmin nmax x fvec)
-      (f64vector->list fvec)))
+      fvec))
 
   ;;; Regular modified cylindrical bessel functions
   (bind "___safe int gsl_sf_bessel_I0_e(const double x, gsl_sf_result * result);")
@@ -127,7 +127,7 @@
     (let* ((len (+ 1 (- nmax nmin)))
            (fvec (make-f64vector len)))
       (%bessel-In-array nmin nmax x fvec)
-      (f64vector->list fvec)))
+      fvec))
 
 
   (bind "___safe int gsl_sf_bessel_I0_scaled_e(const double x, gsl_sf_result * result);")
@@ -145,7 +145,7 @@
     (let* ((len (+ 1 (- nmax nmin)))
            (fvec (make-f64vector len)))
       (%bessel-In-scaled-array nmin nmax x fvec)
-      (f64vector->list fvec)))
+      fvec))
 
   ;;; Irregular modified cylindrical bessel functions
   (bind "___safe int gsl_sf_bessel_K0_e(const double x, gsl_sf_result * result);")
@@ -163,7 +163,7 @@
     (let* ((len (+ 1 (- nmax nmin)))
            (fvec (make-f64vector len)))
       (%bessel-Kn-array nmin nmax x fvec)
-      (f64vector->list fvec)))
+      fvec))
 
   (bind "___safe int gsl_sf_bessel_K0_scaled_e(const double x, gsl_sf_result * result);")
   (bind "___safe double gsl_sf_bessel_K0_scaled(const double x);")
@@ -180,7 +180,7 @@
     (let* ((len (+ 1 (- nmax nmin)))
            (fvec (make-f64vector len)))
       (%bessel-Kn-scaled-array nmin nmax x fvec)
-      (f64vector->list fvec)))
+      fvec))
 
   ;;; Regular Spherical Bessel Functions
   (bind "___safe int gsl_sf_bessel_j0_e(const double x, gsl_sf_result * result);")
@@ -201,7 +201,7 @@
     (let* ((len (+ 1 (- lmax 0)))
            (fvec (make-f64vector len)))
       (%bessel-jl-array lmax x fvec)
-      (f64vector->list fvec)))
+      fvec))
 
   (bind-rename "gsl_sf_bessel_jl_steed_array" "%bessel-jl-steed-array")
   (bind "___safe int gsl_sf_bessel_jl_steed_array(const int lmax, const double x, double * jl_x_array);")
@@ -209,7 +209,7 @@
     (let* ((len (+ 1 (- lmax 0)))
            (fvec (make-f64vector len)))
       (%bessel-jl-steed-array lmax x fvec)
-      (f64vector->list fvec)))
+      fvec))
 
   ;;; Irregular Spherical bessel functions
   (bind "___safe int gsl_sf_bessel_y0_e(const double x, gsl_sf_result * result);")
@@ -230,7 +230,7 @@
     (let* ((len (+ 1 (- lmax 0)))
            (fvec (make-f64vector len)))
       (%bessel-yl-array lmax x fvec)
-      (f64vector->list fvec)))
+      fvec))
 
   ;;; Regular modified spherical bessel functions
   (bind "___safe int gsl_sf_bessel_i0_scaled_e(const double x, gsl_sf_result * result);")
@@ -251,7 +251,7 @@
     (let* ((len (+ 1 (- lmax 0)))
            (fvec (make-f64vector len)))
       (%bessel-il-scaled-array lmax x fvec)
-      (f64vector->list fvec)))
+      fvec))
 
   ;;; Irregular modified spherical bessel functions
   (bind "___safe int gsl_sf_bessel_k0_scaled_e(const double x, gsl_sf_result * result);")
@@ -272,18 +272,13 @@
     (let* ((len (+ 1 (- lmax 0)))
            (fvec (make-f64vector len)))
       (%bessel-kl-scaled-array lmax x fvec)
-      (f64vector->list fvec)))
+      fvec))
 
   ;;; Regular Bessel function - fractional order
   (bind "___safe int gsl_sf_bessel_Jnu_e(const double nu, const double x, gsl_sf_result * result);")
   (bind "___safe double gsl_sf_bessel_Jnu(const double nu, const double x);")
 
-  (bind-rename "gsl_sf_bessel_sequence_Jnu_e" "%bessel-sequence-Jnu-e")
   (bind "___safe int gsl_sf_bessel_sequence_Jnu_e(double nu, gsl_mode_t mode, ___length(v) size_t size, double * v);")
-  (define (bessel-sequence-Jnu-e nu mode v)
-    (let ((v (list->f64vector v)))
-      (%bessel-sequence-Jnu-e nu mode v)
-      (f64vector->list v)))
 
   ;;; Irregular bessel functions - fractional order
   (bind "___safe int gsl_sf_bessel_Ynu_e(double nu, double x, gsl_sf_result * result);")
