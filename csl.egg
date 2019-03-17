@@ -231,6 +231,12 @@
              (source "matrix/csl.matrix.uchar.scm")
              (component-dependencies gsl.matrix.uchar))
 
+  ;; BLAS Support
+  (extension gsl.blas
+             (source "blas/gsl.blas.scm")
+             (csc-options "-C" "`pkg-config --cflags gsl`")
+             (link-options "-L" "`pkg-config --libs gsl`"))
+
   ;; Random number generation
   (extension gsl.rng
              (source "rng/gsl.rng.scm")
