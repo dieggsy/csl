@@ -70,7 +70,7 @@
 
   (bind-options default-renaming: "")
 
-  (bind-rename/pattern "^gsl-rng" "rng")
+  (bind-rename/pattern "^gsl-" "")
 
   (define-record-type rng
     (ptr->rng ptr)
