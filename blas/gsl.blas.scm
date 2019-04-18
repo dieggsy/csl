@@ -43,7 +43,75 @@
                   drot!
                   drotm!
 
-                  ;; cblas-no-trans
+                  cblas-no-trans
+                  cblas-trans
+                  cblas-conj-trans
+                  cblas-upper
+                  cblas-lower
+                  cblas-non-unit
+                  cblas-unit
+                  sgemv!
+                  strmv!
+                  strsv!
+                  dgemv!
+                  dtrmv!
+                  dtrsv!
+                  cgemv!
+                  ctrmv!
+                  ctrsv!
+                  zgemv!
+                  ztrmv!
+                  ztrsv!
+
+                  ssymv!
+                  sger!
+                  ssyr!
+                  ssyr2!
+                  dsymv!
+                  dger!
+                  dsyr!
+                  dsyr2!
+                  chemv!
+                  cgeru!
+                  cgerc!
+                  cher!
+                  cher2!
+                  zhemv!
+                  zgeru!
+                  zgerc!
+                  zher!
+                  zher2!
+
+                  sgemm!
+                  ssymm!
+                  ssyrk!
+                  ssyr2k!
+                  strmm!
+                  strsm!
+                  dgemm!
+                  dsymm!
+                  dsyrk!
+                  dsyr2k!
+                  dtrmm!
+                  dtrsm!
+                  cgemm!
+                  csymm!
+                  csyrk!
+                  csyr2k!
+                  ctrmm!
+                  ctrsm!
+                  zgemm!
+                  zsymm!
+                  zsyrk!
+                  zsyr2k!
+                  ztrmm!
+                  ztrsm!
+                  chemm!
+                  cherk!
+                  cher2k!
+                  zhemm!
+                  zherk!
+                  zher2k!
                   )
   (import scheme
           bind
@@ -248,13 +316,86 @@
   (bind "___safe int  gsl_blas_drotm (csl_vector X, csl_vector Y, const double P[]);")
 
   ;;; Level 2
-  ;; (bind "const int CblasNoTrans")
-  ;; (bind "const int CblasTrans")
-  ;; (bind "const int CblasConjTrans")
+  (bind "const int CblasNoTrans")
+  (bind "const int CblasTrans")
+  (bind "const int CblasConjTrans")
+  (bind "const int CblasUpper")
+  (bind "const int CblasLower")
+  (bind "const int CblasNonUnit")
+  (bind "const int CblasUnit")
 
-  ;; (bind-rename/pattern "gemv$" "gemv!")
-  ;; (bind "int gsl_blas_sgemv(int TransA, float alpha, csl_matrix_float A, csl_vector_float x, float beta, csl_vector_float y)")
+  (bind-rename/pattern "((ge|tr|sy|he)(s|m)(m|v))$" "\\1!")
+  (bind-rename/pattern "trsv$" "trsv!")
 
+  (bind "___safe int gsl_blas_sgemv (int TransA, float alpha, csl_matrix_float A, csl_vector_float x, float beta, csl_vector_float y)")
+  (bind "___safe int gsl_blas_strmv (int Uplo, int TransA, int Diag,const csl_matrix_float A, csl_vector_float X);")
+  (bind "___safe int gsl_blas_strsv (int Uplo, int TransA, int Diag,const csl_matrix_float A, csl_vector_float X);")
 
+  (bind "___safe int gsl_blas_dgemv (int TransA, double alpha, csl_matrix A, csl_vector X, double beta, csl_vector Y);")
+  (bind "___safe int gsl_blas_dtrmv (int Uplo, int TransA, int Diag, csl_matrix A, csl_vector X);")
+  (bind "___safe int gsl_blas_dtrsv (int Uplo, int TransA, int Diag, csl_matrix A, csl_vector X);")
 
-  )
+  (bind "___safe int gsl_blas_cgemv (int TransA,struct gsl_complex_float alpha, csl_matrix_complex_float A, csl_vector_complex_float X,struct gsl_complex_float beta,csl_vector_complex_float Y);")
+  (bind "___safe int gsl_blas_ctrmv (int Uplo,int TransA, int Diag, csl_matrix_complex_float A,csl_vector_complex_float X);")
+  (bind "___safe int gsl_blas_ctrsv (int Uplo,int TransA, int Diag, csl_matrix_complex_float A,csl_vector_complex_float X);")
+
+  (bind "___safe int gsl_blas_zgemv (int TransA,struct gsl_complex alpha,csl_matrix_complex  A,const csl_vector_complex X,struct gsl_complex beta,csl_vector_complex Y);")
+  (bind "___safe int gsl_blas_ztrmv (int Uplo,int TransA, int Diag,csl_matrix_complex  A,csl_vector_complex X);")
+  (bind "___safe int gsl_blas_ztrsv (int Uplo,int TransA, int Diag,csl_matrix_complex  A,csl_vector_complex X);")
+
+  (bind-rename/pattern "((ger|syr|her)2?.?)$" "\\1!")
+  (bind "___safe int  gsl_blas_ssymv (int Uplo,float alpha,csl_matrix_float  A,const csl_vector_float X,float beta,csl_vector_float Y);")
+  (bind "___safe int  gsl_blas_sger (float alpha,const csl_vector_float X,const csl_vector_float Y,csl_matrix_float  A);")
+  (bind "___safe int  gsl_blas_ssyr (int Uplo,float alpha,const csl_vector_float X,csl_matrix_float  A);")
+  (bind "___safe int  gsl_blas_ssyr2 (int Uplo,float alpha,const csl_vector_float X,const csl_vector_float Y,csl_matrix_float  A);")
+  (bind "___safe int  gsl_blas_dsymv (int Uplo,double alpha,csl_matrix  A,const csl_vector X,double beta,csl_vector Y);")
+  (bind "___safe int  gsl_blas_dger (double alpha,const csl_vector X,const csl_vector Y,csl_matrix  A);")
+  (bind "___safe int  gsl_blas_dsyr (int Uplo,double alpha,const csl_vector X,csl_matrix  A);")
+  (bind "___safe int  gsl_blas_dsyr2 (int Uplo,double alpha,const csl_vector X,const csl_vector Y,csl_matrix  A);")
+  (bind "___safe int  gsl_blas_chemv (int Uplo,struct gsl_complex_float alpha,csl_matrix_complex_float  A,const csl_vector_complex_float X,struct gsl_complex_float beta,csl_vector_complex_float Y);")
+  (bind "___safe int  gsl_blas_cgeru (struct gsl_complex_float alpha,const csl_vector_complex_float X,const csl_vector_complex_float Y,csl_matrix_complex_float  A);")
+  (bind "___safe int  gsl_blas_cgerc (struct gsl_complex_float alpha,const csl_vector_complex_float X,const csl_vector_complex_float Y,csl_matrix_complex_float  A);")
+  (bind "___safe int  gsl_blas_cher (int Uplo,float alpha,const csl_vector_complex_float X,csl_matrix_complex_float  A);")
+  (bind "___safe int  gsl_blas_cher2 (int Uplo,struct gsl_complex_float alpha,const csl_vector_complex_float X,const csl_vector_complex_float Y,csl_matrix_complex_float  A);")
+  (bind "___safe int  gsl_blas_zhemv (int Uplo,struct gsl_complex alpha,csl_matrix_complex  A,const csl_vector_complex X,struct gsl_complex beta,csl_vector_complex Y);")
+  (bind "___safe int  gsl_blas_zgeru (struct gsl_complex alpha,const csl_vector_complex X,const csl_vector_complex Y,csl_matrix_complex  A);")
+  (bind "___safe int  gsl_blas_zgerc (struct gsl_complex alpha,const csl_vector_complex X,const csl_vector_complex Y,csl_matrix_complex  A);")
+  (bind "___safe int  gsl_blas_zher (int Uplo,double alpha,const csl_vector_complex X,csl_matrix_complex  A);")
+  (bind "___safe int  gsl_blas_zher2 (int Uplo,struct gsl_complex alpha,const csl_vector_complex X,const csl_vector_complex Y,csl_matrix_complex  A);")
+
+  ;;; Level 3
+  (bind  "const int CblasLeft")
+  (bind  "const int CblasRight")
+  (bind  "const int CblasNonUnit")
+  (bind  "const int CblasUnit")
+
+  (bind "___safe int  gsl_blas_sgemm (int TransA,int TransB,float alpha,csl_matrix_float  A,csl_matrix_float  B,float beta,csl_matrix_float  C);")
+  (bind "___safe int  gsl_blas_ssymm (int Side, int Uplo,float alpha,csl_matrix_float  A,csl_matrix_float  B,float beta,csl_matrix_float  C);")
+  (bind "___safe int  gsl_blas_ssyrk (int Uplo, int Trans,float alpha,csl_matrix_float  A,float beta,csl_matrix_float  C);")
+  (bind "___safe int  gsl_blas_ssyr2k (int Uplo, int Trans,float alpha,csl_matrix_float  A,csl_matrix_float  B,float beta,csl_matrix_float  C);")
+  (bind "___safe int  gsl_blas_strmm (int Side,int Uplo, int TransA,int Diag,float alpha,csl_matrix_float  A,csl_matrix_float  B);")
+  (bind "___safe int  gsl_blas_strsm (int Side,int Uplo, int TransA,int Diag,float alpha,csl_matrix_float  A,csl_matrix_float  B);")
+  (bind "___safe int  gsl_blas_dgemm (int TransA,int TransB,double alpha,csl_matrix  A,csl_matrix  B,double beta,csl_matrix  C);")
+  (bind "___safe int  gsl_blas_dsymm (int Side,int Uplo,double alpha,csl_matrix  A,csl_matrix  B,double beta,csl_matrix  C);")
+  (bind "___safe int  gsl_blas_dsyrk (int Uplo,int Trans,double alpha,csl_matrix  A,double beta,csl_matrix  C);")
+  (bind "___safe int  gsl_blas_dsyr2k (int Uplo,int Trans,double alpha,const  csl_matrix  A,const  csl_matrix  B,double beta,csl_matrix  C);")
+  (bind "___safe int  gsl_blas_dtrmm (int Side,int Uplo, int TransA,int Diag,double alpha,csl_matrix  A,csl_matrix  B);")
+  (bind "___safe int  gsl_blas_dtrsm (int Side,int Uplo, int TransA,int Diag,double alpha,csl_matrix  A,csl_matrix  B);")
+  (bind "___safe int  gsl_blas_cgemm (int TransA,int TransB,struct gsl_complex_float alpha,csl_matrix_complex_float  A,csl_matrix_complex_float  B,struct gsl_complex_float beta,csl_matrix_complex_float  C);")
+  (bind "___safe int  gsl_blas_csymm (int Side,int Uplo,struct gsl_complex_float alpha,csl_matrix_complex_float  A,csl_matrix_complex_float  B,struct gsl_complex_float beta,csl_matrix_complex_float  C);")
+  (bind "___safe int  gsl_blas_csyrk (int Uplo,int Trans,struct gsl_complex_float alpha,csl_matrix_complex_float  A,struct gsl_complex_float beta,csl_matrix_complex_float  C);")
+  (bind "___safe int  gsl_blas_csyr2k (int Uplo,int Trans,struct gsl_complex_float alpha,csl_matrix_complex_float  A,csl_matrix_complex_float  B,struct gsl_complex_float beta,csl_matrix_complex_float  C);")
+  (bind "___safe int  gsl_blas_ctrmm (int Side,int Uplo, int TransA,int Diag,struct gsl_complex_float alpha,csl_matrix_complex_float  A,csl_matrix_complex_float  B);")
+  (bind "___safe int  gsl_blas_ctrsm (int Side,int Uplo, int TransA,int Diag,struct gsl_complex_float alpha,csl_matrix_complex_float  A,csl_matrix_complex_float  B);")
+  (bind "___safe int  gsl_blas_zgemm (int TransA,int TransB,struct gsl_complex alpha,csl_matrix_complex  A,csl_matrix_complex  B,struct gsl_complex beta,csl_matrix_complex  C);")
+  (bind "___safe int  gsl_blas_zsymm (int Side,int Uplo,struct gsl_complex alpha,csl_matrix_complex  A,csl_matrix_complex  B,struct gsl_complex beta,csl_matrix_complex  C);")
+  (bind "___safe int  gsl_blas_zsyrk (int Uplo,int Trans,struct gsl_complex alpha,csl_matrix_complex  A,struct gsl_complex beta,csl_matrix_complex  C);")
+  (bind "___safe int  gsl_blas_zsyr2k (int Uplo,int Trans,struct gsl_complex alpha,csl_matrix_complex  A,csl_matrix_complex  B,struct gsl_complex beta,csl_matrix_complex C);")
+  (bind "___safe int  gsl_blas_ztrmm (int Side,int Uplo, int TransA,int Diag,struct gsl_complex alpha,csl_matrix_complex  A,csl_matrix_complex  B);")
+  (bind "___safe int  gsl_blas_ztrsm (int Side,int Uplo, int TransA,int Diag,struct gsl_complex alpha,csl_matrix_complex  A,csl_matrix_complex  B);")
+  (bind "___safe int  gsl_blas_chemm (int Side,int Uplo,struct gsl_complex_float alpha,csl_matrix_complex_float  A,csl_matrix_complex_float  B,struct gsl_complex_float beta,csl_matrix_complex_float  C);")
+  (bind "___safe int  gsl_blas_cherk (int Uplo,int Trans,float alpha,csl_matrix_complex_float  A,float beta,csl_matrix_complex_float  C);")
+  (bind "___safe int  gsl_blas_cher2k (int Uplo,int Trans,struct gsl_complex_float alpha,csl_matrix_complex_float  A,csl_matrix_complex_float  B,float beta,csl_matrix_complex_float  C);")
+  (bind "___safe int  gsl_blas_zhemm (int Side,int Uplo,struct gsl_complex alpha,csl_matrix_complex  A,csl_matrix_complex  B,struct gsl_complex beta,csl_matrix_complex  C);")
+  (bind "___safe int  gsl_blas_zherk (int Uplo,int Trans,double alpha,csl_matrix_complex  A,double beta,csl_matrix_complex  C);")
+  (bind "___safe int  gsl_blas_zher2k (int Uplo,int Trans,struct gsl_complex alpha,csl_matrix_complex  A,csl_matrix_complex  B,double beta,csl_matrix_complex  C);"))
