@@ -1,19 +1,23 @@
 * TODO slicing
-* TODO Include any missing srfi-133 functions to csl vector for compatibility
-* IN-PROGRESS overhaul matrices
-* TODO Take inspiration from racket/numpy array and matrix functions
-* TODO generics?
+* TODO Include any missing srfi-133 functions in csl vector for compatibility
+* TODO generics? - consider chibi-generic
 * TODO Maybe add a vector-sum/vector-product? maybe?
 * TODO Pretty sure (vector|matrix)-append are more complex than they have to be
-* fix subvector? racket standards vs scheme standards
+* TODO Add csl.permutation for functional permutation operations
+* TODO Add csl.linalg combining blas/linalg functions
+* IN-PROGRESS Take inspiration from racket/numpy array and matrix functions
+* CANCELED fix subvector? racket standards vs scheme standards
+CLOSED: [2019-04-17 Wed 23:03]
 * CANCELED use srfi-25?
 CLOSED: [2018-12-31 Mon 09:45]
+* CANCELED explore 'shared' subvector/vector views (don't return the view itself, return view->vector)
+CLOSED: [2018-11-06 Tue 01:07]
+* DONE overhaul matrices
+CLOSED: [2019-04-17 Wed 23:03]
 * DONE provide schemey alternatives to gsl types/operations (vector to dvector etc.)
 CLOSED: [2018-12-05 Wed 00:38]
 * DONE clean up vector and matrix exports (don't need to export the error/block stuff)
 CLOSED: [2018-12-05 Wed 00:37]
-* CANCELED explore 'shared' subvector/vector views (don't return the view itself, return view->vector)
-CLOSED: [2018-11-06 Tue 01:07]
 * DONE overhaul rng
 CLOSED: [2018-10-13 Sat 23:45]
 * DONE define complex vectors
