@@ -230,6 +230,11 @@
   (extension csl.matrix.uchar
              (source "matrix/csl.matrix.uchar.scm")
              (component-dependencies gsl.matrix.uchar))
+  ;; Permutations
+  (extension gsl.permutation
+             (source "permutation/gsl.permutation.scm")
+             (csc-options "-C" "`pkg-config --cflags gsl`")
+             (link-options "-L" "`pkg-config --libs gsl`"))
 
   ;; BLAS Support
   (extension gsl.blas
