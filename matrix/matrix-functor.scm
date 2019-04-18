@@ -144,7 +144,7 @@
        (list->matrix 'arg))))
 
   (define (make-matrix rows cols #!optional fill)
-    (let ((m (gsl:matrix-alloc rows cols)))
+    (let ((m (gsl:matrix-calloc rows cols)))
       (when fill
         (gsl:matrix-set-all! m fill))
       m))

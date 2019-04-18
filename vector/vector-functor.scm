@@ -121,7 +121,7 @@
     (list->vector args))
 
   (define (make-vector n #!optional fill)
-    (let ((v (gsl:vector-alloc n)))
+    (let ((v (gsl:vector-calloc n)))
       (when fill
         (gsl:vector-set-all! v fill))
       v))
