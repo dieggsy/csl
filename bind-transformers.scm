@@ -9,6 +9,8 @@
 ")
 
 (foreign-declare "
+#ifndef CSL_COMPLEX_HELPERS
+#define CSL_COMPLEX_HELPERS
 gsl_complex f64_to_complex(double *arg) {
     gsl_complex z;
     GSL_SET_COMPLEX(&z,arg[0],arg[1]);
@@ -20,6 +22,7 @@ gsl_complex_float f32_to_complex(float *arg) {
     GSL_SET_COMPLEX(&z,arg[0],arg[1]);
     return z;
 }
+#endif
 " )
 
 (define prec-double (foreign-value "GSL_PREC_DOUBLE" int))
