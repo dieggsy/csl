@@ -1,5 +1,7 @@
 * TODO slicing
-* TODO Include any missing srfi-133 functions in csl vector for compatibility
+* TODO Add (c)alloc* as fn that sets finalizer, leave 'alloc' as low-level.
+** TODO Leave low level fns unmodified, (leave out params and such) modify in csl variant.
+* TODO Incude any missing srfi-133 functions in csl vector for compatibility
 * TODO generics? - consider chibi-generic
 * TODO Maybe add a vector-sum/vector-product? maybe?
 * TODO Pretty sure (vector|matrix)-append are more complex than they have to be

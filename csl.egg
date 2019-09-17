@@ -230,6 +230,7 @@
   (extension csl.matrix.uchar
              (source "matrix/csl.matrix.uchar.scm")
              (component-dependencies gsl.matrix.uchar))
+
   ;; Permutations
   (extension gsl.permutation
              (source "permutation/gsl.permutation.scm")
