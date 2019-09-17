@@ -240,7 +240,26 @@
   (extension gsl.blas
              (source "blas/gsl.blas.scm")
              (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+             (link-options "-L" "`pkg-config --libs gsl`")
+             (component-dependencies gsl.vector.float
+                                     gsl.vector.double
+                                     gsl.vector.complex.float
+                                     gsl.vector.complex.double
+                                     gsl.matrix.float
+                                     gsl.matrix.double
+                                     gsl.matrix.complex.float
+                                     gsl.matrix.complex.double))
+
+  ;; ;; Linear Algebra
+  ;; (extension gsl.linalg.double
+  ;;            (source "linalg/gsl.linalg.double.scm")
+  ;;            (csc-options "-C" "`pkg-config --cflags gsl`")
+  ;;            (link-options "-L" "`pkg-config --libs gsl`")
+  ;;            (component-dependencies gsl.permutation
+  ;;                                    gsl.vector.double
+  ;;                                    gsl.vector.complex.double
+  ;;                                    gsl.matrix.double
+  ;;                                    gsl.matrix.complex.double))
 
   ;; Random number generation
   (extension gsl.rng
