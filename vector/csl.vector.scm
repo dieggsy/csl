@@ -124,11 +124,10 @@
     (list->vector args))
 
   (define (make-vector n #!optional fill)
-    (set-finalizer! (let ((v (gsl:vector-calloc n)))
-                      (when fill
-                        (gsl:vector-set-all! v fill))
-                      v)
-                    vector-free!))
+    (let ((v (set-finalizer! (gsl:vector-calloc n) vector-free!)))
+      (when fill
+        (gsl:vector-set-all! v fill))
+      v))
 
   (define vector-length gsl:vector-size)
 
@@ -149,10 +148,11 @@
   (define vector-ref gsl:vector-get)
 
   (define (subvector v #!optional (start 0) (end (vector-length v)) (step 1))
-    (gsl:vector-subvector-with-stride v
-                                      start
-                                      step
-                                      (add1 (quotient (- end 1 start ) step))))
+    (set-finalizer! (gsl:vector-subvector-with-stride v
+                                                      start
+                                                      step
+                                                      (add1 (quotient (- end 1 start ) step)))
+                    vector-free!))
 
   (define (subvector* v #!key (start 0) (end (vector-length v)) (step 1))
     (subvector v start end step))
@@ -195,9 +195,11 @@
           ((null? vs) new)
         (vector-subvector-with-stride-set! new (car ls) 1 (cadr ls) (car vs)))))
 
-  (define vector-real-part gsl:vector-real)
+  (define (vector-real-part v)
+    (set-finalizer! (gsl:vector-real v) vector-free!))
 
-  (define vector-imag-part gsl:vector-imag)
+  (define (vector-imag-part v)
+    (set-finalizer! (gsl:vector-imag v) vector-free!))
 
   (define (vector+ . vectors)
     (let* ((v1 (car vectors))
