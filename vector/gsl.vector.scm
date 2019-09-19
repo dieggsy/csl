@@ -41,6 +41,7 @@
                               vector-fprintf
                               vector-fscanf!
                               vector-subvector
+                              vector-subvector-set!
                               vector-subvector-with-stride
                               vector-subvector-with-stride-set!
                               vector-imag
@@ -213,6 +214,13 @@
                  #{file-prefix} *vec = #{file-prefix}_alloc(view.vector.size);
                  #{file-prefix}_memcpy(vec, &view.vector);
                  C_return(vec);"
+                substitutions)))
+
+          (define vector-subvector-set!
+            (foreign-safe-lambda* void ((,csl-vector v) (size_t offset) (size_t n) (,csl-vector sub))
+              ,(string-translate*
+                "#{file-prefix}_view view = #{file-prefix}_subvector(v, offset, n);
+                 #{file-prefix}_memcpy(&view.vector, sub);"
                 substitutions)))
 
           (define vector-subvector-with-stride
