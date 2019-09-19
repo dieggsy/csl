@@ -8,6 +8,6 @@
   (define extract-c-file
     (foreign-lambda* c-pointer ((scheme-object port))
                      "C_return(C_block_item(port, 0));"))
-  (assert (port? port) fn-name "bad argument type - not a port:" port)
+  (assert (port? port) fn-name "bad argument type - not a port" port)
   (assert (eq? 'stream (##sys#slot port 7)) fn-name "bad argument type - not a file port" port)
   (extract-c-file port))
