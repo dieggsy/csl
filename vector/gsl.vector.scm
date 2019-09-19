@@ -333,7 +333,7 @@
           (define vector-max
             ,(case base-type
                ((complex complex-float)
-                `(lambda () (error 'vector-max "bad argument type - complex numbers have no ordering")))
+                `(lambda (m) (error 'vector-max "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-lambda ,base-type ,(string-append file-prefix "_max")
                    ,csl-vector))))
@@ -341,7 +341,7 @@
           (define vector-min
             ,(case base-type
                ((complex complex-float)
-                `(lambda () (error 'vector-min "bad argument type - complex numbers have no ordering")))
+                `(lambda (m) (error 'vector-min "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-lambda ,base-type ,(string-append file-prefix "_min")
                    ,csl-vector))))
@@ -349,7 +349,7 @@
           (define vector-minmax
             ,(case base-type
                ((complex complex-float)
-                `(lambda () (error 'vector-min "bad argument type - complex numbers have no ordering")))
+                `(lambda (m) (error 'vector-minmax "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-primitive ((,csl-vector v))
                      ,(string-translate*
@@ -364,7 +364,7 @@
           (define vector-max-index
             ,(case base-type
                ((complex complex-float)
-                `(lambda () (error 'vector-min "bad argument type - complex numbers have no ordering")))
+                `(lambda (m) (error 'vector-max-index "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-lambda size_t ,(string-append file-prefix "_max_index")
                    ,csl-vector))))
@@ -372,7 +372,7 @@
           (define vector-min-index
             ,(case base-type
                ((complex complex-float)
-                `(lambda () (error 'vector-min "bad argument type - complex numbers have no ordering")))
+                `(lambda (m) (error 'vector-min-index "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-lambda size_t ,(string-append file-prefix "_min_index")
                    ,csl-vector))))
@@ -380,7 +380,7 @@
           (define vector-minmax-index
             ,(case base-type
                ((complex complex-float)
-                `(lambda () (error 'vector-min "bad argument type - complex numbers have no ordering")))
+                `(lambda (m) (error 'vector-minmax-index "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-primitive ((,csl-vector v))
                      ,(string-translate*
