@@ -227,16 +227,19 @@
 
   (define (vector+ . vectors)
     (let* ((v1 (car vectors))
-           (new (vector-alloc (gsl:vector-size v1))))
+           (new (vector-calloc (gsl:vector-size v1))))
       (gsl:vector-memcpy! new v1)
       (for-each (cut gsl:vector-add! new <>) (cdr vectors))
       new))
 
   (define (vector- . vectors)
     (let* ((v1 (car vectors))
-           (new (vector-alloc (gsl:vector-size v1))))
-      (gsl:vector-memcpy! new v1)
-      (for-each (cut gsl:vector-sub! new <>) (cdr vectors))
+           (new (vector-calloc (gsl:vector-size v1))))
+      (if (null? (cdr vectors))
+          (gsl:vector-sub! new (car vectors))
+          (begin
+            (gsl:vector-memcpy! new v1)
+            (for-each (cut gsl:vector-sub! new <>) (cdr vectors))))
       new))
 
   (define (vector~* . vectors)
@@ -247,10 +250,16 @@
       new))
 
   (define (vector~/ . vectors)
-    (let* ((v1 (car vectors))
-           (new (vector-alloc (gsl:vector-size v1))))
-      (gsl:vector-memcpy! new v1)
-      (for-each (cut gsl:vector-div! new <>) (cdr vectors))
+    (let* ((m1 (car vectors))
+           (new (vector-alloc (gsl:vector-size1 m1)
+                              (gsl:vector-size2 m1))))
+      (if (null? (cdr vectors))
+          (begin
+            (vector-fill! new 1)
+            (gsl:vector-div! new (car vectors)))
+          (begin
+            (gsl:vector-memcpy! new m1)
+            (for-each (cut gsl:vector-div! new <>) (cdr vectors))))
       new))
 
   (define (vector-scale v n)
