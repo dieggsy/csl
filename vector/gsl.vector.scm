@@ -120,7 +120,7 @@
             ,(case base-type
                ((complex complex-float)
                 `(foreign-safe-lambda* scheme-object
-                     ((,csl-vector v) ((const size_t) i))
+                     (((const ,csl-vector) v) ((const size_t) i))
                    ,(string-translate*
                      "#{complex-ctype} z = #{file-prefix}_get(v,i);
                       C_return(scheme_make_rect(GSL_REAL(z),GSL_IMAG(z)));"
@@ -128,7 +128,7 @@
                (else
                 `(foreign-safe-lambda ,base-type
                      ,(string-append file-prefix "_get")
-                   ,csl-vector (const size_t)))))
+                   (const ,csl-vector) (const size_t)))))
 
           ;; Fix a weird compiler warning?
           (: vector-set! (pointer fixnum * -> void))
@@ -173,7 +173,7 @@
           (define (vector-fwrite fileport vector)
             (let* ((FILE (get-c-file 'vector-fwrite fileport))
                    (ret ((foreign-lambda int ,(string-append file-prefix "_fwrite")
-                           (c-pointer "FILE") ,csl-vector)
+                           (c-pointer "FILE") (const ,csl-vector))
                          FILE vector)))
               (if (= ret (foreign-value GSL_EFAILED int))
                   (error 'vector-fwrite! "error writing to port")
@@ -191,7 +191,7 @@
           (define (vector-fprintf fileport vector format)
             (let* ((FILE (get-c-file 'vector-fprintf fileport))
                    (ret ((foreign-lambda int ,(string-append file-prefix "_fprintf")
-                           (c-pointer "FILE") ,csl-vector c-string)
+                           (c-pointer "FILE") (const ,csl-vector) (const c-string))
                          FILE vector format)))
               (if (= ret (foreign-value GSL_EFAILED int))
                   (error 'vector-fprintf! "error writing port")
@@ -280,7 +280,7 @@
           ;;; Copying vectors
           (define vector-memcpy!
             (foreign-safe-lambda int ,(string-append file-prefix "_memcpy")
-              ,csl-vector ,csl-vector))
+              ,csl-vector (const ,csl-vector)))
           (define vector-swap!
             (foreign-safe-lambda int ,(string-append file-prefix "_swap")
               ,csl-vector ,csl-vector))
@@ -296,24 +296,24 @@
           ;;; Vector operations
           (define vector-add!
             (foreign-safe-lambda int ,(string-append file-prefix "_add")
-              ,csl-vector ,csl-vector))
+              ,csl-vector (const ,csl-vector)))
 
           (define vector-sub!
             (foreign-safe-lambda int ,(string-append file-prefix "_sub")
-              ,csl-vector ,csl-vector))
+              ,csl-vector (const ,csl-vector)))
 
           (define vector-mul!
             (foreign-safe-lambda int ,(string-append file-prefix "_mul")
-              ,csl-vector ,csl-vector))
+              ,csl-vector (const ,csl-vector)))
 
           (define vector-div!
             (foreign-safe-lambda int ,(string-append file-prefix "_div")
-              ,csl-vector ,csl-vector))
+              ,csl-vector (const ,csl-vector)))
 
           (define vector-scale!
             ,(case base-type
                ((complex complex-float)
-                `(foreign-safe-lambda* int ((,csl-vector v) (,base-type z))
+                `(foreign-safe-lambda* int ((,csl-vector v) ((const ,base-type) z))
                    ,(string-translate*
                      "#{complex-ctype} _z;
                       GSL_SET_COMPLEX(&_z, z[0], z[1]);
@@ -321,13 +321,13 @@
                      substitutions)))
                (else
                 `(foreign-safe-lambda int ,(string-append file-prefix "_scale")
-                   ,csl-vector ,base-type))))
+                   ,csl-vector (const ,base-type)))))
 
 
           (define vector-add-constant!
             ,(case base-type
                ((complex complex-float)
-                `(foreign-safe-lambda* int ((,csl-vector v) (,base-type z))
+                `(foreign-safe-lambda* int ((,csl-vector v) ((const ,base-type) z))
                    ,(string-translate*
                      "#{complex-ctype} _z;
                       GSL_SET_COMPLEX(&_z, z[0], z[1]);
@@ -335,7 +335,7 @@
                      substitutions)))
                (else
                 `(foreign-safe-lambda int ,(string-append file-prefix "_add_constant")
-                   ,csl-vector ,base-type))))
+                   ,csl-vector (const ,base-type)))))
 
           (define vector-axpby!
             ,(case base-type
@@ -361,7 +361,7 @@
                 `(lambda (m) (error 'vector-max "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-lambda ,base-type ,(string-append file-prefix "_max")
-                   ,csl-vector))))
+                   (const ,csl-vector)))))
 
           (define vector-min
             ,(case base-type
@@ -369,14 +369,14 @@
                 `(lambda (m) (error 'vector-min "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-lambda ,base-type ,(string-append file-prefix "_min")
-                   ,csl-vector))))
+                   (const ,csl-vector)))))
 
           (define vector-minmax
             ,(case base-type
                ((complex complex-float)
                 `(lambda (m) (error 'vector-minmax "bad argument type - complex numbers have no ordering")))
                (else
-                `(foreign-primitive ((,csl-vector v))
+                `(foreign-primitive (((const ,csl-vector) v))
                      ,(string-translate*
                        "#{base-type} min_out, max_out;
                         #{file-prefix}_minmax(v, &min_out, &max_out);
@@ -392,7 +392,7 @@
                 `(lambda (m) (error 'vector-max-index "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-lambda size_t ,(string-append file-prefix "_max_index")
-                   ,csl-vector))))
+                   (const ,csl-vector)))))
 
           (define vector-min-index
             ,(case base-type
@@ -400,14 +400,14 @@
                 `(lambda (m) (error 'vector-min-index "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-lambda size_t ,(string-append file-prefix "_min_index")
-                   ,csl-vector))))
+                   (const ,csl-vector)))))
 
           (define vector-minmax-index
             ,(case base-type
                ((complex complex-float)
                 `(lambda (m) (error 'vector-minmax-index "bad argument type - complex numbers have no ordering")))
                (else
-                `(foreign-primitive ((,csl-vector v))
+                `(foreign-primitive (((const ,csl-vector) v))
                      ,(string-translate*
                        "size_t min_out, max_out;
                         #{file-prefix}_minmax_index(v, &min_out, &max_out);
@@ -419,15 +419,15 @@
 
           ;;; Vector properties
           (define vector-isnull?
-            (foreign-lambda bool ,(string-append file-prefix "_isnull") ,csl-vector))
+            (foreign-lambda bool ,(string-append file-prefix "_isnull") (const ,csl-vector)))
           (define vector-ispos?
-            (foreign-lambda bool ,(string-append file-prefix "_ispos") ,csl-vector))
+            (foreign-lambda bool ,(string-append file-prefix "_ispos") (const ,csl-vector)))
           (define vector-isneg?
-            (foreign-lambda bool ,(string-append file-prefix "_isneg") ,csl-vector))
+            (foreign-lambda bool ,(string-append file-prefix "_isneg") (const ,csl-vector)))
           (define vector-isnonneg?
-            (foreign-lambda bool ,(string-append file-prefix "_isnonneg") ,csl-vector))
+            (foreign-lambda bool ,(string-append file-prefix "_isnonneg") (const ,csl-vector)))
           (define vector-equal?
-            (foreign-safe-lambda bool ,(string-append file-prefix "_equal") ,csl-vector ,csl-vector)))))))
+            (foreign-safe-lambda bool ,(string-append file-prefix "_equal") (const ,csl-vector) ,csl-vector)))))))
 
 (make-vector-module gsl.vector.char "gsl_vector_char" byte)
 (make-vector-module gsl.vector.complex.double "gsl_vector_complex" complex)

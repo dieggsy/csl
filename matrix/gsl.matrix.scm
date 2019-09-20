@@ -154,7 +154,7 @@
             ,(case base-type
                ((complex complex-float)
                 `(foreign-lambda* scheme-object
-                    ((,csl-matrix m) ((const size_t) i) ((const size_t) j))
+                    (((const ,csl-matrix) m) ((const size_t) i) ((const size_t) j))
                   ,(string-translate*
                     "#{complex-ctype} z = #{file-prefix}_get(m,i,j);
                      C_return(scheme_make_rect(GSL_REAL(z),GSL_IMAG(z)));"
@@ -162,7 +162,7 @@
                (else
                 `(foreign-safe-lambda ,base-type
                      ,(string-append file-prefix "_get")
-                   ,csl-matrix (const size_t) (const size_t)))))
+                   (const ,csl-matrix) (const size_t) (const size_t)))))
 
           (define matrix-set!
             ,(case base-type
@@ -205,7 +205,7 @@
           (define (matrix-fwrite fileport matrix)
             (let* ((FILE (get-c-file 'matrix-fwrite fileport))
                    (ret ((foreign-lambda int ,(string-append file-prefix "_fwrite")
-                           (c-pointer "FILE") ,csl-matrix)
+                           (c-pointer "FILE") (const ,csl-matrix))
                          FILE matrix)))
               (if (= ret (foreign-value GSL_EFAILED int))
                   (error 'matrix-fwrite! "error writing to port")
@@ -223,7 +223,7 @@
           (define (matrix-fprintf fileport matrix format)
             (let* ((FILE (get-c-file 'matrix-fprintf fileport))
                    (ret ((foreign-lambda int ,(string-append file-prefix "_fprintf")
-                           (c-pointer "FILE") ,csl-matrix c-string)
+                           (c-pointer "FILE") (const ,csl-matrix) (const c-string))
                          FILE matrix format)))
               (if (= ret (foreign-value GSL_EFAILED int))
                   (error 'matrix-fprintf! "error writing port")
@@ -374,7 +374,7 @@
           ;;; Copying matrices
           (define matrix-memcpy!
             (foreign-safe-lambda int ,(string-append file-prefix "_memcpy")
-              ,csl-matrix ,csl-matrix))
+              ,csl-matrix (const ,csl-matrix)))
           (define matrix-swap!
             (foreign-safe-lambda int ,(string-append file-prefix "_swap")
               ,csl-matrix ,csl-matrix))
@@ -382,17 +382,17 @@
           ;;; Copying rows and columns
           (define matrix-get-row!
             (foreign-safe-lambda int ,(string-append file-prefix "_get_row")
-              ,csl-vector ,csl-matrix size_t))
+              ,csl-vector (const ,csl-matrix) size_t))
           (define matrix-get-col!
             (foreign-safe-lambda int ,(string-append file-prefix "_get_col")
-              ,csl-vector ,csl-matrix size_t))
+              ,csl-vector (const ,csl-matrix) size_t))
 
           (define matrix-set-row!
             (foreign-safe-lambda int ,(string-append file-prefix "_set_row")
-              ,csl-matrix size_t ,csl-vector))
+              ,csl-matrix size_t (const ,csl-vector)))
           (define matrix-set-col!
             (foreign-safe-lambda int ,(string-append file-prefix "_set_col")
-              ,csl-matrix size_t ,csl-vector))
+              ,csl-matrix size_t (const ,csl-vector)))
 
           ;;; Exchanging rows an dcolumns
           (define matrix-swap-rows!
@@ -409,7 +409,7 @@
 
           (define matrix-transpose-memcpy!
             (foreign-safe-lambda int ,(string-append file-prefix "_transpose_memcpy")
-              ,csl-matrix ,csl-matrix))
+              ,csl-matrix (const ,csl-matrix)))
 
           (define matrix-transpose!
             (foreign-safe-lambda int ,(string-append file-prefix "_transpose")
@@ -418,24 +418,24 @@
           ;;; Matrix-operations
           (define matrix-add!
             (foreign-safe-lambda int ,(string-append file-prefix "_add")
-              ,csl-matrix ,csl-matrix))
+              ,csl-matrix (const ,csl-matrix)))
 
           (define matrix-sub!
             (foreign-safe-lambda int ,(string-append file-prefix "_sub")
-              ,csl-matrix ,csl-matrix))
+              ,csl-matrix (const ,csl-matrix)))
 
           (define matrix-mul-elements!
             (foreign-safe-lambda int ,(string-append file-prefix "_mul_elements")
-              ,csl-matrix ,csl-matrix))
+              ,csl-matrix (const ,csl-matrix)))
 
           (define matrix-div-elements!
             (foreign-safe-lambda int ,(string-append file-prefix "_div_elements")
-              ,csl-matrix ,csl-matrix))
+              ,csl-matrix (const ,csl-matrix)))
 
           (define matrix-scale!
             ,(case base-type
                ((complex complex-float)
-                `(foreign-safe-lambda* int ((,csl-matrix v) (,base-type z))
+                `(foreign-safe-lambda* int ((,csl-matrix v) ((const ,base-type) z))
                    ,(string-translate*
                      "#{complex-ctype} _z;
                       GSL_SET_COMPLEX(&_z, z[0], z[1]);
@@ -443,13 +443,13 @@
                      substitutions)))
                (else
                 `(foreign-safe-lambda int ,(string-append file-prefix "_scale")
-                   ,csl-matrix ,base-type))))
+                   ,csl-matrix (const ,base-type)))))
 
 
           (define matrix-add-constant!
             ,(case base-type
                ((complex complex-float)
-                `(foreign-safe-lambda* int ((,csl-matrix v) (,base-type z))
+                `(foreign-safe-lambda* int ((,csl-matrix v) ((const ,base-type) z))
                    ,(string-translate*
                      "#{complex-ctype} _z;
                       GSL_SET_COMPLEX(&_z, z[0], z[1]);
@@ -457,7 +457,7 @@
                      substitutions)))
                (else
                 `(foreign-safe-lambda int ,(string-append file-prefix "_add_constant")
-                   ,csl-matrix ,base-type))))
+                   ,csl-matrix (const ,base-type)))))
 
           ;;; Finding max and min elements of matrixs
           (define matrix-max
@@ -466,7 +466,7 @@
                 `(lambda (m) (error 'matrix-max "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-lambda ,base-type ,(string-append file-prefix "_max")
-                   ,csl-matrix))))
+                   (const ,csl-matrix)))))
 
           (define matrix-min
             ,(case base-type
@@ -474,14 +474,14 @@
                 `(lambda (m) (error 'matrix-min "bad argument type - complex numbers have no ordering")))
                (else
                 `(foreign-lambda ,base-type ,(string-append file-prefix "_min")
-                   ,csl-matrix))))
+                   (const ,csl-matrix)))))
 
           (define matrix-minmax
             ,(case base-type
                ((complex complex-float)
                 `(lambda (m) (error 'matrix-minmax "bad argument type - complex numbers have no ordering")))
                (else
-                `(foreign-primitive ((,csl-matrix v))
+                `(foreign-primitive (((const ,csl-matrix) v))
                      ,(string-translate*
                        "#{base-type} min_out, max_out;
                         #{file-prefix}_minmax(v, &min_out, &max_out);
@@ -496,7 +496,7 @@
                ((complex complex-float)
                 `(lambda (m) (error 'matrix-max-index "bad argument type - complex numbers have no ordering")))
                (else
-                `(foreign-primitive ((,csl-matrix v))
+                `(foreign-primitive (((const ,csl-matrix) v))
                      ,(string-translate*
                        "size_t imax, jmax;
                         #{file-prefix}_max_index(v, &imax, &jmax);
@@ -511,7 +511,7 @@
                ((complex complex-float)
                 `(lambda (m) (error 'matrix-min-index "bad argument type - complex numbers have no ordering")))
                (else
-                `(foreign-primitive ((,csl-matrix v))
+                `(foreign-primitive (((const ,csl-matrix) v))
                      ,(string-translate*
                        "size_t imin, jmin;
                         #{file-prefix}_min_index(v, &imin, &jmin);
@@ -526,7 +526,7 @@
                ((complex complex-float)
                 `(lambda (m) (error 'matrix-min-index "bad argument type - complex numbers have no ordering")))
                (else
-                `(foreign-primitive ((,csl-matrix v))
+                `(foreign-primitive (((const ,csl-matrix) v))
                      ,(string-translate*
                        "size_t imin, jmin, imax, jmax;
                         #{file-prefix}_minmax_index(v, &imin, &jmin, &imax, &jmax);
@@ -542,15 +542,15 @@
 
           ;;; Matrix properties
           (define matrix-isnull?
-            (foreign-lambda bool ,(string-append file-prefix "_isnull") ,csl-matrix))
+            (foreign-lambda bool ,(string-append file-prefix "_isnull") (const ,csl-matrix)))
           (define matrix-ispos?
-            (foreign-lambda bool ,(string-append file-prefix "_ispos") ,csl-matrix))
+            (foreign-lambda bool ,(string-append file-prefix "_ispos") (const ,csl-matrix)))
           (define matrix-isneg?
-            (foreign-lambda bool ,(string-append file-prefix "_isneg") ,csl-matrix))
+            (foreign-lambda bool ,(string-append file-prefix "_isneg") (const ,csl-matrix)))
           (define matrix-isnonneg?
-            (foreign-lambda bool ,(string-append file-prefix "_isnonneg") ,csl-matrix))
+            (foreign-lambda bool ,(string-append file-prefix "_isnonneg") (const ,csl-matrix)))
           (define matrix-equal?
-            (foreign-safe-lambda bool ,(string-append file-prefix "_equal") ,csl-matrix ,csl-matrix)))))))
+            (foreign-safe-lambda bool ,(string-append file-prefix "_equal") (const ,csl-matrix) ,csl-matrix)))))))
 
 (make-matrix-module gsl.matrix.char "gsl_matrix_char" byte)
 (make-matrix-module gsl.matrix.complex.double "gsl_matrix_complex" complex)
