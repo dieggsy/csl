@@ -56,6 +56,7 @@
                               vector-div!
                               vector-scale!
                               vector-add-constant!
+                              vector-axpby!
                               vector-max
                               vector-min
                               vector-minmax
@@ -335,6 +336,23 @@
                (else
                 `(foreign-safe-lambda int ,(string-append file-prefix "_add_constant")
                    ,csl-vector ,base-type))))
+
+          (define vector-axpby!
+            ,(case base-type
+               ((complex complex-float)
+                `(foreign-safe-lambda* int (((const ,base-type) alpha)
+                                            ((const ,csl-vector) x)
+                                            ((const ,base-type) beta)
+                                            (,csl-vector y))
+                   ,(string-translate*
+                     "#{complex-ctype} _alpha, _beta;
+                      GSL_SET_COMPLEX(&_alpha, alpha[0], alpha[1]);
+                      GSL_SET_COMPLEX(&_beta, beta[0], beta[1]);
+                      #{file-prefix}_axpby(_alpha, x, _beta, y);"
+                     substitutions)))
+               (else
+                `(foreign-safe-lambda int ,(string-append file-prefix "_axpby")
+                   (const ,base-type) (const ,csl-vector) (const ,base-type) ,csl-vector))))
 
           ;;; Maximum and minimum
           (define vector-max
