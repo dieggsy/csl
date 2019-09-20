@@ -23,8 +23,8 @@
                          nan?
                          infinite?
                          finite?
-                         log1+
-                         exp-1
+                         log1p
+                         expm1
                          hypot
                          cosh
                          acosh
@@ -34,15 +34,15 @@
                          atanh
                          ldexp
                          frexp
-                         expt-int
-                         expt2
-                         expt3
-                         expt4
-                         expt5
-                         expt6
-                         expt7
-                         expt8
-                         expt9
+                         pow-int
+                         pow-2
+                         pow-3
+                         pow-4
+                         pow-5
+                         pow-6
+                         pow-7
+                         pow-8
+                         pow-9
                          sign
                          odd?
                          even?
@@ -97,19 +97,18 @@
   (define finite? (foreign-lambda bool "gsl_finite" (const double)))
 
   ;; Elementary functions
-  (define log1+ (foreign-lambda double "gsl_log1p" (const double)))
-  (define exp-1 (foreign-lambda double "gsl_expm1" (const double)))
-  (define hypot2 (foreign-lambda double "gsl_hypot" (const double) (const double)))
+  (define log1p (foreign-lambda double "gsl_log1p" (const double)))
+  (define expm1 (foreign-lambda double "gsl_expm1" (const double)))
+  (define hypot (foreign-lambda double "gsl_hypot" (const double) (const double)))
   (define hypot3 (foreign-lambda double "gsl_hypot3" (const double) (const double) (const double)))
-  (define (hypot a b #!optional c)
-    (if c
-        (hypot3 a b c)
-        (hypot2 a b)))
+
+  ;; added from math.h
   (define cosh (foreign-lambda double "cosh" (const double)))
-  (define acosh (foreign-lambda double "gsl_acosh" (const double)))
   (define sinh (foreign-lambda double "sinh" (const double)))
-  (define asinh (foreign-lambda double "gsl_asinh" (const double)))
   (define tanh (foreign-lambda double "tanh" (const double)))
+
+  (define acosh (foreign-lambda double "gsl_acosh" (const double)))
+  (define asinh (foreign-lambda double "gsl_asinh" (const double)))
   (define atanh (foreign-lambda double "gsl_atanh" (const double)))
   (define ldexp (foreign-lambda double "gsl_ldexp" double int))
   (define frexp
@@ -122,15 +121,15 @@
       "C_values(4,av);"))
 
   ;; Small integer powers
-  (define expt-int (foreign-lambda  double "gsl_pow_int" double int))
-  (define expt2 (foreign-lambda double "gsl_pow_2" (const double)))
-  (define expt3 (foreign-lambda double "gsl_pow_3" (const double)))
-  (define expt4 (foreign-lambda double "gsl_pow_4" (const double)))
-  (define expt5 (foreign-lambda double "gsl_pow_5" (const double)))
-  (define expt6 (foreign-lambda double "gsl_pow_6" (const double)))
-  (define expt7 (foreign-lambda double "gsl_pow_7" (const double)))
-  (define expt8 (foreign-lambda double "gsl_pow_8" (const double)))
-  (define expt9 (foreign-lambda double "gsl_pow_9" (const double)))
+  (define pow-int (foreign-lambda  double "gsl_pow_int" double int))
+  (define pow-2 (foreign-lambda double "gsl_pow_2" (const double)))
+  (define pow-3 (foreign-lambda double "gsl_pow_3" (const double)))
+  (define pow-4 (foreign-lambda double "gsl_pow_4" (const double)))
+  (define pow-5 (foreign-lambda double "gsl_pow_5" (const double)))
+  (define pow-6 (foreign-lambda double "gsl_pow_6" (const double)))
+  (define pow-7 (foreign-lambda double "gsl_pow_7" (const double)))
+  (define pow-8 (foreign-lambda double "gsl_pow_8" (const double)))
+  (define pow-9 (foreign-lambda double "gsl_pow_9" (const double)))
 
   ;; Testing the sign of numbers
   (define sign (foreign-lambda* int ((double x)) "C_return(GSL_SIGN(x));"))
@@ -140,18 +139,12 @@
   (define even? (foreign-lambda* bool ((int x)) "C_return(GSL_IS_EVEN(x));"))
 
   ;; Maximum and minimum functions
-  (define %max (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX(a,b));"))
-  (define (max . args) (foldr %max 0 args))
-  (define %min (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN(a,b));"))
-  (define (min . args) (foldr %min 0 args))
-  (define %max-dbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX_DBL(a,b));"))
-  (define (max-dbl . args) (foldr %max-dbl 0 args))
-  (define %min-dbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN_DBL(a,b));"))
-  (define (min-dbl . args) (foldr %min-dbl 0 args))
-  (define %max-int (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX_INT(a,b));"))
-  (define (max-int . args) (foldr %max-int 0 args))
-  (define %min-int (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN_INT(a,b));"))
-  (define (min-int . args) (foldr %min-int 0 args))
+  (define max (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX(a,b));"))
+  (define min (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN(a,b));"))
+  (define max-dbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX_DBL(a,b));"))
+  (define min-dbl (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN_DBL(a,b));"))
+  (define max-int (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MAX_INT(a,b));"))
+  (define min-int (foreign-lambda* double ((double a) (double b)) "C_return(GSL_MIN_INT(a,b));"))
 
   ;; Approximate comparison of floating point numbers
   (define fcmp (foreign-lambda int "gsl_fcmp" double double double)))
