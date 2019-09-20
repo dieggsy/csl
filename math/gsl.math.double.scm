@@ -1,3 +1,5 @@
+(include "utils/declarations.scm")
+
 (module gsl.math.double (e
                          log2e
                          log10e
@@ -60,7 +62,7 @@
           (only chicken.base foldr include)
           (chicken foreign))
 
-  (include "csl-error.scm")
+  (include "utils/error-handler.scm")
 
   (foreign-declare "#include <gsl/gsl_math.h>")
   (foreign-declare "#include <math.h>")
