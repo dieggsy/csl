@@ -90,7 +90,6 @@
                               matrix-equal?)
           (import (except scheme vector-set! vector?)
                   srfi-4
-                  ;; bind
                   chicken.foreign
                   (only chicken.module reexport)
                   (only chicken.base

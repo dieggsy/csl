@@ -66,7 +66,6 @@
                   cos
                   tan)
           (only chicken.base include foldl error)
-          bind
           (chicken foreign))
 
   (include "utils/error-handler.scm")

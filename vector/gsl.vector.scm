@@ -69,7 +69,6 @@
                               vector-equal?)
           (import (except scheme vector-set! vector vector?)
                   srfi-4
-                  ;; bind
                   chicken.foreign
                   chicken.type
                   (only chicken.base
