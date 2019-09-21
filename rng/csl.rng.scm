@@ -10,9 +10,14 @@
           (only chicken.module reexport)
           (only chicken.blob make-blob)
           (only chicken.random random-bytes)
+          (only chicken.gc set-finalizer!)
           (prefix gsl.rng gsl:))
 
-  (reexport gsl.rng)
+  (reexport (except gsl.rng rng-alloc rng-clone))
+  (define (rng-alloc type)
+    (set-finalizer! (gsl:rng-alloc type) gsl:rng-free!))
+  (define (rng-clone rng)
+    (set-finalizer! (gsl:rng-clone rng) gsl:rng-free!))
 
   (define (rng-random-seed)
     (let ((bytes (random-bytes (make-blob 8))))
