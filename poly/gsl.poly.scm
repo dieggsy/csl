@@ -187,7 +187,7 @@
   (define (poly-complex-solve a)
     (let* ((n (f64vector-length a))
            (z (make-f64vector (* 2 (- n 1)))))
-      ((foreign-safe-lambda* int ((f64vector a) (unsigned-int n) (f64vector z))
+      ((foreign-safe-lambda* int (((const f64vector) a) (unsigned-int n) (f64vector z))
          "gsl_poly_complex_workspace * w = gsl_poly_complex_workspace_alloc(n);"
          "gsl_poly_complex_solve(a,n,w,z);"
          "gsl_poly_complex_workspace_free(w);")
