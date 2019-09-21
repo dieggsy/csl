@@ -1,3 +1,5 @@
+(include "utils/declarations.scm")
+
 (module gsl.rng (rng-alloc
                  rng-set!
                  rng-free!
@@ -56,21 +58,15 @@
                  rng-fishman2x
                  rng-coveyou)
   (import scheme
-          bind
           chicken.foreign
-          (only chicken.base include define-record-type)
-          (only chicken.gc set-finalizer!)
+          (only chicken.base error void when include define-record-type)
           (only chicken.file file-exists?)
           (only miscmacros ensure))
 
-  (include "csl-error.scm")
-  (include "bind-transformers.scm")
+  (include "utils/error-handler.scm")
+  (include "utils/stdio.scm")
 
   (foreign-declare "#include <gsl/gsl_rng.h>")
-
-  (bind-options default-renaming: "")
-
-  (bind-rename/pattern "^gsl-" "")
 
   (define-record-type rng
     (ptr->rng ptr)
@@ -82,125 +78,120 @@
     rng-type?
     (ptr rng-type->ptr))
 
-  (bind-type
-   csl_rng
-   (c-pointer "gsl_rng")
-   rng->ptr
-   ptr->rng)
+  (define-foreign-type gsl-rng
+    (nonnull-c-pointer "gsl_rng")
+    rng->ptr
+    ptr->rng)
 
-  (bind-type
-   csl_rng_type
-   (c-pointer "gsl_rng_type")
-   rng-type->ptr
-   ptr->rng-type)
+  (define-foreign-type gsl-rng-type
+    (nonnull-c-pointer "gsl_rng_type")
+    rng-type->ptr
+    ptr->rng-type)
 
   ;;; Random number generator initialization
-  (bind-rename "gsl_rng_alloc" "%rng-alloc")
-  (bind "csl_rng gsl_rng_alloc(csl_rng_type)")
+  (define rng-alloc (foreign-lambda gsl-rng "gsl_rng_alloc" gsl-rng-type))
 
-  (bind-rename "gsl_rng_set" "rng-set!")
-  (bind "void gsl_rng_set(csl_rng, unsigned long)")
+  (define rng-set! (foreign-lambda void "gsl_rng_set" gsl-rng unsigned-long))
 
-  (bind-rename "gsl_rng_free" "rng-free!")
-  (bind "void gsl_rng_free(csl_rng)")
-
-  (define (rng-alloc type)
-    (set-finalizer! (%rng-alloc type) rng-free!))
+  (define rng-free! (foreign-lambda void "gsl_rng_free" gsl-rng))
 
   ;;; Sampling from a random number generator
-  (bind "unsigned long gsl_rng_get(csl_rng)")
+  (define rng-get (foreign-lambda unsigned-long "gsl_rng_get" gsl-rng))
 
-  (bind "double gsl_rng_uniform(csl_rng)")
-
-  (bind "double gsl_rng_uniform_pos(csl_rng)")
-
-  (bind "double gsl_rng_uniform_int(csl_rng, unsigned long)")
+  (define rng-uniform (foreign-lambda double "gsl_rng_uniform" gsl-rng))
+  (define rng-uniform-pos (foreign-lambda double "gsl_rng_uniform_pos" gsl-rng))
+  (define rng-uniform-int (foreign-lambda double "gsl_rng_uniform_int"
+                            gsl-rng unsigned-long))
 
   ;;; Auxiliary random number generator functions
-  (bind "char* gsl_rng_name(csl_rng)")
+  (define rng-name (foreign-lambda c-string "gsl_rng_name" gsl-rng))
 
-  (bind "unsigned long gsl_rng_max(csl_rng)")
-
-  (bind "unsigned long gsl_rng_min(csl_rng)")
+  (define rng-max (foreign-lambda c-string "gsl_rng_max" gsl-rng))
+  (define rng-min (foreign-lambda c-string "gsl_rng_min" gsl-rng))
 
   ;; gsl_rng_state, gsl_rng_size, and gsl_rng_types_setup omitted
 
   ;;; Random number environment variables
-  (bind "csl_rng_type gsl_rng_default")
+  (define-foreign-variable gsl_rng_default gsl-rng-type)
+  (define (rng-default #!optional rng-type)
+    (when rng-type
+      (set! gsl_rng_default rng-type))
+    gsl_rng_default)
 
-  (bind "unsigned long gsl_rng_default_seed")
+  (define-foreign-variable gsl_rng_default_seed unsigned-long)
+  (define (rng-default-seed #!optional rng-type)
+    (when rng-type
+      (set! gsl_rng_default_seed rng-type))
+    gsl_rng_default_seed)
 
-  (bind "___safe csl_rng_type gsl_rng_env_setup()")
+  (define rng-env-setup (foreign-safe-lambda gsl-rng-type "gsl_rng_env_setup"))
 
   ;;; Copying random number generator state
-  (bind-rename "gsl_rng_memcpy" "rng-memcpy!")
-  (bind "___safe int gsl_rng_memcpy(csl_rng, csl_rng)")
+  (define rng-memcpy! (foreign-safe-lambda int "gsl_rng_memcpy" gsl-rng gsl-rng))
 
-  (bind "csl_rng gsl_rng_clone(csl_rng)")
+  (define rng-clone (foreign-lambda gsl-rng "gsl_rng_clone" gsl-rng))
 
   ;;; Reading and writing random number generator state
-  (bind "FILE * fopen(char *, char *)")
-  (bind "int fclose(FILE *)")
-  (bind-rename "gsl_rng_fwrite" "%rng-fwrite")
-  (bind "int gsl_rng_fwrite(FILE*, csl_rng)")
+  (define (rng-fwrite fileport rng)
+    (let* ((FILE (get-c-file 'rng-fwrite fileport))
+          (ret ((foreign-lambda int "gsl_rng_fwrite"
+                  (c-pointer "FILE") gsl-rng)
+                FILE rng)))
+      (if (= ret (foreign-value GSL_EFAILED int))
+          (error 'rng-fwrite "error writing to port")
+          (void))))
 
-  (define (rng-fwrite filename rng)
-    (ensure string? filename "not a valid string filename" filename)
-    (let ((f (fopen filename "w")))
-      (%rng-fwrite f rng)
-      (fclose f)))
-
-  (bind-rename "gsl_rng_fread" "%rng-fread")
-  (bind "int gsl_rng_fread(FILE*, csl_rng)")
-
-  (define (rng-fread filename rng)
-    (ensure file-exists? filename "file does not exist" filename)
-    (let ((f (fopen filename "r")))
-      (%rng-fread f rng)
-      (fclose f)))
+  (define (rng-fread fileport rng)
+    (let* ((FILE (get-c-file 'rng-fread fileport))
+          (ret ((foreign-lambda int "gsl_rng_fread"
+                  (c-pointer "FILE") gsl-rng)
+                FILE rng)))
+      (if (= ret (foreign-value GSL_EFAILED int))
+          (error 'rng-fread "error reading to port")
+          (void))))
 
   ;;; Random number generator algorithms
-  (bind "const csl_rng_type gsl_rng_mt19937")
-  (bind "const csl_rng_type gsl_rng_ranlxs0")
-  (bind "const csl_rng_type gsl_rng_ranlxs1")
-  (bind "const csl_rng_type gsl_rng_ranlxs2")
-  (bind "const csl_rng_type gsl_rng_ranlxd1")
-  (bind "const csl_rng_type gsl_rng_ranlxd2")
-  (bind "const csl_rng_type gsl_rng_ranlux")
-  (bind "const csl_rng_type gsl_rng_ranlux389")
-  (bind "const csl_rng_type gsl_rng_cmrg")
-  (bind "const csl_rng_type gsl_rng_mrg")
-  (bind "const csl_rng_type gsl_rng_taus")
-  (bind "const csl_rng_type gsl_rng_taus2")
-  (bind "const csl_rng_type gsl_rng_gfsr4")
+  (define rng-mt19937 (foreign-value "gsl_rng_mt19937" gsl-rng-type))
+  (define rng-ranlxs0 (foreign-value "gsl_rng_ranlxs0" gsl-rng-type))
+  (define rng-ranlxs1 (foreign-value "gsl_rng_ranlxs1" gsl-rng-type))
+  (define rng-ranlxs2 (foreign-value "gsl_rng_ranlxs2" gsl-rng-type))
+  (define rng-ranlxd1 (foreign-value "gsl_rng_ranlxd1" gsl-rng-type))
+  (define rng-ranlxd2 (foreign-value "gsl_rng_ranlxd2" gsl-rng-type))
+  (define rng-ranlux (foreign-value "gsl_rng_ranlux" gsl-rng-type))
+  (define rng-ranlux389 (foreign-value "gsl_rng_ranlux389" gsl-rng-type))
+  (define rng-cmrg (foreign-value "gsl_rng_cmrg" gsl-rng-type))
+  (define rng-mrg (foreign-value "gsl_rng_mrg" gsl-rng-type))
+  (define rng-taus (foreign-value "gsl_rng_taus" gsl-rng-type))
+  (define rng-taus2 (foreign-value "gsl_rng_taus2" gsl-rng-type))
+  (define rng-gfsr4 (foreign-value "gsl_rng_gfsr4" gsl-rng-type))
 
   ;;; Unix random number generators
-  (bind "const csl_rng_type gsl_rng_rand")
-  (bind "const csl_rng_type gsl_rng_random_bsd")
-  (bind "const csl_rng_type gsl_rng_random_libc5")
-  (bind "const csl_rng_type gsl_rng_random_glibc2")
-  (bind "const csl_rng_type gsl_rng_rand48")
+  (define rng-rand (foreign-value "gsl_rng_rand" gsl-rng-type))
+  (define rng-random-bsd (foreign-value "gsl_rng_random_bsd" gsl-rng-type))
+  (define rng-random-libc5 (foreign-value "gsl_rng_random_libc5" gsl-rng-type))
+  (define rng-random-glibc2 (foreign-value "gsl_rng_random_glibc2" gsl-rng-type))
+  (define rng-rand48 (foreign-value "gsl_rng_rand48" gsl-rng-type))
 
   ;;; Other random number generators
-  (bind "const csl_rng_type gsl_rng_ranf")
-  (bind "const csl_rng_type gsl_rng_ranmar")
-  (bind "const csl_rng_type gsl_rng_r250")
-  (bind "const csl_rng_type gsl_rng_tt800")
-  (bind "const csl_rng_type gsl_rng_vax")
-  (bind "const csl_rng_type gsl_rng_transputer")
-  (bind "const csl_rng_type gsl_rng_randu")
-  (bind "const csl_rng_type gsl_rng_minstd")
-  (bind "const csl_rng_type gsl_rng_uni")
-  (bind "const csl_rng_type gsl_rng_uni32")
-  (bind "const csl_rng_type gsl_rng_slatec")
-  (bind "const csl_rng_type gsl_rng_zuf")
-  (bind "const csl_rng_type gsl_rng_knuthran2")
-  (bind "const csl_rng_type gsl_rng_knuthran2002")
-  (bind "const csl_rng_type gsl_rng_knuthran")
-  (bind "const csl_rng_type gsl_rng_borosh13")
-  (bind "const csl_rng_type gsl_rng_fishman18")
-  (bind "const csl_rng_type gsl_rng_fishman20")
-  (bind "const csl_rng_type gsl_rng_lecuyer21")
-  (bind "const csl_rng_type gsl_rng_waterman14")
-  (bind "const csl_rng_type gsl_rng_fishman2x")
-  (bind "const csl_rng_type gsl_rng_coveyou"))
+  (define rng-ranf (foreign-value "gsl_rng_ranf" gsl-rng-type))
+  (define rng-ranmar (foreign-value "gsl_rng_ranmar" gsl-rng-type))
+  (define rng-r250 (foreign-value "gsl_rng_r250" gsl-rng-type))
+  (define rng-tt800 (foreign-value "gsl_rng_tt800" gsl-rng-type))
+  (define rng-vax (foreign-value "gsl_rng_vax" gsl-rng-type))
+  (define rng-transputer (foreign-value "gsl_rng_transputer" gsl-rng-type))
+  (define rng-randu (foreign-value "gsl_rng_randu" gsl-rng-type))
+  (define rng-minstd (foreign-value "gsl_rng_minstd" gsl-rng-type))
+  (define rng-uni (foreign-value "gsl_rng_uni" gsl-rng-type))
+  (define rng-uni32 (foreign-value "gsl_rng_uni32" gsl-rng-type))
+  (define rng-slatec (foreign-value "gsl_rng_slatec" gsl-rng-type))
+  (define rng-zuf (foreign-value "gsl_rng_zuf" gsl-rng-type))
+  (define rng-knuthran2 (foreign-value "gsl_rng_knuthran2" gsl-rng-type))
+  (define rng-knuthran2002 (foreign-value "gsl_rng_knuthran2002" gsl-rng-type))
+  (define rng-knuthran (foreign-value "gsl_rng_knuthran" gsl-rng-type))
+  (define rng-borosh13 (foreign-value "gsl_rng_borosh13" gsl-rng-type))
+  (define rng-fishman18 (foreign-value "gsl_rng_fishman18" gsl-rng-type))
+  (define rng-fishman20 (foreign-value "gsl_rng_fishman20" gsl-rng-type))
+  (define rng-lecuyer21 (foreign-value "gsl_rng_lecuyer21" gsl-rng-type))
+  (define rng-waterman14 (foreign-value "gsl_rng_waterman14" gsl-rng-type))
+  (define rng-fishman2x (foreign-value "gsl_rng_fishman2x" gsl-rng-type))
+  (define rng-coveyou (foreign-value "gsl_rng_coveyou" gsl-rng-type)))
