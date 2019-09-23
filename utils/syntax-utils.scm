@@ -23,9 +23,3 @@
     ((double float)
      "C_flonum")
     (else "ERROR")))
-
-(define-for-syntax (sizeof-ctype-expr type)
-  (case type
-    ((complex) (* 2 (foreign-value "sizeof(double)" size_t)))
-    ((double) (foreign-value "sizeof(double)" size_t))
-      ))
