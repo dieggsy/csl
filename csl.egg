@@ -2,7 +2,7 @@
  (synopsis "An opinionated wrapper around gsl.")
  (category math)
  (license "GPL-3.0")
- (dependencies srfi-1 srfi-13 bind miscmacros matchable)
+ (dependencies bind)
  (test-dependencies test)
  (component-options (csc-options  "-O3" "-C" "-O3" "-C" "-Wfatal-errors " "-C" "-Werror"))
  (components

@@ -2,9 +2,7 @@
 (include "utils/syntax-utils.scm")
 (include "utils/declarations.scm")
 
-(import-for-syntax (only chicken.format format)
-                   (only chicken.string string-translate*)
-                   (only matchable match))
+(import-for-syntax (only chicken.string string-translate*))
 
 (define-syntax make-matrix-module
   (er-macro-transformer
@@ -98,12 +96,6 @@
                         include
                         define-record-type
                         identity)
-                  (only chicken.gc set-finalizer!)
-                  (only chicken.file file-exists?)
-                  (only chicken.file.posix file-size)
-                  (only chicken.io read-list)
-                  (only miscmacros ensure)
-                  (only matchable match)
                   ,vector-module-name)
 
           (reexport (only ,vector-module-name vector-free!))
@@ -111,11 +103,14 @@
           (include "utils/complex-types.scm")
           (include "utils/stdio.scm")
 
-          (foreign-declare ,(format "#include <gsl/~a.h>"
-                                    (match file-prefix
-                                      ("gsl_matrix_complex" "gsl_matrix_complex_double")
-                                      ("gsl_matrix" "gsl_matrix_double")
-                                      (else file-prefix))))
+          (foreign-declare
+           ,(string-append "#include <gsl/"
+                           (cond ((string=? file-prefix "gsl_matrix_complex")
+                                  "gsl_matrix_complex_double")
+                                 ((string=? file-prefix "gsl_matrix")
+                                  "gsl_matrix_double")
+                                 (else file-prefix))
+                                           ".h>"))
 
           (define-record-type matrix
             (ptr->matrix ptr)

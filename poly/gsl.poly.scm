@@ -15,10 +15,14 @@
                   poly-complex-solve)
 
   (import scheme
-          (only chicken.base include chop let-values cut)
+          (only chicken.base include chop cut)
           chicken.foreign
-          (only srfi-1 last drop-right)
-          (only srfi-4 list->f64vector f64vector->list f64vector-length f64vector-ref))
+          (only srfi-4
+                make-f64vector
+                list->f64vector
+                f64vector->list
+                f64vector-length
+                f64vector-ref))
 
   (include "utils/error-handler.scm")
   (include "utils/complex-types.scm")

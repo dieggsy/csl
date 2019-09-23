@@ -59,9 +59,7 @@
                  rng-coveyou)
   (import scheme
           chicken.foreign
-          (only chicken.base error void when include define-record-type)
-          (only chicken.file file-exists?)
-          (only miscmacros ensure))
+          (only chicken.base error void when include define-record-type))
 
   (include "utils/error-handler.scm")
   (include "utils/stdio.scm")

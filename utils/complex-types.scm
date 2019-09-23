@@ -1,4 +1,4 @@
-(import srfi-4)
+(import (only srfi-4 f64vector f32vector))
 (define-foreign-type complex
   f64vector
   (lambda (z)

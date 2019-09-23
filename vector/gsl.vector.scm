@@ -2,9 +2,7 @@
 (include "utils/syntax-utils.scm")
 (include "utils/declarations.scm")
 
-(import-for-syntax (only chicken.format format)
-                   (only matchable match)
-                   (only chicken.string string-translate*))
+(import-for-syntax (only chicken.string string-translate*))
 
 (define-syntax make-vector-module
   (er-macro-transformer
@@ -69,30 +67,26 @@
                               vector-isnonneg?
                               vector-equal?)
           (import (except scheme vector-set! vector vector?)
-                  srfi-4
                   chicken.foreign
-                  chicken.type
                   (only chicken.base
                         void
                         error
                         include
                         define-record-type
-                        identity)
-                  (only chicken.file file-exists?)
-                  (only chicken.file.posix file-size)
-                  (only chicken.pathname pathname-directory)
-                  (only chicken.io read-list)
-                  (only matchable match))
+                        identity))
 
           (include "utils/error-handler.scm")
           (include "utils/complex-types.scm")
           (include "utils/stdio.scm")
 
-          (foreign-declare ,(format "#include <gsl/~a.h>"
-                                    (match file-prefix
-                                      ("gsl_vector_complex" "gsl_vector_complex_double")
-                                      ("gsl_vector" "gsl_vector_double")
-                                      (else file-prefix))))
+          (foreign-declare
+           ,(string-append "#include <gsl/"
+                           (cond ((string=? file-prefix "gsl_vector_complex")
+                                  "gsl_vector_complex_double")
+                                 ((string=? file-prefix "gsl_vector")
+                                  "gsl_vector_double")
+                                 (else file-prefix))
+                           ".h>"))
 
           (define-record-type vector
             (ptr->vector ptr)
@@ -130,8 +124,6 @@
                      ,(string-append file-prefix "_get")
                    ,csl-vector (const size_t)))))
 
-          ;; Fix a weird compiler warning?
-          (: vector-set! (pointer fixnum * -> void))
           (define vector-set!
             ,(case base-type
                ((complex complex-float)
