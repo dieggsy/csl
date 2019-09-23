@@ -1,4 +1,6 @@
-(module csl.rng (make-rng
+(module csl.rng (rng-alloc
+                 rng-clone
+                 make-rng
                  rng-random-seed
                  rng-set-seed!
                  rng-uniform-positive
@@ -26,7 +28,7 @@
        (location bytes))))
 
   (define (make-rng rng-type)
-    (let ((rng (gsl:rng-alloc rng-type)))
+    (let ((rng (rng-alloc rng-type)))
       (gsl:rng-set! rng (rng-random-seed))
       rng))
 
@@ -34,4 +36,4 @@
   (define rng-uniform-positive gsl:rng-uniform-pos)
   (define rng-uniform-integer gsl:rng-uniform-int)
   (define rng-copy! gsl:rng-memcpy!)
-  (define rng-copy gsl:rng-clone))
+  (define rng-copy rng-clone))
