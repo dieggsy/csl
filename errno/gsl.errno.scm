@@ -112,7 +112,8 @@
   (define errno/eof (foreign-value GSL_EOF int))
 
   (define errno-name-alist
-    `((,errno/failure . failure)
+    `((,errno/success . success)
+      (,errno/failure . failure)
       (,errno/continue . continue)
       (,errno/dom . dom)
       (,errno/range . range)
