@@ -67,7 +67,6 @@
      vector-copy
      vector-copy!
      vector-reverse
-     vector-reverse!
      vector-append
      vector-real-part
      vector-imag-part
