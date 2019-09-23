@@ -127,28 +127,22 @@
   (define rng-env-setup (foreign-safe-lambda gsl-rng-type "gsl_rng_env_setup"))
 
   ;;; Copying random number generator state
-  (define rng-memcpy! (foreign-safe-lambda int "gsl_rng_memcpy" gsl-rng gsl-rng))
+  (define rng-memcpy! (foreign-safe-lambda gsl-errno "gsl_rng_memcpy" gsl-rng gsl-rng))
 
   (define rng-clone (foreign-lambda gsl-rng "gsl_rng_clone" gsl-rng))
 
   ;;; Reading and writing random number generator state
   (define (rng-fwrite fileport rng)
-    (let* ((FILE (get-c-file 'rng-fwrite fileport))
-          (ret ((foreign-lambda int "gsl_rng_fwrite"
-                  (c-pointer "FILE") gsl-rng)
-                FILE rng)))
-      (if (= ret (foreign-value GSL_EFAILED int))
-          (error 'rng-fwrite "error writing to port")
-          (void))))
+    (let* ((FILE (get-c-file 'rng-fwrite fileport)))
+      ((foreign-lambda gsl-errno "gsl_rng_fwrite"
+         (c-pointer "FILE") gsl-rng)
+       FILE rng)))
 
   (define (rng-fread fileport rng)
-    (let* ((FILE (get-c-file 'rng-fread fileport))
-          (ret ((foreign-lambda int "gsl_rng_fread"
-                  (c-pointer "FILE") gsl-rng)
-                FILE rng)))
-      (if (= ret (foreign-value GSL_EFAILED int))
-          (error 'rng-fread "error reading to port")
-          (void))))
+    (let* ((FILE (get-c-file 'rng-fread fileport)))
+      ((foreign-lambda int "gsl_rng_fread"
+         (c-pointer "FILE") gsl-rng)
+       FILE rng)))
 
   ;;; Random number generator algorithms
   (define rng-mt19937 (foreign-value "gsl_rng_mt19937" gsl-rng-type))

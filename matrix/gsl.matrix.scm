@@ -203,40 +203,29 @@
 
           ;;; Reading and writing matrices
           (define (matrix-fwrite fileport matrix)
-            (let* ((FILE (get-c-file 'matrix-fwrite fileport))
-                   (ret ((foreign-lambda int ,(string-append file-prefix "_fwrite")
-                           (c-pointer "FILE") ,csl-matrix)
-                         FILE matrix)))
-              (if (= ret (foreign-value GSL_EFAILED int))
-                  (error 'matrix-fwrite! "error writing to port")
-                  (void))))
+            (let* ((FILE (get-c-file 'matrix-fwrite fileport)))
+              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fwrite")
+                 (c-pointer "FILE") ,csl-matrix)
+               FILE matrix)))
 
           (define (matrix-fread! fileport matrix)
-            (let* ((FILE (get-c-file 'matrix-fread fileport))
-                   (ret ((foreign-lambda int ,(string-append file-prefix "_fread")
-                           (c-pointer "FILE") ,csl-matrix)
-                         FILE matrix)))
-              (if (= ret (foreign-value GSL_EFAILED int))
-                  (error 'matrix-fread! "error reading from port")
-                  (void))))
+            (let* ((FILE (get-c-file 'matrix-fread fileport)))
+              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fread")
+                 (c-pointer "FILE") ,csl-matrix)
+               FILE matrix)))
 
           (define (matrix-fprintf fileport matrix format)
-            (let* ((FILE (get-c-file 'matrix-fprintf fileport))
-                   (ret ((foreign-lambda int ,(string-append file-prefix "_fprintf")
-                           (c-pointer "FILE") ,csl-matrix c-string)
-                         FILE matrix format)))
-              (if (= ret (foreign-value GSL_EFAILED int))
-                  (error 'matrix-fprintf! "error writing port")
-                  (void))))
+            (let* ((FILE (get-c-file 'matrix-fprintf fileport)))
+              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fprintf")
+                 (c-pointer "FILE") ,csl-matrix c-string)
+               FILE matrix format)
+              ))
 
           (define (matrix-fscanf! fileport matrix)
-            (let* ((FILE (get-c-file 'matrix-fscanf fileport))
-                   (ret ((foreign-lambda int ,(string-append file-prefix "_fscanf")
-                           (c-pointer "FILE") ,csl-matrix)
-                         FILE matrix)))
-              (if (= ret (foreign-value GSL_EFAILED int))
-                  (error 'matrix-fscanf! "error writing port")
-                  (void))))
+            (let* ((FILE (get-c-file 'matrix-fscanf fileport)))
+              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fscanf")
+                 (c-pointer "FILE") ,csl-matrix)
+               FILE matrix)))
 
           ;;; Matrix views
           (define matrix-submatrix
@@ -250,7 +239,7 @@
                 substitutions)))
 
           (define matrix-submatrix-set!
-            (foreign-safe-lambda* ,csl-matrix ((,csl-matrix m) (size_t k1) (size_t k2)
+            (foreign-safe-lambda* void ((,csl-matrix m) (size_t k1) (size_t k2)
                                           (size_t n1) (size_t n2) (,csl-matrix sub))
               ,(string-translate*
                 "#{file-prefix}_view view = #{file-prefix}_submatrix(m, k1, k2, n1, n2);
@@ -273,7 +262,7 @@
                 substitutions)))
 
           (define matrix-submatrix-with-stride-set!
-            (foreign-safe-lambda* ,csl-matrix ((,csl-matrix m) (size_t k1) (size_t k2)
+            (foreign-safe-lambda* void ((,csl-matrix m) (size_t k1) (size_t k2)
                                                (size_t s1) (size_t s2)
                                                (size_t n1) (size_t n2)
                                                (,csl-matrix sub))
@@ -373,87 +362,87 @@
 
           ;;; Copying matrices
           (define matrix-memcpy!
-            (foreign-safe-lambda int ,(string-append file-prefix "_memcpy")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_memcpy")
               ,csl-matrix ,csl-matrix))
           (define matrix-swap!
-            (foreign-safe-lambda int ,(string-append file-prefix "_swap")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_swap")
               ,csl-matrix ,csl-matrix))
 
           ;;; Copying rows and columns
           (define matrix-get-row!
-            (foreign-safe-lambda int ,(string-append file-prefix "_get_row")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_get_row")
               ,csl-vector ,csl-matrix size_t))
           (define matrix-get-col!
-            (foreign-safe-lambda int ,(string-append file-prefix "_get_col")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_get_col")
               ,csl-vector ,csl-matrix size_t))
 
           (define matrix-set-row!
-            (foreign-safe-lambda int ,(string-append file-prefix "_set_row")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_set_row")
               ,csl-matrix size_t ,csl-vector))
           (define matrix-set-col!
-            (foreign-safe-lambda int ,(string-append file-prefix "_set_col")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_set_col")
               ,csl-matrix size_t ,csl-vector))
 
           ;;; Exchanging rows an dcolumns
           (define matrix-swap-rows!
-            (foreign-safe-lambda int ,(string-append file-prefix "_swap_rows")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_swap_rows")
               ,csl-matrix size_t size_t))
 
           (define matrix-swap-columns!
-            (foreign-safe-lambda int ,(string-append file-prefix "_swap_columns")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_swap_columns")
               ,csl-matrix size_t size_t))
 
           (define matrix-swap-rowcol!
-            (foreign-safe-lambda int ,(string-append file-prefix "_swap_rowcol")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_swap_rowcol")
               ,csl-matrix size_t size_t))
 
           (define matrix-transpose-memcpy!
-            (foreign-safe-lambda int ,(string-append file-prefix "_transpose_memcpy")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_transpose_memcpy")
               ,csl-matrix ,csl-matrix))
 
           (define matrix-transpose!
-            (foreign-safe-lambda int ,(string-append file-prefix "_transpose")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_transpose")
               ,csl-matrix))
 
           ;;; Matrix-operations
           (define matrix-add!
-            (foreign-safe-lambda int ,(string-append file-prefix "_add")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_add")
               ,csl-matrix ,csl-matrix))
 
           (define matrix-sub!
-            (foreign-safe-lambda int ,(string-append file-prefix "_sub")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_sub")
               ,csl-matrix ,csl-matrix))
 
           (define matrix-mul-elements!
-            (foreign-safe-lambda int ,(string-append file-prefix "_mul_elements")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_mul_elements")
               ,csl-matrix ,csl-matrix))
 
           (define matrix-div-elements!
-            (foreign-safe-lambda int ,(string-append file-prefix "_div_elements")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_div_elements")
               ,csl-matrix ,csl-matrix))
 
           (define matrix-scale!
             ,(case base-type
                ((complex complex-float)
-                `(foreign-safe-lambda* int ((,csl-matrix v) (,base-type z))
+                `(foreign-safe-lambda* gsl-errno ((,csl-matrix v) (,base-type z))
                    ,(string-translate*
                      "#{complex-ctype} _z;
                       GSL_SET_COMPLEX(&_z, z[0], z[1]);
-                      #{file-prefix}_scale(v, _z);"
+                      C_return(#{file-prefix}_scale(v, _z));"
                      substitutions)))
                (else
-                `(foreign-safe-lambda int ,(string-append file-prefix "_scale")
+                `(foreign-safe-lambda gsl-errno ,(string-append file-prefix "_scale")
                    ,csl-matrix ,base-type))))
 
 
           (define matrix-add-constant!
             ,(case base-type
                ((complex complex-float)
-                `(foreign-safe-lambda* int ((,csl-matrix v) (,base-type z))
+                `(foreign-safe-lambda* gsl-errno ((,csl-matrix v) (,base-type z))
                    ,(string-translate*
                      "#{complex-ctype} _z;
                       GSL_SET_COMPLEX(&_z, z[0], z[1]);
-                      #{file-prefix}_add_constant(v, _z);"
+                      C_return(#{file-prefix}_add_constant(v, _z));"
                      substitutions)))
                (else
                 `(foreign-safe-lambda int ,(string-append file-prefix "_add_constant")

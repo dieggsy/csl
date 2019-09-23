@@ -65,7 +65,7 @@
 
   (define (poly-eval-derivs c x num-derivs)
     (let ((res (make-f64vector num-derivs)))
-      ((foreign-safe-lambda int "gsl_poly_eval_derivs"
+      ((foreign-safe-lambda gsl-errno "gsl_poly_eval_derivs"
          (const f64vector) (const size_t) (const double)
          f64vector (const size_t))
        c (f64vector-length c) x res num-derivs)
@@ -74,7 +74,7 @@
   (define (poly-dd-init xa ya)
     (let* ((size (f64vector-length xa))
            (dd (make-f64vector size)))
-      ((foreign-safe-lambda int "gsl_poly_dd_init"
+      ((foreign-safe-lambda gsl-errno "gsl_poly_dd_init"
          f64vector (const f64vector) (const f64vector) size_t)
        dd
        xa
@@ -91,7 +91,7 @@
     (let* ((size (f64vector-length dd))
            (w (make-f64vector size))
            (res (make-f64vector size)))
-      ((foreign-safe-lambda double "gsl_poly_dd_taylor"
+      ((foreign-safe-lambda gsl-errno "gsl_poly_dd_taylor"
          f64vector double (const f64vector) (const f64vector) size_t f64vector)
        res xp dd xa size w)
       res))
@@ -102,7 +102,7 @@
     (let* ((size (f64vector-length xa))
            (dd (make-f64vector (* 2 size)))
            (za (make-f64vector (* 2 size))))
-      ((foreign-safe-lambda int "gsl_poly_dd_hermite_init"
+      ((foreign-safe-lambda gsl-errno "gsl_poly_dd_hermite_init"
          f64vector f64vector (const f64vector) (const f64vector) (const f64vector) (const size_t))
         dd za xa ya dya size)
       (values dd za)))
@@ -110,7 +110,7 @@
   (define (poly-solve-quadratic a b c)
     (let* ((x0 (make-f64vector 1))
            (x1 (make-f64vector 1))
-           (roots ((foreign-safe-lambda int "gsl_poly_solve_quadratic"
+           (roots ((foreign-safe-lambda gsl-errno "gsl_poly_solve_quadratic"
                        double double double f64vector f64vector)
                    a b c x0 x1)))
       (let ((x0 (f64vector-ref x0 0))
@@ -122,14 +122,15 @@
   (define (poly-complex-solve-quadratic a b c)
     (let* ((zout0 (make-f64vector 2))
            (zout1 (make-f64vector 2))
-           (roots ((foreign-safe-lambda* int ((double a) (double b) (double c)
-                                            (f64vector zout0) (f64vector zout1))
+           (roots ((foreign-safe-lambda* gsl-errno
+                       ((double a) (double b) (double c) (f64vector zout0) (f64vector zout1))
                    "gsl_complex z0, z1;"
                    "int res = gsl_poly_complex_solve_quadratic(a,b,c,&z0,&z1);"
                    "zout0[0] = GSL_REAL(z0);"
                    "zout0[1] = GSL_IMAG(z0);"
                    "zout1[0] = GSL_REAL(z1);"
-                   "zout1[1] = GSL_IMAG(z1);")
+                   "zout1[1] = GSL_IMAG(z1);"
+                   "C_return(res);")
                  a b c
                  zout0
                  zout1))
@@ -146,7 +147,7 @@
     (let* ((x0 (make-f64vector 1))
            (x1 (make-f64vector 1))
            (x2 (make-f64vector 1))
-           (roots ((foreign-safe-lambda int "gsl_poly_solve_cubic"
+           (roots ((foreign-safe-lambda gsl-errno "gsl_poly_solve_cubic"
                        double double double f64vector f64vector f64vector)
                    a b c x0 x1 x2)))
       (let ((x0 (f64vector-ref x0 0))
@@ -159,7 +160,7 @@
     (let* ((zout0 (make-f64vector 2))
            (zout1 (make-f64vector 2))
            (zout2 (make-f64vector 2))
-           (num ((foreign-safe-lambda* int ((double a) (double b) (double c)
+           (num ((foreign-safe-lambda* gsl-errno ((double a) (double b) (double c)
                                             (f64vector zout0) (f64vector zout1)
                                             (f64vector zout2))
                    "gsl_complex z0, z1, z2;"
@@ -169,7 +170,8 @@
                    "zout1[0] = GSL_REAL(z1);"
                    "zout1[1] = GSL_IMAG(z1);"
                    "zout2[0] = GSL_REAL(z2);"
-                   "zout2[1] = GSL_IMAG(z2);")
+                   "zout2[1] = GSL_IMAG(z2);"
+                   "C_return(res);")
                  a b c
                  zout0
                  zout1
@@ -187,10 +189,11 @@
   (define (poly-complex-solve a)
     (let* ((n (f64vector-length a))
            (z (make-f64vector (* 2 (- n 1)))))
-      ((foreign-safe-lambda* int (((const f64vector) a) (unsigned-int n) (f64vector z))
+      ((foreign-safe-lambda* gsl-errno (((const f64vector) a) (unsigned-int n) (f64vector z))
          "gsl_poly_complex_workspace * w = gsl_poly_complex_workspace_alloc(n);"
-         "gsl_poly_complex_solve(a,n,w,z);"
-         "gsl_poly_complex_workspace_free(w);")
+         "int res = gsl_poly_complex_solve(a,n,w,z);"
+         "gsl_poly_complex_workspace_free(w);"
+         "C_return(res);")
        a
        n
        z)

@@ -166,45 +166,33 @@
             (foreign-lambda void ,(string-append file-prefix "_set_zero")
               ,csl-vector))
           (define vector-set-basis!
-            (foreign-safe-lambda void ,(string-append file-prefix "_set_basis")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_set_basis")
               ,csl-vector size_t))
 
           ;;; Reading and writing vectors
           (define (vector-fwrite fileport vector)
-            (let* ((FILE (get-c-file 'vector-fwrite fileport))
-                   (ret ((foreign-lambda int ,(string-append file-prefix "_fwrite")
-                           (c-pointer "FILE") ,csl-vector)
-                         FILE vector)))
-              (if (= ret (foreign-value GSL_EFAILED int))
-                  (error 'vector-fwrite! "error writing to port")
-                  (void))))
+            (let* ((FILE (get-c-file 'vector-fwrite fileport)))
+              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fwrite")
+                 (c-pointer "FILE") ,csl-vector)
+               FILE vector)))
 
           (define (vector-fread! fileport vector)
-            (let* ((FILE (get-c-file 'vector-fread fileport))
-                   (ret ((foreign-lambda int ,(string-append file-prefix "_fread")
-                           (c-pointer "FILE") ,csl-vector)
-                         FILE vector)))
-              (if (= ret (foreign-value GSL_EFAILED int))
-                  (error 'vector-fread! "error reading from port")
-                  (void))))
+            (let* ((FILE (get-c-file 'vector-fread fileport)))
+              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fread")
+                 (c-pointer "FILE") ,csl-vector)
+               FILE vector)))
 
           (define (vector-fprintf fileport vector format)
-            (let* ((FILE (get-c-file 'vector-fprintf fileport))
-                   (ret ((foreign-lambda int ,(string-append file-prefix "_fprintf")
-                           (c-pointer "FILE") ,csl-vector c-string)
-                         FILE vector format)))
-              (if (= ret (foreign-value GSL_EFAILED int))
-                  (error 'vector-fprintf! "error writing port")
-                  (void))))
+            (let* ((FILE (get-c-file 'vector-fprintf fileport)))
+              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fprintf")
+                 (c-pointer "FILE") ,csl-vector c-string)
+               FILE vector format)))
 
           (define (vector-fscanf! fileport vector)
-            (let* ((FILE (get-c-file 'vector-fscanf fileport))
-                   (ret ((foreign-lambda int ,(string-append file-prefix "_fscanf")
-                           (c-pointer "FILE") ,csl-vector)
-                         FILE vector)))
-              (if (= ret (foreign-value GSL_EFAILED int))
-                  (error 'vector-fscanf! "error writing port")
-                  (void))))
+            (let* ((FILE (get-c-file 'vector-fscanf fileport)))
+              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fscanf")
+                 (c-pointer "FILE") ,csl-vector)
+               FILE vector)))
 
           ;;; Vector views
           (define vector-subvector
@@ -279,79 +267,79 @@
 
           ;;; Copying vectors
           (define vector-memcpy!
-            (foreign-safe-lambda int ,(string-append file-prefix "_memcpy")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_memcpy")
               ,csl-vector ,csl-vector))
           (define vector-swap!
-            (foreign-safe-lambda int ,(string-append file-prefix "_swap")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_swap")
               ,csl-vector ,csl-vector))
 
           ;;; Exchanging elements
           (define vector-swap-elements!
-            (foreign-safe-lambda int ,(string-append file-prefix "_swap_elements")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_swap_elements")
               ,csl-vector size_t size_t))
           (define vector-reverse!
-            (foreign-safe-lambda int ,(string-append file-prefix "_reverse")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_reverse")
               ,csl-vector))
 
           ;;; Vector operations
           (define vector-add!
-            (foreign-safe-lambda int ,(string-append file-prefix "_add")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_add")
               ,csl-vector ,csl-vector))
 
           (define vector-sub!
-            (foreign-safe-lambda int ,(string-append file-prefix "_sub")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_sub")
               ,csl-vector ,csl-vector))
 
           (define vector-mul!
-            (foreign-safe-lambda int ,(string-append file-prefix "_mul")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_mul")
               ,csl-vector ,csl-vector))
 
           (define vector-div!
-            (foreign-safe-lambda int ,(string-append file-prefix "_div")
+            (foreign-safe-lambda gsl-errno ,(string-append file-prefix "_div")
               ,csl-vector ,csl-vector))
 
           (define vector-scale!
             ,(case base-type
                ((complex complex-float)
-                `(foreign-safe-lambda* int ((,csl-vector v) (,base-type z))
+                `(foreign-safe-lambda* gsl-errno ((,csl-vector v) (,base-type z))
                    ,(string-translate*
                      "#{complex-ctype} _z;
                       GSL_SET_COMPLEX(&_z, z[0], z[1]);
-                      #{file-prefix}_scale(v, _z);"
+                      C_return(#{file-prefix}_scale(v, _z));"
                      substitutions)))
                (else
-                `(foreign-safe-lambda int ,(string-append file-prefix "_scale")
+                `(foreign-safe-lambda gsl-errno ,(string-append file-prefix "_scale")
                    ,csl-vector ,base-type))))
 
 
           (define vector-add-constant!
             ,(case base-type
                ((complex complex-float)
-                `(foreign-safe-lambda* int ((,csl-vector v) (,base-type z))
+                `(foreign-safe-lambda* gsl-errno ((,csl-vector v) (,base-type z))
                    ,(string-translate*
                      "#{complex-ctype} _z;
                       GSL_SET_COMPLEX(&_z, z[0], z[1]);
-                      #{file-prefix}_add_constant(v, _z);"
+                      C_return(#{file-prefix}_add_constant(v, _z));"
                      substitutions)))
                (else
-                `(foreign-safe-lambda int ,(string-append file-prefix "_add_constant")
+                `(foreign-safe-lambda gsl-errno ,(string-append file-prefix "_add_constant")
                    ,csl-vector ,base-type))))
 
           (define vector-axpby!
             ,(case base-type
                ((complex complex-float)
-                `(foreign-safe-lambda* int (((const ,base-type) alpha)
-                                            ((const ,csl-vector) x)
-                                            ((const ,base-type) beta)
-                                            (,csl-vector y))
+                `(foreign-safe-lambda* gsl-errno (((const ,base-type) alpha)
+                                                  ((const ,csl-vector) x)
+                                                  ((const ,base-type) beta)
+                                                  (,csl-vector y))
                    ,(string-translate*
                      "#{complex-ctype} _alpha, _beta;
                       GSL_SET_COMPLEX(&_alpha, alpha[0], alpha[1]);
                       GSL_SET_COMPLEX(&_beta, beta[0], beta[1]);
-                      #{file-prefix}_axpby(_alpha, x, _beta, y);"
+                      C_return(#{file-prefix}_axpby(_alpha, x, _beta, y));"
                      substitutions)))
                (else
-                `(foreign-safe-lambda int ,(string-append file-prefix "_axpby")
+                `(foreign-safe-lambda gsl-errno ,(string-append file-prefix "_axpby")
                    (const ,base-type) (const ,csl-vector) (const ,base-type) ,csl-vector))))
 
           ;;; Maximum and minimum
