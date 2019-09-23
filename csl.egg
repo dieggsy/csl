@@ -4,7 +4,7 @@
  (license "GPL-3.0")
  (dependencies srfi-1 srfi-13 bind miscmacros matchable)
  (test-dependencies test)
- (component-options (csc-options  "-O3" "-C" "-O3 -Wfatal-errors -Werror"))
+ (component-options (csc-options  "-O3" "-C" "-O3" "-C" "-Wfatal-errors " "-C" "-Werror"))
  (components
 
   ;; Error handling
