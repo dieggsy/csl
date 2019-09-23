@@ -112,13 +112,11 @@
       (values dd za)))
 
   (define (poly-solve-quadratic a b c)
-    (let* ((x0 (make-f64vector 1))
-           (x1 (make-f64vector 1))
-           (roots ((foreign-safe-lambda gsl-errno "gsl_poly_solve_quadratic"
-                       double double double f64vector f64vector)
-                   a b c x0 x1)))
-      (let ((x0 (f64vector-ref x0 0))
-            (x1 (f64vector-ref x1 0)))
+    (let-location ((x0 double)
+                   (x1 double))
+      (let ((roots ((foreign-safe-lambda gsl-errno "gsl_poly_solve_quadratic"
+                             double double double (c-pointer double) (c-pointer double))
+                    a b c (location x0) (location x1))))
         (cond ((zero? roots) '())
               ((= roots 1) (list x0))
               (else (list x0 x1))))))
@@ -148,15 +146,12 @@
           (list z0 z1))))
 
   (define (poly-solve-cubic a b c)
-    (let* ((x0 (make-f64vector 1))
-           (x1 (make-f64vector 1))
-           (x2 (make-f64vector 1))
-           (roots ((foreign-safe-lambda gsl-errno "gsl_poly_solve_cubic"
-                       double double double f64vector f64vector f64vector)
-                   a b c x0 x1 x2)))
-      (let ((x0 (f64vector-ref x0 0))
-            (x1 (f64vector-ref x1 0))
-            (x2 (f64vector-ref x2 0)))
+    (let-location ((x0 double)
+                   (x1 double)
+                   (x2 double))
+      (let ((roots ((foreign-safe-lambda gsl-errno "gsl_poly_solve_cubic"
+                      double double double (c-pointer double) (c-pointer double) (c-pointer double))
+                    a b c (location x0) (location x1) (location x2))))
         (cond ((= roots 1) (list x0))
               (else (list x0 x1 x2))))))
 
