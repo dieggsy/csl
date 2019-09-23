@@ -16,7 +16,7 @@
                  rng-memcpy!
                  rng-clone
                  rng-fwrite
-                 rng-fread
+                 rng-fread!
                  rng-mt19937
                  rng-ranlxs0
                  rng-ranlxs1
@@ -134,13 +134,13 @@
   ;;; Reading and writing random number generator state
   (define (rng-fwrite fileport rng)
     (let* ((FILE (get-c-file 'rng-fwrite fileport)))
-      ((foreign-lambda gsl-errno "gsl_rng_fwrite"
+      ((foreign-safe-lambda gsl-errno "gsl_rng_fwrite"
          (c-pointer "FILE") gsl-rng)
        FILE rng)))
 
-  (define (rng-fread fileport rng)
+  (define (rng-fread! fileport rng)
     (let* ((FILE (get-c-file 'rng-fread fileport)))
-      ((foreign-lambda int "gsl_rng_fread"
+      ((foreign-safe-lambda int "gsl_rng_fread"
          (c-pointer "FILE") gsl-rng)
        FILE rng)))
 

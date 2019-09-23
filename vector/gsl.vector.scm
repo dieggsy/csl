@@ -172,25 +172,25 @@
           ;;; Reading and writing vectors
           (define (vector-fwrite fileport vector)
             (let* ((FILE (get-c-file 'vector-fwrite fileport)))
-              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fwrite")
+              ((foreign-safe-lambda gsl-errno ,(string-append file-prefix "_fwrite")
                  (c-pointer "FILE") ,csl-vector)
                FILE vector)))
 
           (define (vector-fread! fileport vector)
             (let* ((FILE (get-c-file 'vector-fread fileport)))
-              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fread")
+              ((foreign-safe-lambda gsl-errno ,(string-append file-prefix "_fread")
                  (c-pointer "FILE") ,csl-vector)
                FILE vector)))
 
           (define (vector-fprintf fileport vector format)
             (let* ((FILE (get-c-file 'vector-fprintf fileport)))
-              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fprintf")
+              ((foreign-safe-lambda gsl-errno ,(string-append file-prefix "_fprintf")
                  (c-pointer "FILE") ,csl-vector c-string)
                FILE vector format)))
 
           (define (vector-fscanf! fileport vector)
             (let* ((FILE (get-c-file 'vector-fscanf fileport)))
-              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fscanf")
+              ((foreign-safe-lambda gsl-errno ,(string-append file-prefix "_fscanf")
                  (c-pointer "FILE") ,csl-vector)
                FILE vector)))
 

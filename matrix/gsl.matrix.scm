@@ -204,26 +204,25 @@
           ;;; Reading and writing matrices
           (define (matrix-fwrite fileport matrix)
             (let* ((FILE (get-c-file 'matrix-fwrite fileport)))
-              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fwrite")
+              ((foreign-safe-lambda gsl-errno ,(string-append file-prefix "_fwrite")
                  (c-pointer "FILE") ,csl-matrix)
                FILE matrix)))
 
           (define (matrix-fread! fileport matrix)
             (let* ((FILE (get-c-file 'matrix-fread fileport)))
-              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fread")
+              ((foreign-safe-lambda gsl-errno ,(string-append file-prefix "_fread")
                  (c-pointer "FILE") ,csl-matrix)
                FILE matrix)))
 
           (define (matrix-fprintf fileport matrix format)
             (let* ((FILE (get-c-file 'matrix-fprintf fileport)))
-              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fprintf")
+              ((foreign-safe-lambda gsl-errno ,(string-append file-prefix "_fprintf")
                  (c-pointer "FILE") ,csl-matrix c-string)
-               FILE matrix format)
-              ))
+               FILE matrix format)))
 
           (define (matrix-fscanf! fileport matrix)
             (let* ((FILE (get-c-file 'matrix-fscanf fileport)))
-              ((foreign-lambda gsl-errno ,(string-append file-prefix "_fscanf")
+              ((foreign-safe-lambda gsl-errno ,(string-append file-prefix "_fscanf")
                  (c-pointer "FILE") ,csl-matrix)
                FILE matrix)))
 
