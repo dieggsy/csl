@@ -10,29 +10,25 @@
   ;; Error handling
   (extension gsl.errno
              (source "errno/gsl.errno.scm")
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+             (custom-build build-gsl))
 
   ;; Mathematical Functions (real)
   (extension gsl.math.double
              (source "math/gsl.math.double.scm")
              (component-dependencies gsl.errno)
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+             (custom-build build-gsl))
 
   ;; Complex Numbers (+ math)
   (extension gsl.math.complex
              (source "math/gsl.math.complex.scm")
              (component-dependencies gsl.errno)
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+             (custom-build build-gsl))
 
   ;; Polynomials
   (extension gsl.poly
              (source "poly/gsl.poly.scm")
              (component-dependencies gsl.errno)
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+             (custom-build build-gsl))
 
   ;; Special functions
   (extension gsl.special.airy
@@ -66,8 +62,7 @@
               gsl.vector.ushort
               gsl.vector.uchar)
              (component-dependencies gsl.errno)
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+             (custom-build build-gsl))
 
 
   ;; Vectors (high level)
@@ -106,7 +101,8 @@
               gsl.matrix.uint
               gsl.matrix.ushort
               gsl.matrix.uchar)
-             (component-dependencies gsl.errno gsl.vector))
+             (component-dependencies gsl.errno gsl.vector)
+             (custom-build build-gsl))
 
   ;; Matrices (high level)
   (extension csl.matrix
@@ -130,8 +126,7 @@
   (extension gsl.permutation
              (source "permutation/gsl.permutation.scm")
              (component-dependencies gsl.errno)
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+             (custom-build build-gsl))
 
   ;; BLAS Support
   (extension gsl.blas
@@ -162,8 +157,7 @@
   (extension gsl.rng
              (source "rng/gsl.rng.scm")
              (component-dependencies gsl.errno)
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+             (custom-build build-gsl))
   (extension csl.rng
              (source "rng/csl.rng.scm")
              (component-dependencies gsl.rng))
@@ -171,14 +165,11 @@
   ;; Physical constants
   (extension gsl.mksa
              (source "const/gsl.mksa.scm")
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+             (custom-build build-gsl))
   (extension gsl.cgsm
              (source "const/gsl.cgsm.scm")
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+             (custom-build build-gsl))
   (extension gsl.num
              (source "const/gsl.num.scm")
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+             (custom-build build-gsl))
   ))

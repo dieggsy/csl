@@ -1,0 +1,2 @@
+#!/bin/sh
+"$CHICKEN_CSC" $@ -C "`pkg-config --cflags gsl`" -L "`pkg-config --libs gsl`"
