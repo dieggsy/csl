@@ -7,21 +7,30 @@
  (component-options (csc-options  "-O3" "-C" "-O3 -Wfatal-errors -Werror"))
  (components
 
+  ;; Error handling
+  (extension gsl.errno
+             (source "errno/gsl.errno.scm")
+             (csc-options "-C" "`pkg-config --cflags gsl`")
+             (link-options "-L" "`pkg-config --libs gsl`"))
+
   ;; Mathematical Functions (real)
   (extension gsl.math.double
              (source "math/gsl.math.double.scm")
+             (component-dependencies gsl.errno)
              (csc-options "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
 
   ;; Complex Numbers (+ math)
   (extension gsl.math.complex
              (source "math/gsl.math.complex.scm")
+             (component-dependencies gsl.errno)
              (csc-options "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
 
   ;; Polynomials
   (extension gsl.poly
              (source "poly/gsl.poly.scm")
+             (component-dependencies gsl.errno)
              (csc-options "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
 
@@ -120,6 +129,7 @@
   ;; Permutations
   (extension gsl.permutation
              (source "permutation/gsl.permutation.scm")
+             (component-dependencies gsl.errno)
              (csc-options "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
 
@@ -151,6 +161,7 @@
   ;; Random number generation
   (extension gsl.rng
              (source "rng/gsl.rng.scm")
+             (component-dependencies gsl.errno)
              (csc-options "-C" "`pkg-config --cflags gsl`")
              (link-options "-L" "`pkg-config --libs gsl`"))
   (extension csl.rng
