@@ -127,6 +127,9 @@
              (source "permutation/gsl.permutation.scm")
              (component-dependencies gsl.errno)
              (custom-build build-gsl))
+  (extension csl.permutation
+             (source "permutation/csl.permutation.scm")
+             (component-dependencies gsl.permutation))
 
   ;; BLAS Support
   (extension gsl.blas
