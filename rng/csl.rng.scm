@@ -27,9 +27,9 @@
          "C_return(*(unsigned long*)l);")
        (location bytes))))
 
-  (define (make-rng rng-type)
+  (define (make-rng rng-type #!optional (seed (rng-random-seed)))
     (let ((rng (rng-alloc rng-type)))
-      (gsl:rng-set! rng (rng-random-seed))
+      (gsl:rng-set! rng seed)
       rng))
 
   (define rng-set-seed! gsl:rng-set!)
