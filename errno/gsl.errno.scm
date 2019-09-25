@@ -67,13 +67,13 @@
   (define (errno->error errno handler
                         #!optional (file 'unknown) (line 'unknown)
                         (reason (strerror errno)))
-    (if (eqv? (error-handler) handler)
-        (if (= errno errno/success)
-            (void)
+    (if (= errno errno/success)
+        (if (error-handler) (void) errno)
+        (if (eqv? (error-handler) handler)
             (signal (condition `(gsl file ,file line ,line handler ,handler)
                                `(,(alist-ref errno errno-name-alist = 'unknown-error))
-                               `(exn message ,reason))))
-        errno))
+                               `(exn message ,reason)))
+            errno)))
 
   (define errno/success (foreign-value GSL_SUCCESS int))
   (define errno/failure (foreign-value GSL_FAILURE int))
