@@ -1,6 +1,6 @@
 (module csl.permutation (permutation-alloc
                          permutation-calloc
-                         make-identity-permutation
+                         make-permutation
                          permutation-reverse
                          permutation-inverse
                          permutation-next!
@@ -11,12 +11,11 @@
                          permutation-linear->canonical!
                          permutation-canonical->linear!
                          permutation-linear->canonical
-                         permutation-canonical->linear
-                         )
+                         permutation-canonical->linear)
   (import scheme
           (only chicken.module reexport)
           (only chicken.gc set-finalizer!)
-          (only chicken.type the)
+          (only chicken.base when)
           (prefix gsl.permutation gsl:)
           (prefix gsl.errno gsl:))
 
@@ -24,16 +23,16 @@
                     permutation-alloc
                     permutation-calloc
                     permutation-next!
-                    permutation-prev!)) 
+                    permutation-prev!))
 
   (define (permutation-alloc size)
     (set-finalizer! (gsl:permutation-alloc size) gsl:permutation-free!))
   (define (permutation-calloc size)
     (set-finalizer! (gsl:permutation-calloc size) gsl:permutation-free!))
 
-  (define (make-identity-permutation size)
+  (define (make-permutation size #!optional init)
     (let ((p (permutation-alloc size)))
-      (gsl:permutation-init! p)
+      (when init (gsl:permutation-init! p))
       p))
 
   (define (permutation-reverse p)

@@ -7,6 +7,7 @@
                          permutation-free!
                          permutation-memcpy!
                          permutation-size
+                         permutation-data
                          permutation-get
                          permutation-swap!
                          permutation-size
@@ -27,7 +28,8 @@
                          permutation-canonical-cycles)
   (import scheme
           chicken.foreign
-          (only chicken.base include define-record-type))
+          (only chicken.base include define-record-type)
+          (only srfi-4 make-u64vector make-u32vector))
 
   (include "utils/error-handler.scm")
   (include "utils/stdio.scm")
@@ -66,6 +68,14 @@
   ;;; Permutation properties
   (define permutation-size
     (foreign-lambda size_t "gsl_permutation_size" gsl-permutation))
+  (define (permutation-data p)
+    (let ((ret ((cond-expand (64bit make-u64vector) (else make-u32vector))
+                (permutation-size p))))
+      ((foreign-lambda* void ((gsl-permutation p) (c-pointer ret))
+         "memcpy(ret, p->data, sizeof(size_t)*p->size);")
+       p
+       (location ret))
+      ret))
   (define permutation-valid
     (foreign-safe-lambda gsl-errno "gsl_permutation_valid" gsl-permutation))
 
