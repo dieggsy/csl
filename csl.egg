@@ -9,7 +9,7 @@
 
   ;; Error handling
   (extension gsl.errno
-             (source "errno/gsl.errno.scm")
+             (source "misc/gsl.errno.scm")
              (custom-build build-gsl))
 
   ;; Mathematical Functions (real)
