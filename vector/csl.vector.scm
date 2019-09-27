@@ -281,7 +281,7 @@
       (gsl:vector-set-basis! v n)
       v)))
 
-(import gsl.vector.complex.double)
+(import gsl.vector.complex)
 (import gsl.vector.complex.float)
 (import gsl.vector.double)
 (import gsl.vector.float)
@@ -295,7 +295,7 @@
 (import gsl.vector.uchar)
 
 
-(module csl.vector.complex.double = (generic-vector gsl.vector.complex.double))
+(module csl.vector.complex = (generic-vector gsl.vector.complex))
 (module csl.vector.complex.float = (generic-vector gsl.vector.complex.float))
 (module csl.vector.double = (generic-vector gsl.vector.double))
 (module csl.vector.float = (generic-vector gsl.vector.float))

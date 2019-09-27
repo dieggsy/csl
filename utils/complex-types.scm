@@ -8,3 +8,16 @@
   f32vector
   (lambda (z)
     (f32vector (real-part z) (imag-part z))))
+
+(cond-expand
+  (complex
+   (define-foreign-type TYPE
+     f64vector
+     (lambda (z)
+       (f64vector (real-part z) (imag-part z)))))
+  (complex-float
+   (define-foreign-type TYPE
+     f32vector
+     (lambda (z)
+       (f32vector (real-part z) (imag-part z)))))
+  (else))

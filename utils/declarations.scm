@@ -17,6 +17,12 @@
 (foreign-declare "typedef unsigned short unsigned_short;")
 (foreign-declare "typedef unsigned int unsigned_int;")
 (foreign-declare "typedef unsigned long unsigned_long;")
+(foreign-declare "
+#define CONCAT3_SPECIAL(a,b,c) a##b##_##c
+#define CONCAT2_SPECIAL(a,b) a##b
+#define TYPED_FN(prefix, type, fn) CONCAT3_SPECIAL(prefix,type,fn)
+#define SUBTYPE(type, subtype) CONCAT2_SPECIAL(type,subtype)
+")
 
 (define-external (csl_err (c-string reason) (c-string file) (int line) (int errno)) void
   (errno->error errno 'handler file line reason))

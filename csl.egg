@@ -46,21 +46,52 @@
 
 
   ;; Vectors (low level)
-  (extension gsl.vector
-             (source "vector/gsl.vector.scm")
-             (modules
-              gsl.vector.complex.double
-              gsl.vector.complex.float
-              gsl.vector.double
-              gsl.vector.float
-              gsl.vector.long
-              gsl.vector.int
-              gsl.vector.short
-              gsl.vector.char
-              gsl.vector.ulong
-              gsl.vector.uint
-              gsl.vector.ushort
-              gsl.vector.uchar)
+  (extension gsl.vector.complex
+             (source "vector/gsl.vector.complex.scm")
+             (component-dependencies gsl.errno)
+             (custom-build build-gsl))
+  (extension gsl.vector.complex.float
+             (source "vector/gsl.vector.complex.float.scm")
+             (component-dependencies gsl.errno)
+             (custom-build build-gsl))
+  (extension gsl.vector.double
+             (source "vector/gsl.vector.double.scm")
+             (component-dependencies gsl.errno)
+             (custom-build build-gsl))
+  (extension gsl.vector.float
+             (source "vector/gsl.vector.float.scm")
+             (component-dependencies gsl.errno)
+             (custom-build build-gsl))
+  (extension gsl.vector.long
+             (source "vector/gsl.vector.long.scm")
+             (component-dependencies gsl.errno)
+             (custom-build build-gsl))
+  (extension gsl.vector.int
+             (source "vector/gsl.vector.int.scm")
+             (component-dependencies gsl.errno)
+             (custom-build build-gsl))
+  (extension gsl.vector.short
+             (source "vector/gsl.vector.short.scm")
+             (component-dependencies gsl.errno)
+             (custom-build build-gsl))
+  (extension gsl.vector.char
+             (source "vector/gsl.vector.char.scm")
+             (component-dependencies gsl.errno)
+             (custom-build build-gsl))
+  (extension gsl.vector.ulong
+             (source "vector/gsl.vector.ulong.scm")
+             (component-dependencies gsl.errno)
+             (custom-build build-gsl))
+  (extension gsl.vector.uint
+             (source "vector/gsl.vector.uint.scm")
+             (component-dependencies gsl.errno)
+             (custom-build build-gsl))
+  (extension gsl.vector.ushort
+             (source "vector/gsl.vector.ushort.scm")
+             (component-dependencies gsl.errno)
+             (custom-build build-gsl))
+  (extension gsl.vector.uchar
+             (source "vector/gsl.vector.uchar.scm")
              (component-dependencies gsl.errno)
              (custom-build build-gsl))
 
@@ -69,7 +100,7 @@
   (extension csl.vector
              (source "vector/csl.vector.scm")
              (modules
-              csl.vector.complex.double
+              csl.vector.complex
               csl.vector.complex.float
               csl.vector.double
               csl.vector.float
@@ -81,7 +112,19 @@
               csl.vector.uint
               csl.vector.ushort
               csl.vector.uchar)
-             (component-dependencies gsl.vector))
+             (component-dependencies
+              gsl.vector.complex
+              gsl.vector.complex.float
+              gsl.vector.double
+              gsl.vector.float
+              gsl.vector.long
+              gsl.vector.int
+              gsl.vector.short
+              gsl.vector.char
+              gsl.vector.ulong
+              gsl.vector.uint
+              gsl.vector.ushort
+              gsl.vector.uchar))
 
   ;; (extension csl.vector (source "vector/csl.vector.scheme.scm"))
 
