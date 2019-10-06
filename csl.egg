@@ -34,19 +34,19 @@
              (component-dependencies gsl.errno)
              (custom-build build-gsl))
 
-  ;; Special functions
-  (extension gsl.special.airy
-             (source "special/gsl.special.airy.scm")
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
-  (extension gsl.special.bessel
-             (source "special/gsl.special.bessel.scm")
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
-  (extension gsl.special.clausen
-             (source "special/gsl.special.clausen.scm")
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`"))
+  ;; ;; Special functions
+  ;; (extension gsl.special.airy
+  ;;            (source "special/gsl.special.airy.scm")
+  ;;            (csc-options "-C" "`pkg-config --cflags gsl`")
+  ;;            (link-options "-L" "`pkg-config --libs gsl`"))
+  ;; (extension gsl.special.bessel
+  ;;            (source "special/gsl.special.bessel.scm")
+  ;;            (csc-options "-C" "`pkg-config --cflags gsl`")
+  ;;            (link-options "-L" "`pkg-config --libs gsl`"))
+  ;; (extension gsl.special.clausen
+  ;;            (source "special/gsl.special.clausen.scm")
+  ;;            (csc-options "-C" "`pkg-config --cflags gsl`")
+  ;;            (link-options "-L" "`pkg-config --libs gsl`"))
 
 
   ;; Vectors (low level)
@@ -132,42 +132,42 @@
 
   ;; (extension csl.vector (source "vector/csl.vector.scheme.scm"))
 
-  ;; Matrices (low level)
-  (extension gsl.matrix
-             (source "matrix/gsl.matrix.scm")
-             (modules
-              gsl.matrix.complex.double
-              gsl.matrix.complex.float
-              gsl.matrix.double
-              gsl.matrix.float
-              gsl.matrix.long
-              gsl.matrix.int
-              gsl.matrix.short
-              gsl.matrix.char
-              gsl.matrix.ulong
-              gsl.matrix.uint
-              gsl.matrix.ushort
-              gsl.matrix.uchar)
-             (component-dependencies gsl.errno gsl.vector)
-             (custom-build build-gsl))
+  ;; ;; Matrices (low level)
+  ;; (extension gsl.matrix
+  ;;            (source "matrix/gsl.matrix.scm")
+  ;;            (modules
+  ;;             gsl.matrix.complex.double
+  ;;             gsl.matrix.complex.float
+  ;;             gsl.matrix.double
+  ;;             gsl.matrix.float
+  ;;             gsl.matrix.long
+  ;;             gsl.matrix.int
+  ;;             gsl.matrix.short
+  ;;             gsl.matrix.char
+  ;;             gsl.matrix.ulong
+  ;;             gsl.matrix.uint
+  ;;             gsl.matrix.ushort
+  ;;             gsl.matrix.uchar)
+  ;;            (component-dependencies gsl.errno gsl.vector)
+  ;;            (custom-build build-gsl))
 
-  ;; Matrices (high level)
-  (extension csl.matrix
-             (source "matrix/csl.matrix.scm")
-             (modules
-              csl.matrix.complex.double
-              csl.matrix.complex.float
-              csl.matrix.double
-              csl.matrix.float
-              csl.matrix.long
-              csl.matrix.int
-              csl.matrix.short
-              csl.matrix.char
-              csl.matrix.ulong
-              csl.matrix.uint
-              csl.matrix.ushort
-              csl.matrix.uchar)
-             (component-dependencies gsl.matrix))
+  ;; ;; Matrices (high level)
+  ;; (extension csl.matrix
+  ;;            (source "matrix/csl.matrix.scm")
+  ;;            (modules
+  ;;             csl.matrix.complex.double
+  ;;             csl.matrix.complex.float
+  ;;             csl.matrix.double
+  ;;             csl.matrix.float
+  ;;             csl.matrix.long
+  ;;             csl.matrix.int
+  ;;             csl.matrix.short
+  ;;             csl.matrix.char
+  ;;             csl.matrix.ulong
+  ;;             csl.matrix.uint
+  ;;             csl.matrix.ushort
+  ;;             csl.matrix.uchar)
+  ;;            (component-dependencies gsl.matrix))
 
   ;; Permutations
   (extension gsl.permutation
@@ -178,19 +178,37 @@
              (source "permutation/csl.permutation.scm")
              (component-dependencies gsl.permutation))
 
+  (extension gsl.permute
+             (source "permutation/gsl.permute.scm")
+             (modules
+              ;; gsl.permute.complex.double
+              ;; gsl.permute.complex.float
+              gsl.permute.double
+              gsl.permute.float
+              gsl.permute.long
+              gsl.permute.int
+              gsl.permute.short
+              gsl.permute.char
+              gsl.permute.ulong
+              gsl.permute.uint
+              gsl.permute.ushort
+              gsl.permute.uchar)
+             (component-dependencies gsl.errno gsl.permutation)
+             (custom-build build-gsl))
+
   ;; BLAS Support
-  (extension gsl.blas
-             (source "blas/gsl.blas.scm")
-             (csc-options "-C" "`pkg-config --cflags gsl`")
-             (link-options "-L" "`pkg-config --libs gsl`")
-             (component-dependencies gsl.vector.float
-                                     gsl.vector.double
-                                     gsl.vector.complex.float
-                                     gsl.vector.complex.double
-                                     gsl.matrix.float
-                                     gsl.matrix.double
-                                     gsl.matrix.complex.float
-                                     gsl.matrix.complex.double))
+  ;; (extension gsl.blas
+  ;;            (source "blas/gsl.blas.scm")
+  ;;            (csc-options "-C" "`pkg-config --cflags gsl`")
+  ;;            (link-options "-L" "`pkg-config --libs gsl`")
+  ;;            (component-dependencies gsl.vector.float
+  ;;                                    gsl.vector.double
+  ;;                                    gsl.vector.complex.float
+  ;;                                    gsl.vector.complex.double
+  ;;                                    gsl.matrix.float
+  ;;                                    gsl.matrix.double
+  ;;                                    gsl.matrix.complex.float
+  ;;                                    gsl.matrix.complex.double))
 
   ;; ;; Linear Algebra
   ;; (extension gsl.linalg.double
