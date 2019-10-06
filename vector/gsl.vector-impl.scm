@@ -48,6 +48,8 @@
 (include "utils/stdio.scm")
 
 (define-record-type vector
+  @("Wraps the gsl_vector pointer. All vector pointer return and argument types
+must be wrapped in this record.")
   (ptr->vector ptr)
   vector?
   (ptr vector->ptr))
@@ -58,14 +60,18 @@
   ptr->vector)
 
 (define vector-size
+  @("Wraps {{vector->size}}")
   (foreign-lambda* size_t ((gsl-vector v))
     "C_return(v->size);"))
 
 (define vector-alloc
+  @("Direct binding to {{gsl_vector_alloc}}.")
   (foreign-lambda gsl-vector "TYPED_FN(gsl_vector, _TYPE, alloc)" size_t))
 (define vector-calloc
+  @("Direct binding to {{gsl_vector_calloc}}.")
   (foreign-lambda gsl-vector "TYPED_FN(gsl_vector, _TYPE, calloc)" size_t))
 (define vector-free!
+  @("Direct binding to {{gsl_vector_free}}.")
   (foreign-lambda void "TYPED_FN(gsl_vector, _TYPE, free)" gsl-vector))
 
 ;;; Accessing vector elements
