@@ -1,10 +1,14 @@
 ((author "Diego A. Mundo")
+ ;; user: dieggsy
  (synopsis "An opinionated wrapper around gsl.")
  (category math)
  (license "GPL-3.0")
- (dependencies bind)
+ (dependencies bind number-limits)
  (test-dependencies test)
- (component-options (csc-options  "-O3" "-C" "-O3" "-C" "-Wfatal-errors " "-C" "-Werror"))
+ (component-options
+  (csc-options "-X" "hahn"
+               "-O3" "-C" "-O3"
+               "-C" "-Wfatal-errors " "-C" "-Werror"))
  (components
 
   ;; Error handling
